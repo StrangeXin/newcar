@@ -98,25 +98,44 @@ export class CarCandidateService {
       throw new Error('Candidate not found');
     }
 
-    // 先将同旅程其他 ACTIVE 候选标为 ELIMINATED
-    await prisma.carCandidate.updateMany({
-      where: {
-        journeyId: candidate.journeyId,
-        id: { not: candidateId },
-        status: CandidateStatus.ACTIVE,
-      },
-      data: {
-        status: CandidateStatus.ELIMINATED,
-        eliminationReason: '用户选择了其他车型',
-      },
-    });
+    const [, winner] = await prisma.$transaction([
+      prisma.carCandidate.updateMany({
+        where: {
+          journeyId: candidate.journeyId,
+          id: { not: candidateId },
+          status: CandidateStatus.ACTIVE,
+        },
+        data: {
+          status: CandidateStatus.ELIMINATED,
+          eliminationReason: '用户选择了其他车型',
+        },
+      }),
+      prisma.carCandidate.update({
+        where: { id: candidateId },
+        data: { status: CandidateStatus.WINNER },
+        include: { car: true },
+      }),
+    ]);
 
-    // 将选中车型标为 WINNER
-    return prisma.carCandidate.update({
-      where: { id: candidateId },
-      data: { status: CandidateStatus.WINNER },
-      include: { car: true },
+    return winner;
+  }
+
+  // 获取旅程所有者
+  async getJourneyOwner(journeyId: string): Promise<string | null> {
+    const journey = await prisma.journey.findUnique({
+      where: { id: journeyId },
+      select: { userId: true },
     });
+    return journey?.userId ?? null;
+  }
+
+  // 通过候选车型获取旅程所有者
+  async getCandidateJourneyOwner(candidateId: string): Promise<string | null> {
+    const candidate = await prisma.carCandidate.findUnique({
+      where: { id: candidateId },
+      include: { journey: { select: { userId: true } } },
+    });
+    return candidate?.journey.userId ?? null;
   }
 
   // 移除候选车型

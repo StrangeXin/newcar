@@ -17,6 +17,11 @@ export class CarCandidateController {
         return res.status(400).json({ error: 'Invalid addedReason' });
       }
 
+      const owner = await carCandidateService.getJourneyOwner(journeyId);
+      if (!owner || owner !== req.userId) {
+        return res.status(403).json({ error: 'Forbidden' });
+      }
+
       const candidate = await carCandidateService.addCandidate({
         journeyId,
         carId,
@@ -34,6 +39,12 @@ export class CarCandidateController {
   async getCandidates(req: AuthenticatedRequest, res: Response) {
     try {
       const { journeyId } = req.params;
+
+      const owner = await carCandidateService.getJourneyOwner(journeyId);
+      if (!owner || owner !== req.userId) {
+        return res.status(403).json({ error: 'Forbidden' });
+      }
+
       const candidates = await carCandidateService.getCandidatesByJourney(journeyId);
       return res.json({ candidates });
     } catch (error: any) {
@@ -50,6 +61,15 @@ export class CarCandidateController {
         return res.status(400).json({ error: 'Invalid status' });
       }
 
+      if (status === CandidateStatus.WINNER) {
+        return res.status(400).json({ error: 'Use POST /candidates/:id/winner to mark a winner' });
+      }
+
+      const owner = await carCandidateService.getCandidateJourneyOwner(candidateId);
+      if (!owner || owner !== req.userId) {
+        return res.status(403).json({ error: 'Forbidden' });
+      }
+
       const candidate = await carCandidateService.updateStatus(
         candidateId,
         status,
@@ -64,6 +84,12 @@ export class CarCandidateController {
   async markAsWinner(req: AuthenticatedRequest, res: Response) {
     try {
       const { candidateId } = req.params;
+
+      const owner = await carCandidateService.getCandidateJourneyOwner(candidateId);
+      if (!owner || owner !== req.userId) {
+        return res.status(403).json({ error: 'Forbidden' });
+      }
+
       const candidate = await carCandidateService.markAsWinner(candidateId);
       return res.json(candidate);
     } catch (error: any) {
@@ -75,6 +101,11 @@ export class CarCandidateController {
     try {
       const { candidateId } = req.params;
       const { notes } = req.body;
+
+      const owner = await carCandidateService.getCandidateJourneyOwner(candidateId);
+      if (!owner || owner !== req.userId) {
+        return res.status(403).json({ error: 'Forbidden' });
+      }
 
       const candidate = await carCandidateService.updateNotes(candidateId, notes);
       return res.json(candidate);
