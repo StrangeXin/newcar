@@ -32,4 +32,10 @@ export const config = {
   otp: {
     secret: requireConfigValue(process.env.OTP_SECRET, 'OTP_SECRET'),
   },
+
+  ai: {
+    apiKey: process.env.AI_API_KEY || '',
+    model: process.env.AI_MODEL || 'claude-sonnet-4-6',
+    maxTokens: parseInt(process.env.AI_MAX_TOKENS || '1024', 10),
+  },
 };

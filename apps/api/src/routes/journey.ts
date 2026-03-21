@@ -6,6 +6,7 @@ import { journeyService } from '../services/journey.service';
 import { prisma } from '../lib/prisma';
 import conversationRoutes from './conversation';
 import carCandidateRoutes from './car-candidate';
+import aiChatRoutes from './ai-chat';
 
 const router = Router();
 
@@ -58,6 +59,7 @@ router.get(
   }
 );
 
+router.use('/', aiChatRoutes);
 router.use('/', conversationRoutes);
 router.use('/', carCandidateRoutes);
 
