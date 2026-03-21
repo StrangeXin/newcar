@@ -53,16 +53,19 @@ export class ConversationService {
     });
 
     const messages = (conversation.messages as any[]) || [];
-    messages.push({
+    const newMessage = {
       role: data.role,
       content: data.content,
       timestamp: new Date().toISOString(),
-    });
+    };
+    messages.push(newMessage);
 
-    return prisma.conversation.update({
+    await prisma.conversation.update({
       where: { id: conversation.id },
       data: { messages },
     });
+
+    return newMessage;
   }
 
   async extractSignals(conversationId: string, signals: any[]) {
@@ -106,11 +109,17 @@ export class ConversationService {
     userId?: string;
     limit?: number;
   }) {
-    const conversation = await this.getOrCreateConversation({
-      journeyId: data.journeyId,
-      userId: data.userId,
-      sessionId: data.sessionId,
+    const conversation = await prisma.conversation.findFirst({
+      where: {
+        journeyId: data.journeyId,
+        sessionId: data.sessionId,
+      },
+      orderBy: { createdAt: 'desc' },
     });
+
+    if (!conversation) {
+      return [];
+    }
 
     const messages = (conversation.messages as any[]) || [];
     const limit = data.limit ?? 10;
@@ -122,11 +131,17 @@ export class ConversationService {
     sessionId: string;
     userId?: string;
   }) {
-    const conversation = await this.getOrCreateConversation({
-      journeyId: data.journeyId,
-      userId: data.userId,
-      sessionId: data.sessionId,
+    const conversation = await prisma.conversation.findFirst({
+      where: {
+        journeyId: data.journeyId,
+        sessionId: data.sessionId,
+      },
+      orderBy: { createdAt: 'desc' },
     });
+
+    if (!conversation) {
+      return [];
+    }
 
     return conversation.extractedSignals as any[];
   }
