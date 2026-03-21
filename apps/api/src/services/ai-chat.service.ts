@@ -6,7 +6,10 @@ import { MessageRole } from '@newcar/shared';
 
 export class AiChatService {
   private getClient(): Anthropic {
-    return new Anthropic({ apiKey: config.ai.apiKey });
+    return new Anthropic({
+      apiKey: config.ai.apiKey,
+      baseURL: config.ai.baseURL,
+    });
   }
 
   async chat(data: {
@@ -58,6 +61,7 @@ export class AiChatService {
       const block = response.content[0];
       aiContent = block.type === 'text' ? block.text : '';
     } catch (err: any) {
+      console.error('AI API error:', err?.message || err);
       aiContent = '抱歉，我现在无法回答。请稍后再试。';
     }
 
