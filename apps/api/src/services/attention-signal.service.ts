@@ -1,11 +1,12 @@
 import { AttentionSignal, AttentionSignalType, CandidateStatus } from '@newcar/shared';
+import { DEFAULT_LOCALE, t } from '../lib/i18n';
 import { prisma } from '../lib/prisma';
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 const PRICE_CHANGE_THRESHOLD = 0.03;
 
 export class AttentionSignalService {
-  async checkPriceChanges(candidateCarIds: string[]): Promise<AttentionSignal[]> {
+  async checkPriceChanges(candidateCarIds: string[], locale = DEFAULT_LOCALE): Promise<AttentionSignal[]> {
     const signals: AttentionSignal[] = [];
 
     const yesterday = new Date(Date.now() - DAY_MS);
@@ -40,7 +41,10 @@ export class AttentionSignalService {
           signals.push({
             carId,
             signalType: AttentionSignalType.PRICE_DROP,
-            description: change < 0 ? `降价${Math.abs(Math.round(change * 100))}%` : `涨价${Math.round(change * 100)}%`,
+            description:
+              change < 0
+                ? t(locale, 'attention.priceDrop', { percent: Math.abs(Math.round(change * 100)) })
+                : t(locale, 'attention.priceIncrease', { percent: Math.round(change * 100) }),
             delta: newest.msrp - oldest.msrp,
             oldValue: String(oldest.msrp),
             newValue: String(newest.msrp),
@@ -56,7 +60,7 @@ export class AttentionSignalService {
     return [];
   }
 
-  async checkNewReviews(candidateCarIds: string[]): Promise<AttentionSignal[]> {
+  async checkNewReviews(candidateCarIds: string[], locale = DEFAULT_LOCALE): Promise<AttentionSignal[]> {
     const signals: AttentionSignal[] = [];
 
     const yesterday = new Date(Date.now() - DAY_MS);
@@ -73,7 +77,7 @@ export class AttentionSignalService {
       signals.push({
         carId: review.carId,
         signalType: AttentionSignalType.NEW_REVIEW,
-        description: review.title || '有新的评测文章',
+        description: review.title || t(locale, 'attention.newReviewDefault'),
         newValue: review.aiSummary || review.content?.slice(0, 50),
       });
     }
@@ -81,7 +85,11 @@ export class AttentionSignalService {
     return signals;
   }
 
-  async checkPolicyUpdates(userCity: string, candidateCarIds: string[]): Promise<AttentionSignal[]> {
+  async checkPolicyUpdates(
+    userCity: string,
+    candidateCarIds: string[],
+    locale = DEFAULT_LOCALE
+  ): Promise<AttentionSignal[]> {
     const signals: AttentionSignal[] = [];
 
     const today = new Date();
@@ -100,7 +108,10 @@ export class AttentionSignalService {
       signals.push({
         carId: policy.carId || 'all',
         signalType: AttentionSignalType.POLICY_UPDATE,
-        description: `${policy.policyType}: 补贴${policy.subsidyAmount}元`,
+        description: t(locale, 'attention.policyDescription', {
+          policyType: policy.policyType,
+          subsidyAmount: policy.subsidyAmount,
+        }),
         newValue: policy.policyType,
       });
     }
@@ -108,7 +119,7 @@ export class AttentionSignalService {
     return signals;
   }
 
-  async getAttentionSignals(journeyId: string, userCity?: string): Promise<AttentionSignal[]> {
+  async getAttentionSignals(journeyId: string, userCity?: string, locale = DEFAULT_LOCALE): Promise<AttentionSignal[]> {
     const candidates = await prisma.carCandidate.findMany({
       where: { journeyId, status: CandidateStatus.ACTIVE },
       select: { carId: true },
@@ -120,9 +131,9 @@ export class AttentionSignalService {
     }
 
     const [prices, reviews, policies] = await Promise.all([
-      this.checkPriceChanges(carIds),
-      this.checkNewReviews(carIds),
-      userCity ? this.checkPolicyUpdates(userCity, carIds) : Promise.resolve([]),
+      this.checkPriceChanges(carIds, locale),
+      this.checkNewReviews(carIds, locale),
+      userCity ? this.checkPolicyUpdates(userCity, carIds, locale) : Promise.resolve([]),
     ]);
 
     return [...prices, ...reviews, ...policies].slice(0, 3);

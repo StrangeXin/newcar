@@ -26,6 +26,11 @@ export enum Platform {
   ANDROID = 'ANDROID',
 }
 
+export enum Locale {
+  ZH_CN = 'zh-CN',
+  EN_US = 'en-US',
+}
+
 export enum BehaviorEventType {
   PAGE_VIEW = 'PAGE_VIEW',
   CAR_VIEW = 'CAR_VIEW',

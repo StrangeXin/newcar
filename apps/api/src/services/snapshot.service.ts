@@ -2,11 +2,13 @@ import Anthropic from '@anthropic-ai/sdk';
 import {
   AttentionSignal,
   KeyInsight,
+  Locale,
   SnapshotAiResponse,
   SnapshotExtractedSignal,
   SnapshotTrigger,
 } from '@newcar/shared';
 import { config } from '../config';
+import { DEFAULT_LOCALE, resolveLocaleFromUserSettings, t } from '../lib/i18n';
 import { prisma } from '../lib/prisma';
 import { attentionSignalService } from './attention-signal.service';
 import { notificationService } from './notification.service';
@@ -21,7 +23,7 @@ interface SnapshotAggregateInputs {
     title: string;
     stage: string;
     requirements: unknown;
-    user: { city: string | null } | null;
+    user: { city: string | null; notificationSettings?: unknown } | null;
   };
   recentBehaviorEvents: Array<{ type: string; timestamp: Date }>;
   allExtractedSignals: SnapshotExtractedSignal[];
@@ -43,7 +45,11 @@ export class SnapshotService {
     });
   }
 
-  async generateSnapshot(journeyId: string, trigger: SnapshotTrigger = SnapshotTrigger.DAILY) {
+  async generateSnapshot(
+    journeyId: string,
+    trigger: SnapshotTrigger = SnapshotTrigger.DAILY,
+    acceptLanguage?: string
+  ) {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
@@ -59,7 +65,8 @@ export class SnapshotService {
     }
 
     const inputs = await this.aggregateInputs(journeyId);
-    const prompt = this.buildSnapshotPrompt(inputs);
+    const locale = this.getLocale(inputs, acceptLanguage);
+    const prompt = this.buildSnapshotPrompt(inputs, locale);
 
     const client = this.getClient();
     let aiResponse: SnapshotAiResponse;
@@ -68,7 +75,7 @@ export class SnapshotService {
       const response = await client.messages.create({
         model: config.ai.model,
         max_tokens: config.ai.maxTokens * 2,
-        system: '你是购车AI助手，负责生成用户的购车旅程摘要。',
+        system: t(locale, 'snapshot.systemPrompt'),
         messages: [{ role: 'user', content: prompt }],
       });
 
@@ -76,7 +83,7 @@ export class SnapshotService {
       aiResponse = block.type === 'text' ? (JSON.parse(block.text) as SnapshotAiResponse) : this.generateFallbackSnapshot(inputs);
     } catch (err: any) {
       console.error('Snapshot AI error:', err?.message || err);
-      aiResponse = this.generateFallbackSnapshot(inputs);
+      aiResponse = this.generateFallbackSnapshot(inputs, locale);
     }
 
     const snapshot = await prisma.journeySnapshot.create({
@@ -97,11 +104,12 @@ export class SnapshotService {
 
     const signals = await attentionSignalService.getAttentionSignals(
       journeyId,
-      inputs.journey.user?.city || undefined
+      inputs.journey.user?.city || undefined,
+      locale
     );
 
     if (signals.length > 0) {
-      await notificationService.createNotificationsFromSignals(inputs.journey.userId, journeyId, signals);
+      await notificationService.createNotificationsFromSignals(inputs.journey.userId, journeyId, signals, locale);
     }
 
     await prisma.journey.update({
@@ -170,7 +178,7 @@ export class SnapshotService {
     };
   }
 
-  private buildSnapshotPrompt(inputs: SnapshotAggregateInputs): string {
+  private buildSnapshotPrompt(inputs: SnapshotAggregateInputs, locale: Locale): string {
     const { journey, recentBehaviorEvents, allExtractedSignals, candidates, latestSnapshot } = inputs;
 
     const eventSummary = this.summarizeBehaviorEvents(recentBehaviorEvents);
@@ -187,6 +195,38 @@ export class SnapshotService {
       .join('\n');
 
     const latestInsights = latestSnapshot?.keyInsights ? JSON.parse(JSON.stringify(latestSnapshot.keyInsights)) : [];
+
+    if (locale === Locale.EN_US) {
+      return `Generate a car-purchase journey snapshot.
+
+User:
+- Journey ID: ${journey.id}
+- Current Stage: ${journey.stage}
+- Journey Title: ${journey.title}
+- Requirements: ${JSON.stringify(journey.requirements)}
+
+Recent Behavior (last ${EFFECTIVE_EVENT_DAYS} days):
+${eventSummary}
+
+Structured User Signals:
+${signalSummary || 'N/A'}
+
+Candidate Cars:
+${candidateSummary || 'No candidates yet'}
+
+Previous Snapshot Insights:
+${latestInsights.length > 0 ? latestInsights.map((insight: KeyInsight) => `- ${insight.insight}`).join('\n') : 'None'}
+
+Return JSON with:
+{
+  "narrative_summary": "100-200 words summary",
+  "key_insights": [{"insight": "text", "evidence": "text", "confidence": 0.0-1.0}],
+  "top_recommendation": "car ID or null",
+  "recommendation_reasoning": "reasoning text",
+  "attention_signals": [{"carId": "id", "signalType": "type", "description": "desc", "delta": 0}],
+  "next_suggested_actions": ["action 1", "action 2"]
+}`;
+    }
 
     return `生成购车旅程快照。
 
@@ -234,16 +274,23 @@ ${latestInsights.length > 0 ? latestInsights.map((insight: KeyInsight) => `- ${i
       .join(', ');
   }
 
-  private generateFallbackSnapshot(inputs: SnapshotAggregateInputs): SnapshotAiResponse {
+  private generateFallbackSnapshot(inputs: SnapshotAggregateInputs, locale = DEFAULT_LOCALE): SnapshotAiResponse {
     return {
-      narrative_summary: `你正在${inputs.journey.stage}阶段，已有${inputs.candidates.length}个候选车型。`,
+      narrative_summary: t(locale, 'snapshot.fallback.narrative', {
+        stage: inputs.journey.stage,
+        count: inputs.candidates.length,
+      }),
       key_insights: [],
       top_recommendation: inputs.candidates[0]?.carId || null,
-      recommendation_reasoning: '基于当前候选列表推荐',
+      recommendation_reasoning: t(locale, 'snapshot.fallback.reasoning'),
       attention_signals: [],
-      next_suggested_actions: ['继续与AI助手对话，明确你的需求'],
+      next_suggested_actions: [t(locale, 'snapshot.fallback.nextAction')],
       tokens_used: 0,
     };
+  }
+
+  private getLocale(inputs: SnapshotAggregateInputs, acceptLanguage?: string): Locale {
+    return resolveLocaleFromUserSettings(inputs.journey.user?.notificationSettings, acceptLanguage);
   }
 }
 

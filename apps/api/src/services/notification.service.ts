@@ -1,4 +1,5 @@
 import { AttentionSignal, AttentionSignalType } from '@newcar/shared';
+import { DEFAULT_LOCALE, t } from '../lib/i18n';
 import { prisma } from '../lib/prisma';
 
 const MAX_NOTIFICATIONS_PER_JOURNEY_PER_DAY = 3;
@@ -40,7 +41,12 @@ export class NotificationService {
     });
   }
 
-  async createNotificationsFromSignals(userId: string, journeyId: string, signals: AttentionSignal[]) {
+  async createNotificationsFromSignals(
+    userId: string,
+    journeyId: string,
+    signals: AttentionSignal[],
+    locale = DEFAULT_LOCALE
+  ) {
     const notifications = [];
 
     for (const signal of signals) {
@@ -49,7 +55,7 @@ export class NotificationService {
         journeyId,
         type: signal.signalType,
         relatedCarId: signal.carId !== 'all' ? signal.carId : undefined,
-        title: this.buildNotificationTitle(signal),
+        title: this.buildNotificationTitle(signal, locale),
         body: signal.description,
         metadata: {
           delta: signal.delta,
@@ -66,20 +72,20 @@ export class NotificationService {
     return notifications;
   }
 
-  private buildNotificationTitle(signal: AttentionSignal): string {
+  private buildNotificationTitle(signal: AttentionSignal, locale = DEFAULT_LOCALE): string {
     switch (signal.signalType) {
       case AttentionSignalType.PRICE_DROP:
-        return '价格变动';
+        return t(locale, 'notification.title.PRICE_DROP');
       case AttentionSignalType.NEW_VARIANT:
-        return '新车型发布';
+        return t(locale, 'notification.title.NEW_VARIANT');
       case AttentionSignalType.NEW_REVIEW:
-        return '新评测内容';
+        return t(locale, 'notification.title.NEW_REVIEW');
       case AttentionSignalType.POLICY_UPDATE:
-        return '政策更新';
+        return t(locale, 'notification.title.POLICY_UPDATE');
       case AttentionSignalType.OTA_RECALL:
-        return '系统更新/召回';
+        return t(locale, 'notification.title.OTA_RECALL');
       default:
-        return '动态更新';
+        return t(locale, 'notification.title.dynamic');
     }
   }
 

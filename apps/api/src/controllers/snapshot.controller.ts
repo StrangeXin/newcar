@@ -21,7 +21,8 @@ export class SnapshotController {
 
       const snapshot = await snapshotService.generateSnapshot(
         journeyId,
-        (trigger as SnapshotTrigger) || SnapshotTrigger.MANUAL
+        (trigger as SnapshotTrigger) || SnapshotTrigger.MANUAL,
+        req.headers['accept-language'] as string | undefined
       );
 
       return res.json(snapshot);
