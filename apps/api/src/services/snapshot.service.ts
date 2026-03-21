@@ -2,6 +2,8 @@ import Anthropic from '@anthropic-ai/sdk';
 import { AttentionSignal, KeyInsight, SnapshotTrigger } from '@newcar/shared';
 import { config } from '../config';
 import { prisma } from '../lib/prisma';
+import { attentionSignalService } from './attention-signal.service';
+import { notificationService } from './notification.service';
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 const EFFECTIVE_EVENT_DAYS = 7;
@@ -75,6 +77,15 @@ export class SnapshotService {
         tokensUsed: aiResponse.tokens_used || 0,
       },
     });
+
+    const signals = await attentionSignalService.getAttentionSignals(
+      journeyId,
+      inputs.journey.user?.city || undefined
+    );
+
+    if (signals.length > 0) {
+      await notificationService.createNotificationsFromSignals(inputs.journey.userId, journeyId, signals);
+    }
 
     await prisma.journey.update({
       where: { id: journeyId },
