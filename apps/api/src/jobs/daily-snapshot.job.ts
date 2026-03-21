@@ -1,0 +1,34 @@
+import { JourneyStatus, SnapshotTrigger } from '@newcar/shared';
+import { prisma } from '../lib/prisma';
+import { snapshotService } from '../services/snapshot.service';
+
+const DAY_MS = 24 * 60 * 60 * 1000;
+const SILENCE_THRESHOLD_DAYS = 7;
+
+export async function runDailySnapshotJob() {
+  const cutoffDate = new Date(Date.now() - SILENCE_THRESHOLD_DAYS * DAY_MS);
+
+  const activeJourneys = await prisma.journey.findMany({
+    where: {
+      status: JourneyStatus.ACTIVE,
+      lastActivityAt: { gte: cutoffDate },
+    },
+    select: { id: true, userId: true },
+  });
+
+  console.log(`Daily snapshot job: found ${activeJourneys.length} active journeys`);
+
+  const results: Array<{ journeyId: string; success: boolean; snapshotId?: string; error?: string }> = [];
+  for (const journey of activeJourneys) {
+    try {
+      const snapshot = await snapshotService.generateSnapshot(journey.id, SnapshotTrigger.DAILY);
+      results.push({ journeyId: journey.id, success: true, snapshotId: snapshot.id });
+    } catch (err: any) {
+      console.error(`Snapshot failed for journey ${journey.id}:`, err?.message || err);
+      results.push({ journeyId: journey.id, success: false, error: err?.message || 'unknown_error' });
+    }
+  }
+
+  console.log(`Daily snapshot job completed: ${results.filter((item) => item.success).length}/${results.length} succeeded`);
+  return results;
+}
