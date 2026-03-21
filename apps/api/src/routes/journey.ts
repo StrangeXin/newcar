@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { journeyController } from '../controllers/journey.controller';
 import { authMiddleware } from '../middleware/auth';
 import { sessionMiddleware } from '../middleware/session';
+import conversationRoutes from './conversation';
 
 const router = Router();
 
@@ -11,5 +12,6 @@ router.patch('/:journeyId/stage', authMiddleware, (req, res) => journeyControlle
 router.patch('/:journeyId/pause', authMiddleware, (req, res) => journeyController.pauseJourney(req, res));
 router.patch('/:journeyId/complete', authMiddleware, (req, res) => journeyController.completeJourney(req, res));
 router.post('/:journeyId/events', sessionMiddleware, (req, res) => journeyController.recordBehaviorEvent(req, res));
+router.use('/', conversationRoutes);
 
 export default router;
