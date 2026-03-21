@@ -1,0 +1,279 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                   String   @id @default(cuid())
+  openid               String?  @unique
+  email                String?  @unique
+  phone                String?  @unique
+  avatar               String?
+  nickname             String?
+  city                 String?
+  hasGarage            Boolean  @default(false)
+  chargingSituation    String?
+  familySize           Int?
+  privacyDefault       String   @default("PRIVATE")
+  notificationSettings Json?
+  role                 String   @default("MEMBER")
+  createdAt            DateTime @default(now())
+  lastActiveAt         DateTime @default(now())
+
+  devices           UserDevice[]
+  journeys          Journey[]
+  conversations     Conversation[]
+  publishedJourneys PublishedJourney[]
+  journeyForks      JourneyFork[]
+  notifications     NotificationFeed[]
+
+  @@map("users")
+}
+
+model UserDevice {
+  id                String   @id @default(cuid())
+  userId            String
+  platform          String
+  pushToken         String?
+  deviceFingerprint String?
+  lastSeenAt        DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("user_devices")
+}
+
+model Journey {
+  id                String   @id @default(cuid())
+  userId            String
+  title             String
+  stage             String   @default("AWARENESS")
+  status            String   @default("ACTIVE")
+  requirements      Json?
+  aiConfidenceScore Float?
+  templateSourceId  String?
+  startedAt         DateTime @default(now())
+  completedAt       DateTime?
+  lastActivityAt    DateTime @default(now())
+
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  templateSource Journey? @relation("JourneyForks", fields: [templateSourceId], references: [id])
+  forkedJourneys Journey[] @relation("JourneyForks")
+
+  candidates       CarCandidate[]
+  snapshots        JourneySnapshot[]
+  behaviorEvents   BehaviorEvent[]
+  conversations    Conversation[]
+  publishedJourney PublishedJourney?
+  notifications    NotificationFeed[]
+
+  @@map("journeys")
+}
+
+model BehaviorEvent {
+  id         String   @id @default(cuid())
+  journeyId  String
+  userId     String?
+  sessionId  String
+  type       String
+  targetType String?
+  targetId   String?
+  metadata   Json?
+  aiWeight   Float    @default(0)
+  timestamp  DateTime @default(now())
+
+  journey Journey @relation(fields: [journeyId], references: [id], onDelete: Cascade)
+
+  @@map("behavior_events")
+}
+
+model Conversation {
+  id               String   @id @default(cuid())
+  journeyId        String
+  userId           String?
+  sessionId        String
+  messages         Json     @default("[]")
+  extractedSignals Json     @default("[]")
+  toolCalls        Json     @default("[]")
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  journey Journey @relation(fields: [journeyId], references: [id], onDelete: Cascade)
+  user    User?   @relation(fields: [userId], references: [id])
+
+  @@map("conversations")
+}
+
+model CarCandidate {
+  id                String   @id @default(cuid())
+  journeyId         String
+  carId             String
+  status            String   @default("ACTIVE")
+  addedReason       String
+  userInterestScore Float?
+  aiMatchScore      Float?
+  priceAtAdd        Int?
+  eliminationReason String?
+  userNotes         String?
+  addedAt           DateTime @default(now())
+
+  journey Journey @relation(fields: [journeyId], references: [id], onDelete: Cascade)
+  car     Car     @relation(fields: [carId], references: [id])
+
+  @@map("car_candidates")
+}
+
+model JourneySnapshot {
+  id                      String   @id @default(cuid())
+  journeyId               String
+  trigger                 String   @default("DAILY")
+  narrativeSummary        String?
+  keyInsights             Json     @default("[]")
+  topRecommendation       String?
+  recommendationReasoning String?
+  attentionSignals        Json     @default("[]")
+  nextSuggestedActions    Json     @default("[]")
+  modelUsed               String?
+  promptVersion           String?
+  tokensUsed              Int?
+  generatedAt             DateTime @default(now())
+
+  journey Journey @relation(fields: [journeyId], references: [id], onDelete: Cascade)
+
+  @@map("journey_snapshots")
+}
+
+model Car {
+  id        String   @id @default(cuid())
+  brand     String
+  model     String
+  variant   String
+  year      Int
+  type      String
+  fuelType  String
+  baseSpecs Json?
+  msrp      Int?
+  updatedAt DateTime @updatedAt
+
+  priceSnapshots CarPriceSnapshot[]
+  reviews        CarReview[]
+  candidates     CarCandidate[]
+
+  @@map("cars")
+}
+
+model CarPriceSnapshot {
+  id             String   @id @default(cuid())
+  carId          String
+  region         String?
+  msrp           Int
+  dealerDiscount Int?
+  policyIds      Json?
+  effectivePrice Int?
+  source         String?
+  capturedAt     DateTime @default(now())
+
+  car Car @relation(fields: [carId], references: [id], onDelete: Cascade)
+
+  @@map("car_price_snapshots")
+}
+
+model CarPolicy {
+  id                  String   @id @default(cuid())
+  carId               String?
+  region              String
+  policyType          String
+  subsidyAmount       Int
+  eligibilityCriteria Json?
+  validFrom           DateTime
+  validUntil          DateTime
+  sourceUrl           String?
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  @@map("car_policies")
+}
+
+model CarReview {
+  id              String   @id @default(cuid())
+  carId           String
+  source          String
+  platform        String?
+  title           String?
+  content         String?
+  aiSummary       String?
+  sentimentScores Json?
+  publishedAt     DateTime?
+  ingestedAt      DateTime @default(now())
+
+  car Car @relation(fields: [carId], references: [id], onDelete: Cascade)
+
+  @@map("car_reviews")
+}
+
+model PublishedJourney {
+  id               String   @id @default(cuid())
+  journeyId        String   @unique
+  userId           String
+  title            String
+  description      String?
+  publishedFormats String[] @default([])
+  tags             Json?
+  storyContent     String?
+  reportData       Json?
+  templateData     Json?
+  contentVersion   Int      @default(1)
+  lastSyncedAt     DateTime?
+  visibility       String   @default("PUBLIC")
+  viewCount        Int      @default(0)
+  likeCount        Int      @default(0)
+  commentCount     Int      @default(0)
+  forkCount        Int      @default(0)
+  featured         Boolean  @default(false)
+  contentStatus    String   @default("LIVE")
+  publishedAt      DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  journey Journey @relation(fields: [journeyId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id])
+  forks   JourneyFork[]
+
+  @@map("published_journeys")
+}
+
+model JourneyFork {
+  id                       String   @id @default(cuid())
+  sourcePublishedJourneyId String
+  newJourneyId             String
+  userId                   String
+  inheritedCandidates      Json     @default("[]")
+  inheritedFramework       Json?
+  forkedAt                 DateTime @default(now())
+
+  sourcePublishedJourney PublishedJourney @relation(fields: [sourcePublishedJourneyId], references: [id])
+  user                   User             @relation(fields: [userId], references: [id])
+
+  @@map("journey_forks")
+}
+
+model NotificationFeed {
+  id           String   @id @default(cuid())
+  userId       String
+  journeyId    String?
+  type         String
+  relatedCarId String?
+  title        String
+  body         String?
+  metadata     Json?
+  isRead       Boolean  @default(false)
+  createdAt    DateTime @default(now())
+
+  user    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  journey Journey? @relation(fields: [journeyId], references: [id], onDelete: Cascade)
+
+  @@map("notification_feeds")
+}

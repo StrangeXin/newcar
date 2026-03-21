@@ -1,0 +1,16 @@
+{
+  "name": "newcar",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "turbo run dev",
+    "build": "turbo run build",
+    "test": "npm --workspace apps/api run test"
+  },
+  "devDependencies": {
+    "turbo": "^2.5.0"
+  }
+}
