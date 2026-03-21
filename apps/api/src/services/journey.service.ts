@@ -132,6 +132,103 @@ export class JourneyService {
     });
   }
 
+  async checkExpiredJourneys() {
+    const EXPIRY_DAYS = 90;
+    const expiryDate = new Date();
+    expiryDate.setDate(expiryDate.getDate() - EXPIRY_DAYS);
+
+    const expiredJourneys = await prisma.journey.findMany({
+      where: {
+        status: {
+          in: ['ACTIVE', 'PAUSED'],
+        },
+        lastActivityAt: {
+          lt: expiryDate,
+        },
+      },
+    });
+
+    const results = [];
+    for (const journey of expiredJourneys) {
+      const updated = await prisma.journey.update({
+        where: { id: journey.id },
+        data: { status: 'ABANDONED' },
+      });
+      results.push(updated);
+
+      // 同时更新关联的 PublishedJourney 状态
+      await prisma.publishedJourney.updateMany({
+        where: { journeyId: journey.id },
+        data: { contentStatus: 'JOURNEY_ABANDONED' },
+      });
+    }
+
+    return results;
+  }
+
+  async getJourneyDetail(journeyId: string) {
+    return prisma.journey.findUnique({
+      where: { id: journeyId },
+      include: {
+        candidates: {
+          include: { car: true },
+        },
+        snapshots: {
+          orderBy: { generatedAt: 'desc' },
+          take: 1,
+        },
+        conversations: {
+          orderBy: { createdAt: 'desc' },
+          take: 1,
+        },
+        behaviorEvents: {
+          orderBy: { timestamp: 'desc' },
+          take: 100,
+        },
+      },
+    });
+  }
+
+  async updateRequirements(journeyId: string, requirements: {
+    budgetMin?: number;
+    budgetMax?: number;
+    useCases?: string[];
+    fuelTypePreference?: string[];
+    dailyKm?: number;
+    stylePreference?: string;
+  }) {
+    const journey = await prisma.journey.findUnique({
+      where: { id: journeyId },
+    });
+
+    if (!journey) {
+      throw new Error('Journey not found');
+    }
+
+    const currentRequirements = (journey.requirements as any) || {};
+
+    return prisma.journey.update({
+      where: { id: journeyId },
+      data: {
+        requirements: {
+          ...currentRequirements,
+          ...requirements,
+        },
+        lastActivityAt: new Date(),
+      },
+    });
+  }
+
+  async updateAiConfidenceScore(journeyId: string, score: number) {
+    return prisma.journey.update({
+      where: { id: journeyId },
+      data: {
+        aiConfidenceScore: score,
+        lastActivityAt: new Date(),
+      },
+    });
+  }
+
   private calculateAiWeight(type: string, metadata?: unknown): number {
     const baseWeights: Record<string, number> = {
       CAR_VIEW: 1.0,
