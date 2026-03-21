@@ -140,7 +140,7 @@ export class JourneyService {
     const expiredJourneys = await prisma.journey.findMany({
       where: {
         status: {
-          in: ['ACTIVE', 'PAUSED'],
+          in: [JourneyStatus.ACTIVE, JourneyStatus.PAUSED],
         },
         lastActivityAt: {
           lt: expiryDate,
@@ -152,7 +152,7 @@ export class JourneyService {
     for (const journey of expiredJourneys) {
       const updated = await prisma.journey.update({
         where: { id: journey.id },
-        data: { status: 'ABANDONED' },
+        data: { status: JourneyStatus.ABANDONED },
       });
       results.push(updated);
 

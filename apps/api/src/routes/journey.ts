@@ -15,8 +15,6 @@ router.patch('/:journeyId/stage', authMiddleware, (req, res) => journeyControlle
 router.patch('/:journeyId/pause', authMiddleware, (req, res) => journeyController.pauseJourney(req, res));
 router.patch('/:journeyId/complete', authMiddleware, (req, res) => journeyController.completeJourney(req, res));
 router.post('/:journeyId/events', sessionMiddleware, (req, res) => journeyController.recordBehaviorEvent(req, res));
-router.use('/', conversationRoutes);
-router.use('/', carCandidateRoutes);
 
 // 手动触发过期检查（仅 Admin）
 router.post(
@@ -50,11 +48,17 @@ router.get(
       if (!journey) {
         return res.status(404).json({ error: 'Journey not found' });
       }
+      if (journey.userId !== req.userId) {
+        return res.status(403).json({ error: 'Forbidden' });
+      }
       res.json(journey);
     } catch (error: any) {
       res.status(500).json({ error: error.message });
     }
   }
 );
+
+router.use('/', conversationRoutes);
+router.use('/', carCandidateRoutes);
 
 export default router;
