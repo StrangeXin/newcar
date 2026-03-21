@@ -5,6 +5,7 @@ import { rateLimitMiddleware } from './middleware/rateLimit';
 import authRoutes from './routes/auth';
 import journeyRoutes from './routes/journey';
 import sessionRoutes from './routes/session';
+import snapshotRoutes from './routes/snapshot';
 
 export function createApp(): Express {
   const app = express();
@@ -21,6 +22,7 @@ export function createApp(): Express {
   app.use('/auth', authRoutes);
   app.use('/', sessionRoutes);
   app.use('/journeys', journeyRoutes);
+  app.use('/snapshots', snapshotRoutes);
 
   app.use(errorHandler);
 
