@@ -34,7 +34,7 @@ export const config = {
   },
 
   ai: {
-    apiKey: process.env.AI_API_KEY || 'sk-cp-dhKfizbRQro-q3rJvDNBPBv3MOP0XDzOSj8iJBl45lBF4mnC9c6ON-xcUE5Ir2FetqX1ZJH4o0bOJcj-9bXgumx7Tys9iOl60q-0yBkpkL88SYxZRW3q3v0',
+    apiKey: process.env.AI_API_KEY || '',
     model: process.env.AI_MODEL || 'MiniMax-M2.7',
     maxTokens: parseInt(process.env.AI_MAX_TOKENS || '1024', 10),
     baseURL: process.env.AI_BASE_URL || 'https://api.minimaxi.com/anthropic',

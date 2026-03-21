@@ -1,12 +1,18 @@
 import { Response } from 'express';
 import { AuthenticatedRequest } from '../middleware/auth';
 import { conversationService } from '../services/conversation.service';
+import { journeyService } from '../services/journey.service';
 import { MessageRole } from '@newcar/shared';
 
 export class ConversationController {
   async getOrCreate(req: AuthenticatedRequest, res: Response) {
     try {
       const { journeyId } = req.params;
+      if (req.userId) {
+        const journey = await journeyService.getJourneyDetail(journeyId);
+        if (!journey) return res.status(404).json({ error: 'Journey not found' });
+        if (journey.userId !== req.userId) return res.status(403).json({ error: 'Forbidden' });
+      }
       const conversation = await conversationService.getOrCreateConversation({
         journeyId,
         userId: req.userId,
@@ -22,6 +28,11 @@ export class ConversationController {
     try {
       const { journeyId } = req.params;
       const { role, content } = req.body;
+      if (req.userId) {
+        const journey = await journeyService.getJourneyDetail(journeyId);
+        if (!journey) return res.status(404).json({ error: 'Journey not found' });
+        if (journey.userId !== req.userId) return res.status(403).json({ error: 'Forbidden' });
+      }
 
       if (!content) {
         return res.status(400).json({ error: 'Content is required' });
@@ -48,6 +59,11 @@ export class ConversationController {
   async getHistory(req: AuthenticatedRequest, res: Response) {
     try {
       const { journeyId } = req.params;
+      if (req.userId) {
+        const journey = await journeyService.getJourneyDetail(journeyId);
+        if (!journey) return res.status(404).json({ error: 'Journey not found' });
+        if (journey.userId !== req.userId) return res.status(403).json({ error: 'Forbidden' });
+      }
       const limit = parseInt(req.query.limit as string) || 10;
 
       const messages = await conversationService.getConversationHistory({
@@ -66,6 +82,11 @@ export class ConversationController {
   async getSignals(req: AuthenticatedRequest, res: Response) {
     try {
       const { journeyId } = req.params;
+      if (req.userId) {
+        const journey = await journeyService.getJourneyDetail(journeyId);
+        if (!journey) return res.status(404).json({ error: 'Journey not found' });
+        if (journey.userId !== req.userId) return res.status(403).json({ error: 'Forbidden' });
+      }
       const signals = await conversationService.getExtractedSignals({
         journeyId,
         sessionId: req.sessionId!,
