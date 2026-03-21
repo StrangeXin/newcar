@@ -5,7 +5,7 @@ import { snapshotService } from '../services/snapshot.service';
 const DAY_MS = 24 * 60 * 60 * 1000;
 const SILENCE_THRESHOLD_DAYS = 7;
 
-export async function runDailySnapshotJob() {
+export async function runDailySnapshotJob(): Promise<void> {
   const cutoffDate = new Date(Date.now() - SILENCE_THRESHOLD_DAYS * DAY_MS);
 
   const activeJourneys = await prisma.journey.findMany({
@@ -30,5 +30,4 @@ export async function runDailySnapshotJob() {
   }
 
   console.log(`Daily snapshot job completed: ${results.filter((item) => item.success).length}/${results.length} succeeded`);
-  return results;
 }

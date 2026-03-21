@@ -9,6 +9,12 @@ interface Requirements {
   stylePreference?: string;
 }
 
+interface CarLike {
+  msrp: number | null;
+  fuelType: string;
+  type: string;
+}
+
 export class CandidateScoringService {
   async scoreCandidates(journeyId: string): Promise<void> {
     const journey = await prisma.journey.findUnique({
@@ -46,7 +52,7 @@ export class CandidateScoringService {
     });
   }
 
-  private calculateMatchScore(car: any, requirements: Requirements): number {
+  private calculateMatchScore(car: CarLike, requirements: Requirements): number {
     let score = 0.5;
 
     if (requirements.budgetMin && requirements.budgetMax && car.msrp) {

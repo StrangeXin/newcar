@@ -1,4 +1,4 @@
-import { AttentionSignal } from '@newcar/shared';
+import { AttentionSignal, AttentionSignalType, CandidateStatus } from '@newcar/shared';
 import { prisma } from '../lib/prisma';
 
 const DAY_MS = 24 * 60 * 60 * 1000;
@@ -19,7 +19,7 @@ export class AttentionSignalService {
       orderBy: { capturedAt: 'asc' },
     });
 
-    const byCar = new Map<string, any[]>();
+    const byCar = new Map<string, Array<{ carId: string; msrp: number }>>();
     for (const snapshot of priceSnapshots) {
       const list = byCar.get(snapshot.carId) || [];
       list.push(snapshot);
@@ -39,7 +39,7 @@ export class AttentionSignalService {
         if (Math.abs(change) >= PRICE_CHANGE_THRESHOLD) {
           signals.push({
             carId,
-            signalType: 'PRICE_DROP',
+            signalType: AttentionSignalType.PRICE_DROP,
             description: change < 0 ? `降价${Math.abs(Math.round(change * 100))}%` : `涨价${Math.round(change * 100)}%`,
             delta: newest.msrp - oldest.msrp,
             oldValue: String(oldest.msrp),
@@ -72,7 +72,7 @@ export class AttentionSignalService {
     for (const review of newReviews) {
       signals.push({
         carId: review.carId,
-        signalType: 'NEW_REVIEW',
+        signalType: AttentionSignalType.NEW_REVIEW,
         description: review.title || '有新的评测文章',
         newValue: review.aiSummary || review.content?.slice(0, 50),
       });
@@ -99,7 +99,7 @@ export class AttentionSignalService {
     for (const policy of relevantPolicies) {
       signals.push({
         carId: policy.carId || 'all',
-        signalType: 'POLICY_UPDATE',
+        signalType: AttentionSignalType.POLICY_UPDATE,
         description: `${policy.policyType}: 补贴${policy.subsidyAmount}元`,
         newValue: policy.policyType,
       });
@@ -110,11 +110,11 @@ export class AttentionSignalService {
 
   async getAttentionSignals(journeyId: string, userCity?: string): Promise<AttentionSignal[]> {
     const candidates = await prisma.carCandidate.findMany({
-      where: { journeyId, status: 'ACTIVE' },
+      where: { journeyId, status: CandidateStatus.ACTIVE },
       select: { carId: true },
     });
 
-    const carIds = candidates.map((candidate) => candidate.carId);
+    const carIds = candidates.map((candidate: { carId: string }) => candidate.carId);
     if (carIds.length === 0) {
       return [];
     }

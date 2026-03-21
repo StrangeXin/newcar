@@ -1,4 +1,4 @@
-import { AttentionSignal } from '@newcar/shared';
+import { AttentionSignal, AttentionSignalType } from '@newcar/shared';
 import { prisma } from '../lib/prisma';
 
 const MAX_NOTIFICATIONS_PER_JOURNEY_PER_DAY = 3;
@@ -7,7 +7,7 @@ export class NotificationService {
   async createNotification(data: {
     userId: string;
     journeyId: string;
-    type: string;
+    type: AttentionSignalType;
     relatedCarId?: string;
     title: string;
     body?: string;
@@ -68,15 +68,15 @@ export class NotificationService {
 
   private buildNotificationTitle(signal: AttentionSignal): string {
     switch (signal.signalType) {
-      case 'PRICE_DROP':
+      case AttentionSignalType.PRICE_DROP:
         return '价格变动';
-      case 'NEW_VARIANT':
+      case AttentionSignalType.NEW_VARIANT:
         return '新车型发布';
-      case 'NEW_REVIEW':
+      case AttentionSignalType.NEW_REVIEW:
         return '新评测内容';
-      case 'POLICY_UPDATE':
+      case AttentionSignalType.POLICY_UPDATE:
         return '政策更新';
-      case 'OTA_RECALL':
+      case AttentionSignalType.OTA_RECALL:
         return '系统更新/召回';
       default:
         return '动态更新';

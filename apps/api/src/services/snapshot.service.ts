@@ -1,5 +1,11 @@
 import Anthropic from '@anthropic-ai/sdk';
-import { AttentionSignal, KeyInsight, SnapshotTrigger } from '@newcar/shared';
+import {
+  AttentionSignal,
+  KeyInsight,
+  SnapshotAiResponse,
+  SnapshotExtractedSignal,
+  SnapshotTrigger,
+} from '@newcar/shared';
 import { config } from '../config';
 import { prisma } from '../lib/prisma';
 import { attentionSignalService } from './attention-signal.service';
@@ -8,14 +14,25 @@ import { notificationService } from './notification.service';
 const DAY_MS = 24 * 60 * 60 * 1000;
 const EFFECTIVE_EVENT_DAYS = 7;
 
-interface SnapshotAiResponse {
-  narrative_summary?: string;
-  key_insights?: KeyInsight[];
-  top_recommendation?: string | null;
-  recommendation_reasoning?: string;
-  attention_signals?: AttentionSignal[];
-  next_suggested_actions?: string[];
-  tokens_used?: number;
+interface SnapshotAggregateInputs {
+  journey: {
+    id: string;
+    userId: string;
+    title: string;
+    stage: string;
+    requirements: unknown;
+    user: { city: string | null } | null;
+  };
+  recentBehaviorEvents: Array<{ type: string; timestamp: Date }>;
+  allExtractedSignals: SnapshotExtractedSignal[];
+  candidates: Array<{
+    carId: string;
+    status: string;
+    aiMatchScore: number | null;
+    car: { brand: string; model: string };
+  }>;
+  latestSnapshot: { keyInsights: unknown } | null;
+  todayPriceSnapshots: Array<{ carId: string; msrp: number }>;
 }
 
 export class SnapshotService {
@@ -95,7 +112,7 @@ export class SnapshotService {
     return snapshot;
   }
 
-  private async aggregateInputs(journeyId: string) {
+  private async aggregateInputs(journeyId: string): Promise<SnapshotAggregateInputs> {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
@@ -119,21 +136,21 @@ export class SnapshotService {
       throw new Error('Journey not found');
     }
 
-    const allSignals: any[] = [];
+    const allSignals: SnapshotExtractedSignal[] = [];
     for (const conv of journey.conversations) {
-      const signals = Array.isArray(conv.extractedSignals) ? (conv.extractedSignals as any[]) : [];
+      const signals = Array.isArray(conv.extractedSignals) ? (conv.extractedSignals as SnapshotExtractedSignal[]) : [];
       allSignals.push(...signals);
     }
 
     const cutoffDate = new Date(Date.now() - EFFECTIVE_EVENT_DAYS * DAY_MS);
-    const recentEvents = journey.behaviorEvents.filter((event) => new Date(event.timestamp) >= cutoffDate);
+    const recentEvents = journey.behaviorEvents.filter((event: { timestamp: Date }) => new Date(event.timestamp) >= cutoffDate);
 
     const latestSnapshot = await prisma.journeySnapshot.findFirst({
       where: { journeyId },
       orderBy: { generatedAt: 'desc' },
     });
 
-    const candidateCarIds = journey.candidates.map((candidate) => candidate.carId);
+    const candidateCarIds = journey.candidates.map((candidate: { carId: string }) => candidate.carId);
     const todayPriceSnapshots = candidateCarIds.length
       ? await prisma.carPriceSnapshot.findMany({
           where: {
@@ -153,20 +170,20 @@ export class SnapshotService {
     };
   }
 
-  private buildSnapshotPrompt(inputs: any): string {
+  private buildSnapshotPrompt(inputs: SnapshotAggregateInputs): string {
     const { journey, recentBehaviorEvents, allExtractedSignals, candidates, latestSnapshot } = inputs;
 
     const eventSummary = this.summarizeBehaviorEvents(recentBehaviorEvents);
 
     const candidateSummary = candidates
-      .map((candidate: any) => {
+      .map((candidate) => {
         return `${candidate.car.brand} ${candidate.car.model}: status=${candidate.status}, aiMatchScore=${candidate.aiMatchScore}`;
       })
       .join('\n');
 
     const signalSummary = allExtractedSignals
       .slice(0, 20)
-      .map((signal: any) => `[${signal.type}] ${signal.value} (confidence: ${signal.confidence})`)
+      .map((signal) => `[${signal.type}] ${signal.value} (confidence: ${signal.confidence})`)
       .join('\n');
 
     const latestInsights = latestSnapshot?.keyInsights ? JSON.parse(JSON.stringify(latestSnapshot.keyInsights)) : [];
@@ -189,7 +206,7 @@ ${signalSummary || '暂无'}
 ${candidateSummary || '暂无候选车型'}
 
 上一次快照的关键洞察（如有）：
-${latestInsights.length > 0 ? latestInsights.map((insight: any) => `- ${insight.insight}`).join('\n') : '无'}
+${latestInsights.length > 0 ? latestInsights.map((insight: KeyInsight) => `- ${insight.insight}`).join('\n') : '无'}
 
 请生成JSON格式的快照，包含：
 {
@@ -202,7 +219,7 @@ ${latestInsights.length > 0 ? latestInsights.map((insight: any) => `- ${insight.
 }`;
   }
 
-  private summarizeBehaviorEvents(events: any[]): string {
+  private summarizeBehaviorEvents(events: Array<{ type: string }>): string {
     if (events.length === 0) {
       return '暂无行为记录';
     }
@@ -217,7 +234,7 @@ ${latestInsights.length > 0 ? latestInsights.map((insight: any) => `- ${insight.
       .join(', ');
   }
 
-  private generateFallbackSnapshot(inputs: any): SnapshotAiResponse {
+  private generateFallbackSnapshot(inputs: SnapshotAggregateInputs): SnapshotAiResponse {
     return {
       narrative_summary: `你正在${inputs.journey.stage}阶段，已有${inputs.candidates.length}个候选车型。`,
       key_insights: [],
