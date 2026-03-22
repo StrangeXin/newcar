@@ -64,8 +64,75 @@ async function upsertCars() {
   }
 }
 
+async function seedPolicyAndPriceSnapshots() {
+  const beijingPolicy = await prisma.carPolicy.findFirst({
+    where: {
+      region: '北京',
+      policyType: '新能源补贴',
+    },
+    select: { id: true },
+  });
+
+  if (!beijingPolicy) {
+    await prisma.carPolicy.create({
+      data: {
+        region: '北京',
+        policyType: '新能源补贴',
+        subsidyAmount: 5000,
+        validFrom: new Date('2026-01-01T00:00:00.000Z'),
+        validUntil: new Date('2026-12-31T23:59:59.000Z'),
+        sourceUrl: 'https://example.gov/policy/beijing-nev',
+      },
+    });
+  }
+
+  const targetCar = await prisma.car.findFirst({
+    where: { brand: '比亚迪', model: '海豹 EV' },
+    select: { id: true },
+  });
+  if (!targetCar) {
+    return;
+  }
+
+  const existingSnapshots = await prisma.carPriceSnapshot.count({
+    where: {
+      carId: targetCar.id,
+      region: '上海',
+      source: 'seed',
+    },
+  });
+
+  if (existingSnapshots === 0) {
+    await prisma.carPriceSnapshot.createMany({
+      data: [
+        {
+          carId: targetCar.id,
+          region: '上海',
+          msrp: 179800,
+          dealerDiscount: 2000,
+          effectivePrice: 177800,
+          source: 'seed',
+          policyIds: [],
+          capturedAt: new Date(Date.now() - 24 * 60 * 60 * 1000),
+        },
+        {
+          carId: targetCar.id,
+          region: '上海',
+          msrp: 171800,
+          dealerDiscount: 3000,
+          effectivePrice: 168800,
+          source: 'seed',
+          policyIds: [],
+          capturedAt: new Date(),
+        },
+      ],
+    });
+  }
+}
+
 async function main() {
   await upsertCars();
+  await seedPolicyAndPriceSnapshots();
   const count = await prisma.car.count();
   console.log(`Seeded cars. Total records in cars table: ${count}`);
 }

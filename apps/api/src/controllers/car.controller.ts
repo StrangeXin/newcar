@@ -89,15 +89,24 @@ export class CarController {
     try {
       const { id } = req.params;
       const { region, msrp, dealerDiscount, effectivePrice, source, policyIds } = req.body;
-      if (!msrp || typeof msrp !== 'number') {
+      if (!msrp || typeof msrp !== 'number' || msrp <= 0) {
         return res.status(400).json({ error: 'msrp is required' });
       }
+      const car = await carService.getCarById(id);
+      if (!car) {
+        return res.status(404).json({ error: 'Car not found' });
+      }
+
+      const normalizedEffectivePrice =
+        typeof effectivePrice === 'number'
+          ? effectivePrice
+          : msrp - (typeof dealerDiscount === 'number' ? dealerDiscount : 0);
 
       const snapshot = await carService.createPriceSnapshot(id, {
         region,
         msrp,
         dealerDiscount,
-        effectivePrice,
+        effectivePrice: normalizedEffectivePrice,
         source,
         policyIds,
       });
@@ -112,6 +121,9 @@ export class CarController {
       const { carId, region, policyType, subsidyAmount, eligibilityCriteria, validFrom, validUntil, sourceUrl } = req.body;
       if (!region || !policyType || typeof subsidyAmount !== 'number' || !validFrom || !validUntil) {
         return res.status(400).json({ error: 'Missing required fields' });
+      }
+      if (new Date(validFrom) >= new Date(validUntil)) {
+        return res.status(400).json({ error: 'validFrom must be earlier than validUntil' });
       }
 
       const policy = await carService.createPolicy({
