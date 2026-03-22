@@ -55,3 +55,35 @@ export interface Candidate {
   eliminationReason?: string | null;
   car: CarInfo;
 }
+
+export interface CommunityJourney {
+  id: string;
+  journeyId: string;
+  title: string;
+  description?: string | null;
+  publishedFormats: string[];
+  tags?: Record<string, unknown> | null;
+  storyContent?: string | null;
+  reportData?: unknown;
+  templateData?: unknown;
+  visibility: string;
+  viewCount: number;
+  likeCount: number;
+  commentCount: number;
+  forkCount: number;
+  contentStatus: string;
+  publishedAt: string;
+  user?: {
+    id: string;
+    nickname?: string | null;
+    avatar?: string | null;
+  };
+  journey?: {
+    id: string;
+    status: string;
+    stage: string;
+    requirements?: Record<string, unknown>;
+    startedAt?: string;
+    completedAt?: string | null;
+  };
+}

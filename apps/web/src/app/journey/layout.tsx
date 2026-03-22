@@ -1,4 +1,5 @@
 import { cookies } from 'next/headers';
+import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { ChatPanel } from '@/components/chat/ChatPanel';
 import { StageProgress } from '@/components/journey/StageProgress';
@@ -27,15 +28,15 @@ export default function JourneyLayout({ children }: { children: React.ReactNode 
       <div className="lg:hidden">
         <main>{children}</main>
         <nav className="fixed bottom-0 left-0 right-0 z-20 grid grid-cols-4 border-t border-black/10 bg-white/95 backdrop-blur">
-          <button type="button" className="px-2 py-3 text-xs font-semibold text-ink">
+          <Link href="/journey" className="px-2 py-3 text-center text-xs font-semibold text-ink">
             我的旅程
-          </button>
-          <button type="button" className="px-2 py-3 text-xs font-semibold text-black/60">
+          </Link>
+          <button type="button" className="px-2 py-3 text-xs font-semibold text-black/60" aria-label="AI助手">
             AI助手
           </button>
-          <button type="button" className="px-2 py-3 text-xs font-semibold text-black/60">
+          <Link href="/community" className="px-2 py-3 text-center text-xs font-semibold text-black/60">
             社区
-          </button>
+          </Link>
           <button type="button" className="px-2 py-3 text-xs font-semibold text-black/60">
             我的
           </button>

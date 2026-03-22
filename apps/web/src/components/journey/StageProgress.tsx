@@ -1,3 +1,5 @@
+import Link from 'next/link';
+
 interface StageProgressProps {
   currentStage?: string;
 }
@@ -44,12 +46,12 @@ export function StageProgress({ currentStage = 'AWARENESS' }: StageProgressProps
           );
         })}
       </ol>
-      <button
-        type="button"
+      <Link
+        href="/journey/publish"
         className="mt-6 w-full rounded-xl border border-black/20 bg-white px-4 py-2 text-sm font-semibold text-black/80"
       >
         发布历程
-      </button>
+      </Link>
     </aside>
   );
 }
