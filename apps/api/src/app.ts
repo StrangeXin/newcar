@@ -4,6 +4,7 @@ import { errorHandler } from './middleware/error';
 import { rateLimitMiddleware } from './middleware/rateLimit';
 import authRoutes from './routes/auth';
 import { carRoutes, policyRoutes } from './routes/cars';
+import deviceRoutes from './routes/devices';
 import journeyRoutes from './routes/journey';
 import notificationRoutes from './routes/notifications';
 import sessionRoutes from './routes/session';
@@ -28,6 +29,7 @@ export function createApp(): Express {
   app.use('/journeys', journeyRoutes);
   app.use('/snapshots', snapshotRoutes);
   app.use('/notifications', notificationRoutes);
+  app.use('/devices', deviceRoutes);
 
   app.use(errorHandler);
 
