@@ -1,12 +1,20 @@
 'use client';
 
+import dynamic from 'next/dynamic';
 import { useState } from 'react';
 import { useParams } from 'next/navigation';
 import { del, post } from '@/lib/api';
 import { usePublishedJourney } from '@/hooks/usePublishedJourney';
-import { ReportView } from '@/components/community/JourneyDetail/ReportView';
 import { StoryView } from '@/components/community/JourneyDetail/StoryView';
 import { TemplateView } from '@/components/community/JourneyDetail/TemplateView';
+
+const ReportView = dynamic(
+  () => import('@/components/community/JourneyDetail/ReportView').then((mod) => mod.ReportView),
+  {
+    ssr: false,
+    loading: () => <div className="animate-pulse h-64 bg-gray-100 rounded-lg" />,
+  }
+);
 
 type TabKey = 'story' | 'report' | 'template';
 
