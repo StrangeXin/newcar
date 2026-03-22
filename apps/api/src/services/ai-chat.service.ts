@@ -1,4 +1,4 @@
-import OpenAI from 'openai';
+import Anthropic from '@anthropic-ai/sdk';
 import { config } from '../config';
 import { conversationService } from './conversation.service';
 import { journeyService } from './journey.service';
@@ -6,8 +6,8 @@ import { MessageRole } from '@newcar/shared';
 import { weaviateService } from './weaviate.service';
 
 export class AiChatService {
-  private getClient(): OpenAI {
-    return new OpenAI({
+  private getClient(): Anthropic {
+    return new Anthropic({
       apiKey: config.ai.apiKey,
       baseURL: config.ai.baseURL,
     });
@@ -49,22 +49,22 @@ export class AiChatService {
     // 5. Build system prompt
     const systemPrompt = this.buildSystemPrompt(toolContext);
 
-    // 6. Call AI API via OpenAI SDK (OpenRouter)
+    // 6. Call AI API via Anthropic SDK (DeepSeek/MiniMax 支持 Anthropic 格式)
     const client = this.getClient();
     let aiContent: string;
     try {
-      const response = await client.chat.completions.create({
+      const response = await client.messages.create({
         model: config.ai.model,
         max_tokens: config.ai.maxTokens,
-        messages: [
-          { role: 'system', content: systemPrompt },
-          ...history.map((m: any) => ({
-            role: m.role === 'USER' ? 'user' : 'assistant',
-            content: m.content,
-          })),
-        ],
+        system: systemPrompt,
+        messages: history.map((m: any) => ({
+          role: m.role === 'USER' ? 'user' : 'assistant',
+          content: m.content,
+        })),
       });
-      aiContent = response.choices[0]?.message?.content ?? '';
+      // Find the first text block
+      const textBlock = response.content.find((block: any) => block.type === 'text');
+      aiContent = textBlock?.text ?? '';
     } catch (err: any) {
       console.error('AI API error:', err?.message || err);
       aiContent = '抱歉，我现在无法回答。请稍后再试。';
