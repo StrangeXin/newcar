@@ -6,7 +6,7 @@
 
 **Architecture:** 使用 `@langchain/langgraph` 的 `AgentExecutor` + `ChatAnthropic` model，ReAct 循环执行工具。Memory 分层：Redis 存短期 conversation history，Prisma 存持久化 signals/preferences。
 
-**Tech Stack:** `@langchain/langgraph`, `@langchain/core`, `@anthropic-ai/sdk`, `ioredis`, `Prisma`
+**Tech Stack:** `deepagents`, `langchain`, `@anthropic-ai/sdk`, `ioredis`, `Prisma`
 
 ---
 
@@ -15,27 +15,23 @@
 ```
 src/
 ├── agents/
-│   ├── shopping.agent.ts          # LangGraph Agent 定义 (createAgent)
-│   ├── state.ts                   # AgentState 接口定义
+│   ├── shopping.agent.ts          # createDeepAgent 定义
 │   └── memory/
 │       ├── redis.memory.ts        # Redis 短期记忆
 │       └── types.ts               # Signal, UserPreference 类型
+├── middleware/
+│   └── shopping.middleware.ts      # AgentMiddleware: 5个工具
 ├── tools/
-│   ├── car.search.tool.ts         # car_search 工具
-│   ├── car.detail.tool.ts         # car_detail 工具
-│   ├── journey.read.tool.ts       # journey_read 工具
-│   ├── journey.write.tool.ts      # journey_write 工具
-│   ├── notify.tool.ts             # notify 工具
-│   └── index.ts                  # 工具注册
+│   └── index.ts                  # 工具定义 (使用 langchain tool)
 ├── services/
 │   └── ai-chat.service.ts        # 重构后调用 Agent
 └── config/
-    └── index.ts                   # 已有配置，可能需新增 memory TTL
+    └── index.ts                   # 已有配置
 ```
 
 ---
 
-## Task 1: 添加 LangChain 依赖
+## Task 1: 添加 deepagents + langchain 依赖
 
 **Files:**
 - Modify: `apps/api/package.json`
@@ -43,25 +39,22 @@ src/
 - [ ] **Step 1: 添加依赖**
 
 ```json
-"@langchain/langgraph": "^0.2.0",
-"@langchain/core": "^0.3.0"
+"deepagents": "^0.1.0",
+"langchain": "^0.3.0"
 ```
 
 Run: `cd apps/api && npm install`
 
 ---
 
-## Task 2: 创建 Agent State 定义
+## Task 2: 创建 Signal 和 Preference 类型
 
 **Files:**
-- Create: `apps/api/src/agents/state.ts`
+- Create: `apps/api/src/agents/memory/types.ts`
 
-- [ ] **Step 1: 创建 State 类型**
+- [ ] **Step 1: 创建类型**
 
 ```typescript
-import { BaseMessage } from '@langchain/core/messages';
-import { JourneyStage } from '@newcar/shared';
-
 export interface Signal {
   type: 'REQUIREMENT' | 'PREFERENCE' | 'BUDGET';
   value: string;
@@ -75,18 +68,6 @@ export interface UserPreference {
   preferredCarTypes?: string[];
   updatedAt: string;
 }
-
-export interface AgentState {
-  messages: BaseMessage[];
-  journeyId: string;
-  userId: string;
-  sessionId: string;
-  extractedSignals: Signal[];
-  userPreferences: UserPreference;
-  currentStage: JourneyStage;
-  toolResults: Record<string, unknown>;
-  finalOutput?: string;
-}
 ```
 
 ---
@@ -99,39 +80,28 @@ export interface AgentState {
 - [ ] **Step 1: 创建 Redis Memory 类**
 
 ```typescript
-import { BaseMessage, AIMessage, HumanMessage } from '@langchain/core/messages';
 import { redis } from '../../lib/redis';
-import { Signal } from '../state';
+import { Signal } from './types';
 
 const CONVERSATION_PREFIX = 'conversation:';
 const SIGNALS_PREFIX = 'signals:';
 const TTL_SECONDS = 7 * 24 * 60 * 60; // 7 days
 
+export interface SerializedMessage {
+  role: 'user' | 'assistant';
+  content: string;
+}
+
 export class RedisMemory {
-  async saveMessages(sessionId: string, messages: BaseMessage[]): Promise<void> {
+  async saveMessages(sessionId: string, messages: SerializedMessage[]): Promise<void> {
     const key = `${CONVERSATION_PREFIX}${sessionId}`;
-    const serialized = messages.map((m) => ({
-      type: m.constructor.name,
-      content: m.content,
-      additional_kwargs: m.additional_kwargs,
-    }));
-    await redis.setex(key, TTL_SECONDS, JSON.stringify(serialized));
+    await redis.setex(key, TTL_SECONDS, JSON.stringify(messages));
   }
 
-  async loadMessages(sessionId: string): Promise<BaseMessage[]> {
+  async loadMessages(sessionId: string): Promise<SerializedMessage[]> {
     const key = `${CONVERSATION_PREFIX}${sessionId}`;
     const data = await redis.get(key);
-    if (!data) return [];
-    const parsed = JSON.parse(data) as Array<{
-      type: string;
-      content: string;
-      additional_kwargs?: Record<string, unknown>;
-    }>;
-    return parsed.map((m) =>
-      m.type === 'AIMessage'
-        ? new AIMessage({ content: m.content, additional_kwargs: m.additional_kwargs })
-        : new HumanMessage({ content: m.content })
-    );
+    return data ? JSON.parse(data) : [];
   }
 
   async saveSignals(sessionId: string, signals: Signal[]): Promise<void> {
@@ -155,36 +125,38 @@ export const redisMemory = new RedisMemory();
 
 ---
 
-## Task 4: 创建 5 个 Tool
+## Task 4: 创建 Shopping Middleware (5个工具)
 
 **Files:**
-- Create: `apps/api/src/tools/car.search.tool.ts`
-- Create: `apps/api/src/tools/car.detail.tool.ts`
-- Create: `apps/api/src/tools/journey.read.tool.ts`
-- Create: `apps/api/src/tools/journey.write.tool.ts`
-- Create: `apps/api/src/tools/notify.tool.ts`
+- Create: `apps/api/src/middleware/shopping.middleware.ts`
+- Modify: `apps/api/src/tools/index.ts` (创建工具定义)
+
+### 4.1 定义 Tools (使用 langchain tool)
+
+**Files:**
 - Create: `apps/api/src/tools/index.ts`
 
-### 4.1 car_search tool
-
-**Files:**
-- Create: `apps/api/src/tools/car.search.tool.ts`
-
-- [ ] **Step 1: 创建 car_search tool**
+- [ ] **Step 1: 创建 5 个工具**
 
 ```typescript
-import { DynamicTool } from '@langchain/core/tools';
+import { tool } from 'langchain';
 import { weaviateService } from '../services/weaviate.service';
+import { carService } from '../services/car.service';
+import { journeyService } from '../services/journey.service';
+import { carCandidateService } from '../services/car-candidate.service';
 
-export const carSearchTool = new DynamicTool({
-  name: 'car_search',
-  description: 'Search for cars based on user requirements. Input: { query: string, fuel_type?: "BEV"|"PHEV"|"HEV", budget_max?: number (unit: 万元), car_type?: "SEDAN"|"SUV"|"MPV" }. Returns top 5 matching cars.',
-  func: async (input: string) => {
-    const args = JSON.parse(input);
-    const results = await weaviateService.searchCars(args.query, {
-      fuelType: args.fuel_type,
-      maxMsrp: args.budget_max ? args.budget_max * 10000 : undefined,
-      carType: args.car_type,
+// Tool 1: car_search
+export const carSearchTool = tool(
+  async ({ query, fuel_type, budget_max, car_type }: {
+    query: string;
+    fuel_type?: string;
+    budget_max?: number;
+    car_type?: string;
+  }) => {
+    const results = await weaviateService.searchCars(query, {
+      fuelType: fuel_type,
+      maxMsrp: budget_max ? budget_max * 10000 : undefined,
+      carType: car_type,
     });
     if (results.length === 0) {
       return '未找到匹配的车型，请尝试调整搜索条件。';
@@ -194,217 +166,166 @@ export const carSearchTool = new DynamicTool({
       .map((car, i) => `${i + 1}. ${car.brand} ${car.model} ${car.variant} - ${(car.msrp / 10000).toFixed(1)}万 (${car.fuelType}, ${car.carType})`)
       .join('\n');
   },
-});
-```
+  {
+    name: 'car_search',
+    description: '搜索车型。根据用户需求搜索匹配的车型，返回前5个结果。',
+    schema: z.object({
+      query: z.string().describe('搜索query'),
+      fuel_type: z.enum(['BEV', 'PHEV', 'HEV']).optional().describe('燃料类型'),
+      budget_max: z.number().optional().describe('预算上限（万元）'),
+      car_type: z.enum(['SEDAN', 'SUV', 'MPV']).optional().describe('车型类型'),
+    }),
+  }
+);
 
-### 4.2 car_detail tool
-
-**Files:**
-- Create: `apps/api/src/tools/car.detail.tool.ts`
-
-- [ ] **Step 2: 创建 car_detail tool**
-
-```typescript
-import { DynamicTool } from '@langchain/core/tools';
-import { carService } from '../services/car.service';
-
-export const carDetailTool = new DynamicTool({
-  name: 'car_detail',
-  description: 'Get detailed information about a specific car. Input: { car_id: string }. Returns car specifications and pricing.',
-  func: async (input: string) => {
-    const { car_id } = JSON.parse(input);
+// Tool 2: car_detail
+export const carDetailTool = tool(
+  async ({ car_id }: { car_id: string }) => {
     const car = await carService.getCarById(car_id);
-    if (!car) {
-      return `未找到车型 ID: ${car_id}`;
-    }
+    if (!car) return `未找到车型 ID: ${car_id}`;
     return `${car.brand} ${car.model} ${car.variant}\n指导价: ${car.msrp ? `${(car.msrp / 10000).toFixed(1)}万` : '暂无'}\n类型: ${car.carType || '未知'}\n燃料类型: ${car.fuelType}`;
   },
-});
-```
+  {
+    name: 'car_detail',
+    description: '获取车型详细信息',
+    schema: z.object({
+      car_id: z.string().describe('车型ID'),
+    }),
+  }
+);
 
-### 4.3 journey_read tool
-
-**Files:**
-- Create: `apps/api/src/tools/journey.read.tool.ts`
-
-- [ ] **Step 3: 创建 journey_read tool**
-
-```typescript
-import { DynamicTool } from '@langchain/core/tools';
-import { journeyService } from '../services/journey.service';
-
-export const journeyReadTool = new DynamicTool({
-  name: 'journey_read',
-  description: 'Read journey status and details. Input: { journey_id: string }. Returns stage, requirements, candidates count.',
-  func: async (input: string) => {
-    const { journey_id } = JSON.parse(input);
+// Tool 3: journey_read
+export const journeyReadTool = tool(
+  async ({ journey_id }: { journey_id: string }) => {
     const journey = await journeyService.getJourneyDetail(journey_id);
-    if (!journey) {
-      return `未找到 Journey: ${journey_id}`;
-    }
+    if (!journey) return `未找到 Journey: ${journey_id}`;
     const candidates = journey.candidates || [];
-    return `Journey: ${journey.title}\nStage: ${journey.stage}\nStatus: ${journey.status}\n预算范围: ${journey.requirements?.budgetMin || '未设置'}万 - ${journey.requirements?.budgetMax || '未设置'}万\n候选车型: ${candidates.length}款\n用车场景: ${journey.requirements?.useCases?.join(', ') || '未设置'}`;
+    return `Journey: ${journey.title}\nStage: ${journey.stage}\nStatus: ${journey.status}\n预算范围: ${journey.requirements?.budgetMin || '未设置'}万 - ${journey.requirements?.budgetMax || '未设置'}万\n候选车型: ${candidates.length}款`;
   },
-});
-```
+  {
+    name: 'journey_read',
+    description: '读取用户Journey状态',
+    schema: z.object({
+      journey_id: z.string().describe('Journey ID'),
+    }),
+  }
+);
 
-### 4.4 journey_write tool
-
-**Files:**
-- Create: `apps/api/src/tools/journey.write.tool.ts`
-
-- [ ] **Step 4: 创建 journey_write tool**
-
-```typescript
-import { DynamicTool } from '@langchain/core/tools';
-import { journeyService } from '../services/journey.service';
-import { carCandidateService } from '../services/car-candidate.service';
-
-export const journeyWriteTool = new DynamicTool({
-  name: 'journey_write',
-  description: 'Update journey status or requirements. Input: { journey_id: string, action: "update_stage"|"update_requirements"|"add_candidate"|"remove_candidate", data: object }. Returns updated result.',
-  func: async (input: string) => {
-    const { journey_id, action, data } = JSON.parse(input);
-
+// Tool 4: journey_write
+export const journeyWriteTool = tool(
+  async ({ journey_id, action, data }: {
+    journey_id: string;
+    action: string;
+    data: any;
+  }) => {
     switch (action) {
-      case 'update_stage': {
+      case 'update_stage':
         await journeyService.updateStage(journey_id, data.stage);
         return `Journey stage 已更新为: ${data.stage}`;
-      }
-      case 'update_requirements': {
+      case 'update_requirements':
         await journeyService.updateRequirements(journey_id, data.requirements);
         return `Journey requirements 已更新`;
-      }
-      case 'add_candidate': {
+      case 'add_candidate':
         await carCandidateService.addCandidate({
           journeyId: journey_id,
           carId: data.car_id,
           addedReason: 'AI_RECOMMENDED',
         });
         return `已添加车型 ${data.car_id} 到候选列表`;
-      }
-      case 'remove_candidate': {
+      case 'remove_candidate':
         await carCandidateService.removeCandidate(journey_id, data.car_id);
         return `已从候选列表移除车型 ${data.car_id}`;
-      }
       default:
         return `未知 action: ${action}`;
     }
   },
-});
-```
+  {
+    name: 'journey_write',
+    description: '更新Journey状态或候选车型',
+    schema: z.object({
+      journey_id: z.string(),
+      action: z.enum(['update_stage', 'update_requirements', 'add_candidate', 'remove_candidate']),
+      data: z.any(),
+    }),
+  }
+);
 
-### 4.5 notify tool
-
-**Files:**
-- Create: `apps/api/src/tools/notify.tool.ts`
-
-- [ ] **Step 5: 创建 notify tool**
-
-```typescript
-import { DynamicTool } from '@langchain/core/tools';
-import { wechatService } from '../services/wechat.service';
-
-export const notifyTool = new DynamicTool({
-  name: 'notify',
-  description: 'Send WeChat notification to user. Input: { user_id: string, template: "price_drop"|"new_review"|"policy_update"|"ota_recall", data: object }.',
-  func: async (input: string) => {
-    const { user_id, template, data } = JSON.parse(input);
-    try {
-      const result = await wechatService.sendTemplateMessage(user_id, template, data);
-      return `通知已发送: ${template}`;
-    } catch (err: any) {
-      return `通知发送失败: ${err.message}`;
-    }
+// Tool 5: notify
+export const notifyTool = tool(
+  async ({ user_id, template, data }: {
+    user_id: string;
+    template: string;
+    data: any;
+  }) => {
+    // TODO: 实现微信通知
+    return `通知功能暂未实现`;
   },
-});
+  {
+    name: 'notify',
+    description: '发送微信通知',
+    schema: z.object({
+      user_id: z.string(),
+      template: z.string(),
+      data: z.any(),
+    }),
+  }
+);
 ```
 
-### 4.6 Tool 索引
+### 4.2 创建 Middleware
 
 **Files:**
-- Create: `apps/api/src/tools/index.ts`
+- Create: `apps/api/src/middleware/shopping.middleware.ts`
 
-- [ ] **Step 6: 创建工具索引**
+- [ ] **Step 2: 创建 ShoppingMiddleware**
 
 ```typescript
-import { carSearchTool } from './car.search.tool';
-import { carDetailTool } from './car.detail.tool';
-import { journeyReadTool } from './journey.read.tool';
-import { journeyWriteTool } from './journey.write.tool';
-import { notifyTool } from './notify.tool';
+import type { AgentMiddleware } from 'langchain';
+import { carSearchTool, carDetailTool, journeyReadTool, journeyWriteTool, notifyTool } from '../tools';
 
-export const tools = [
-  carSearchTool,
-  carDetailTool,
-  journeyReadTool,
-  journeyWriteTool,
-  notifyTool,
-];
-
-export { carSearchTool, carDetailTool, journeyReadTool, journeyWriteTool, notifyTool };
+export class ShoppingMiddleware implements AgentMiddleware {
+  tools = [
+    carSearchTool,
+    carDetailTool,
+    journeyReadTool,
+    journeyWriteTool,
+    notifyTool,
+  ];
+}
 ```
 
 ---
 
-## Task 5: 创建 LangGraph Agent
+## Task 5: 创建 DeepAgent
 
 **Files:**
 - Create: `apps/api/src/agents/shopping.agent.ts`
 
-- [ ] **Step 1: 创建 Agent 定义**
+- [ ] **Step 1: 创建 Agent**
 
 ```typescript
-import { ChatAnthropic } from '@anthropic-ai/sdk';
-import { AgentState } from './state';
-import { tools } from '../tools';
-import { redisMemory } from './memory/redis.memory';
-import { conversationService } from '../services/conversation.service';
-import { carCandidateService } from '../services/car-candidate.service';
-import { weaviateService } from '../services/weaviate.service';
-import { AIMessage, HumanMessage } from '@langchain/core/messages';
+import { createDeepAgent } from 'deepagents';
 import { config } from '../config';
+import { ShoppingMiddleware } from '../middleware/shopping.middleware';
 
-const SYSTEM_PROMPT = `你是用户的购车助手，帮助用户完成购车决策。用户正在使用 AI 原生购车平台。
+const SYSTEM_PROMPT = `你是用户的购车助手，帮助用户完成购车决策。
 
 你的职责：
 1. 了解用户需求（预算、用车场景、家庭情况等）
 2. 搜索和推荐合适的候选车型
 3. 帮助用户对比和分析候选车型
 4. 跟踪用户的偏好变化
-5. 根据对话内容判断 Journey stage 转换时机
-
-当需要搜索车型时使用 car_search 工具。
-当需要了解用户当前 Journey 状态时使用 journey_read 工具。
-当用户决定添加/移除候选车型时使用 journey_write 工具。
-当需要了解车型详情时使用 car_detail 工具。
-当有重要更新（价格变动、新政策）需要通知用户时使用 notify 工具。
 
 请用友好、专业的语气与用户交流。`;
 
-export async function createShoppingAgent() {
-  const model = new ChatAnthropic({
-    model: config.ai.model,
-    anthropicApiUrl: config.ai.baseURL + '/v1/messages',
-    apiKey: config.ai.apiKey,
-    maxTokens: config.ai.maxTokens,
-  }).bindTools(tools);
-
-  return model;
-}
-
-export async function runAgent(state: AgentState): Promise<Partial<AgentState>> {
-  const model = await createShoppingAgent();
-
-  const response = await model.invoke(state.messages, {
-    configurable: { thread_id: state.sessionId },
-  });
-
-  return {
-    messages: [...state.messages, response],
-    finalOutput: response.content as string,
-  };
-}
+export const shoppingAgent = createDeepAgent({
+  model: config.ai.model,
+  baseURL: config.ai.baseURL,
+  apiKey: config.ai.apiKey,
+  maxTokens: config.ai.maxTokens,
+  systemPrompt: SYSTEM_PROMPT,
+  middleware: [new ShoppingMiddleware()],
+});
 ```
 
 ---
@@ -417,14 +338,11 @@ export async function runAgent(state: AgentState): Promise<Partial<AgentState>> 
 - [ ] **Step 1: 重构 chat 方法**
 
 ```typescript
-import { AgentState } from '../agents/state';
+import { shoppingAgent } from '../agents/shopping.agent';
 import { redisMemory } from '../agents/memory/redis.memory';
-import { runAgent } from '../agents/shopping.agent';
-import { AIMessage, HumanMessage } from '@langchain/core/messages';
 import { conversationService } from './conversation.service';
 import { journeyService } from './journey.service';
 import { MessageRole } from '@newcar/shared';
-import { JourneyStage } from '@newcar/shared';
 
 export class AiChatService {
   async chat(data: {
@@ -433,7 +351,7 @@ export class AiChatService {
     sessionId: string;
     message: string;
   }): Promise<{ message: string; conversationId: string; extractedSignals: any[] }> {
-    // 1. Get or create conversation
+    // 1. Get or create conversation (Prisma)
     const conversation = await conversationService.getOrCreateConversation({
       journeyId: data.journeyId,
       userId: data.userId,
@@ -442,38 +360,29 @@ export class AiChatService {
 
     // 2. Load memory from Redis
     const historyMessages = await redisMemory.loadMessages(data.sessionId);
-    const savedSignals = await redisMemory.loadSignals(data.sessionId);
 
-    // 3. Get journey state
-    const journey = await journeyService.getJourneyDetail(data.journeyId);
-    const currentStage = (journey?.stage as JourneyStage) || JourneyStage.AWARENESS;
+    // 3. Build messages array with history + new message
+    const messages = [
+      ...historyMessages.map((m) => ({ role: m.role as 'user' | 'assistant', content: m.content })),
+      { role: 'user' as const, content: data.message },
+    ];
 
-    // 4. Build initial state
-    const state: AgentState = {
-      messages: [
-        ...historyMessages,
-        new HumanMessage({ content: data.message }),
-      ],
+    // 4. Run DeepAgent
+    const response = await shoppingAgent.invoke({
+      messages,
       journeyId: data.journeyId,
-      userId: data.userId || '',
-      sessionId: data.sessionId,
-      extractedSignals: savedSignals,
-      userPreferences: { updatedAt: new Date().toISOString() },
-      currentStage,
-      toolResults: {},
-    };
+    });
 
-    // 5. Run agent (ReAct loop)
-    const result = await runAgent(state);
+    const aiMessage = response.messages[response.messages.length - 1].content;
 
-    // 6. Extract final response
-    const finalOutput = result.finalOutput || '抱歉，我现在无法回答。';
+    // 5. Save to Redis
+    await redisMemory.saveMessages(data.sessionId, [
+      ...historyMessages,
+      { role: 'user', content: data.message },
+      { role: 'assistant', content: aiMessage },
+    ]);
 
-    // 7. Save updated messages to Redis
-    const updatedMessages = result.messages || [];
-    await redisMemory.saveMessages(data.sessionId, updatedMessages);
-
-    // 8. Save AI response to Prisma (持久化)
+    // 6. Save to Prisma (持久化)
     await conversationService.addMessage({
       journeyId: data.journeyId,
       sessionId: data.sessionId,
@@ -486,16 +395,16 @@ export class AiChatService {
       sessionId: data.sessionId,
       userId: data.userId,
       role: MessageRole.ASSISTANT,
-      content: finalOutput,
+      content: aiMessage,
     });
 
-    // 9. Update journey lastActivityAt
+    // 7. Update journey lastActivityAt
     await journeyService.updateAiConfidenceScore(data.journeyId, 0.7);
 
     return {
-      message: finalOutput,
+      message: aiMessage,
       conversationId: conversation.id,
-      extractedSignals: state.extractedSignals,
+      extractedSignals: [],
     };
   }
 }
@@ -510,13 +419,12 @@ export const aiChatService = new AiChatService();
 - [ ] **Step 1: 运行 TypeScript 检查**
 
 Run: `cd apps/api && npx tsc --noEmit`
-Expected: 无编译错误
 
 - [ ] **Step 2: 如有错误，修复**
 
 常见问题：
 - `journeyService.updateStage` / `updateRequirements` 方法不存在 → 需在 journey.service.ts 中添加
-- `carCandidateService.addCandidate` / `removeCandidate` 方法不存在 → 需检查或添加
+- `carCandidateService.addCandidate` / `removeCandidate` 方法不存在 → 需确认或添加
 
 ---
 
@@ -526,7 +434,7 @@ Expected: 无编译错误
 
 Run: `cd apps/api && npm run dev`
 
-- [ ] **Step 2: 获取 OTP 和 Token**
+- [ ] **Step 2: 测试 chat 接口**
 
 ```bash
 OTP=$(curl -s -X POST http://localhost:3000/auth/phone/send-otp \
@@ -536,25 +444,22 @@ OTP=$(curl -s -X POST http://localhost:3000/auth/phone/send-otp \
 TOKEN=$(curl -s -X POST http://localhost:3000/auth/phone/login \
   -H "Content-Type: application/json" \
   -d "{\"phone\": \"13900000002\", \"otp\": \"$OTP\"}" | python3 -c "import sys,json; print(json.load(sys.stdin)['accessToken'])")
-```
 
-- [ ] **Step 3: 测试 chat 接口**
-
-```bash
 curl -s -X POST http://localhost:3000/journeys/test-active-journey/chat \
   -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
-  -d '{"message": "我想买个10万左右的新能源车"}' | python3 -m json.tool
+  -d '{"message": "我想买个10万左右的新能源车"}'
 ```
 
-Expected: 返回包含具体车型推荐的文字回复，不是空内容
+Expected: 返回包含具体车型推荐的文字回复
 
 ---
 
 ## 已知依赖/待确认
 
-1. **journeyService.updateStage** - 需要在 `journey.service.ts` 中添加
-2. **journeyService.updateRequirements** - 需要在 `journey.service.ts` 中添加
-3. **carCandidateService.removeCandidate** - 需要确认方法签名
-4. **wechatService.sendTemplateMessage** - 需要确认方法签名
-5. **Weaviate 未运行** - 测试时 car_search 会返回空或降级
+1. **deepagents 包版本** - 确认 `createDeepAgent` API 是否与文档一致
+2. **journeyService.updateStage** - 需要在 `journey.service.ts` 中添加
+3. **journeyService.updateRequirements** - 需要在 `journey.service.ts` 中添加
+4. **carCandidateService.removeCandidate** - 需要确认方法签名
+5. **Weaviate 未运行** - 测试时 car_search 会降级
+6. **langchain tool 需要 zod** - 需添加 `"zod": "^3.23.0"` 依赖
