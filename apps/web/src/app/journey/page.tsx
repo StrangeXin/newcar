@@ -2,11 +2,12 @@
 
 import { useEffect } from 'react';
 import { Kanban } from '@/components/journey/Kanban';
+import { NewJourneyWizard } from '@/components/journey/NewJourneyWizard';
 import { useJourney } from '@/hooks/useJourney';
 import { trackEvent } from '@/lib/behavior';
 
 export default function JourneyPage() {
-  const { journey, isLoading, error } = useJourney();
+  const { journey, isLoading, error, refresh } = useJourney();
 
   useEffect(() => {
     if (!journey?.id) {
@@ -21,10 +22,8 @@ export default function JourneyPage() {
         <h1 className="text-xl font-bold">旅程看板</h1>
         {isLoading ? <p className="mt-3 text-sm text-black/60">正在加载旅程数据...</p> : null}
         {error ? <p className="mt-3 text-sm text-red-600">{error.message}</p> : null}
-        {!isLoading && !journey && !error ? (
-          <p className="mt-3 text-sm text-black/65">暂未找到活跃旅程。</p>
-        ) : null}
-        {journey ? (
+        {!isLoading && !journey && !error ? <div className="mt-4"><NewJourneyWizard onCreated={refresh} /></div> : null}
+        {journey && !error ? (
           <div className="mt-4">
             <Kanban journeyId={journey.id} />
           </div>
