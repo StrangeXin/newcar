@@ -21,7 +21,7 @@
   "dependencies": {
     "@anthropic-ai/sdk": "^0.80.0",
     "@langchain/anthropic": "^0.3.0",
-    "@langchain/core": "^0.3.0",
+    "@langchain/core": "^0.3.80",
     "@newcar/shared": "1.0.0",
     "@prisma/client": "^6.7.0",
     "axios": "^1.9.0",
@@ -29,6 +29,7 @@
     "deepagents": "^1.8.0",
     "dotenv": "^16.4.5",
     "express": "^4.21.2",
+    "graphql": "^16.13.1",
     "ioredis": "^5.4.1",
     "jsonwebtoken": "^9.0.2",
     "langchain": "^0.3.0",
