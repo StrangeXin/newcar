@@ -3,6 +3,7 @@ import express, { Express, Request, Response } from 'express';
 import { errorHandler } from './middleware/error';
 import { rateLimitMiddleware } from './middleware/rateLimit';
 import authRoutes from './routes/auth';
+import { carRoutes, policyRoutes } from './routes/cars';
 import journeyRoutes from './routes/journey';
 import notificationRoutes from './routes/notifications';
 import sessionRoutes from './routes/session';
@@ -21,6 +22,8 @@ export function createApp(): Express {
   });
 
   app.use('/auth', authRoutes);
+  app.use('/cars', carRoutes);
+  app.use('/policies', policyRoutes);
   app.use('/', sessionRoutes);
   app.use('/journeys', journeyRoutes);
   app.use('/snapshots', snapshotRoutes);
