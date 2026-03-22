@@ -1,10 +1,19 @@
 'use client';
 
+import { useEffect } from 'react';
 import { Kanban } from '@/components/journey/Kanban';
 import { useJourney } from '@/hooks/useJourney';
+import { trackEvent } from '@/lib/behavior';
 
 export default function JourneyPage() {
   const { journey, isLoading, error } = useJourney();
+
+  useEffect(() => {
+    if (!journey?.id) {
+      return;
+    }
+    void trackEvent(journey.id, 'PAGE_VIEW', 'PAGE', 'journey', { page: 'journey' });
+  }, [journey?.id]);
 
   return (
     <main className="mx-auto min-h-screen w-full max-w-6xl px-4 py-4 lg:max-w-none lg:px-0 lg:py-0">

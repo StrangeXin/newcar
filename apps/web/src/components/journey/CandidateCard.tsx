@@ -1,7 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { patch, post } from '@/lib/api';
+import { trackEvent } from '@/lib/behavior';
 import { Candidate } from '@/types/api';
 
 interface CandidateCardProps {
@@ -54,6 +55,22 @@ export function CandidateCard({ candidate, onUpdated }: CandidateCardProps) {
 
   const score = Math.round((candidate.aiMatchScore || 0) * 100);
   const displayPrice = candidate.priceAtAdd || candidate.car.msrp || 0;
+
+  useEffect(() => {
+    const start = Date.now();
+    void trackEvent(candidate.journeyId, 'CAR_VIEW', 'CAR', candidate.carId, {
+      carId: candidate.carId,
+      duration_sec: 0,
+    });
+
+    return () => {
+      const durationSec = Math.max(0, Math.round((Date.now() - start) / 1000));
+      void trackEvent(candidate.journeyId, 'CAR_VIEW', 'CAR', candidate.carId, {
+        carId: candidate.carId,
+        duration_sec: durationSec,
+      });
+    };
+  }, [candidate.carId, candidate.journeyId]);
 
   return (
     <article className="rounded-2xl border border-black/10 bg-white p-4 shadow-card">

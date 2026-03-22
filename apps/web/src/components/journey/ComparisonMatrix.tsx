@@ -1,5 +1,7 @@
 'use client';
 
+import { useEffect } from 'react';
+import { trackEvent } from '@/lib/behavior';
 import { Candidate } from '@/types/api';
 
 interface ComparisonMatrixProps {
@@ -8,6 +10,17 @@ interface ComparisonMatrixProps {
 
 export function ComparisonMatrix({ candidates }: ComparisonMatrixProps) {
   const active = candidates.filter((item) => item.status === 'ACTIVE');
+  const journeyId = active[0]?.journeyId;
+
+  useEffect(() => {
+    if (!journeyId || active.length < 2) {
+      return;
+    }
+    void trackEvent(journeyId, 'COMPARISON_OPEN', 'CANDIDATE_SET', undefined, {
+      candidateCount: active.length,
+    });
+  }, [journeyId, active.length]);
+
   if (active.length < 2) {
     return null;
   }
