@@ -81,11 +81,22 @@ export class ModerationService {
   }
 
   async rejectContent(publishedJourneyId: string, reason: string) {
+    const existing = await prisma.publishedJourney.findUnique({
+      where: { id: publishedJourneyId },
+      select: { tags: true },
+    });
+
+    const currentTags =
+      existing?.tags && typeof existing.tags === 'object' && !Array.isArray(existing.tags)
+        ? (existing.tags as Record<string, unknown>)
+        : {};
+
     return prisma.publishedJourney.update({
       where: { id: publishedJourneyId },
       data: {
         contentStatus: 'REJECTED',
         tags: {
+          ...currentTags,
           rejectionReason: reason,
         },
       },

@@ -183,6 +183,14 @@ ${candidateList || '暂无'}
   ) {
     const { title, description, publishedFormats, visibility } = options;
 
+    if (!publishedFormats || publishedFormats.length === 0) {
+      throw new Error('publishedFormats must include at least one format');
+    }
+    const invalidFormats = publishedFormats.filter((f) => !VALID_FORMATS.includes(String(f).toLowerCase()));
+    if (invalidFormats.length > 0) {
+      throw new Error(`Invalid publishedFormats: ${invalidFormats.join(', ')}`);
+    }
+
     // 1. 查询 Journey（含 candidates、snapshots、user）
     const journey = await prisma.journey.findUnique({
       where: { id: journeyId },
@@ -288,6 +296,14 @@ ${candidateList || '暂无'}
   }
 
   async previewPublish(journeyId: string, publishedFormats: string[]): Promise<object> {
+    if (!publishedFormats || publishedFormats.length === 0) {
+      throw new Error('publishedFormats must include at least one format');
+    }
+    const invalidFormats = publishedFormats.filter((f) => !VALID_FORMATS.includes(String(f).toLowerCase()));
+    if (invalidFormats.length > 0) {
+      throw new Error(`Invalid publishedFormats: ${invalidFormats.join(', ')}`);
+    }
+
     const journey = await prisma.journey.findUnique({
       where: { id: journeyId },
       include: {
