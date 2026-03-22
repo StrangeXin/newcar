@@ -1,4 +1,5 @@
 import { AttentionSignal, AttentionSignalType } from '@newcar/shared';
+import { Prisma } from '@prisma/client';
 import { DEFAULT_LOCALE, t } from '../lib/i18n';
 import { prisma } from '../lib/prisma';
 
@@ -36,7 +37,7 @@ export class NotificationService {
         relatedCarId: data.relatedCarId,
         title: data.title,
         body: data.body,
-        metadata: data.metadata || {},
+        metadata: (data.metadata || {}) as Prisma.InputJsonValue,
       },
     });
   }
