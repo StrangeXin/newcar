@@ -1,4 +1,5 @@
 import Anthropic from '@anthropic-ai/sdk';
+import { Prisma } from '@prisma/client';
 import {
   AttentionSignal,
   KeyInsight,
@@ -12,6 +13,7 @@ import { DEFAULT_LOCALE, resolveLocaleFromUserSettings, t } from '../lib/i18n';
 import { prisma } from '../lib/prisma';
 import { attentionSignalService } from './attention-signal.service';
 import { notificationService } from './notification.service';
+import { pushService } from './push.service';
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 const EFFECTIVE_EVENT_DAYS = 7;
@@ -91,11 +93,11 @@ export class SnapshotService {
         journeyId,
         trigger,
         narrativeSummary: aiResponse.narrative_summary,
-        keyInsights: aiResponse.key_insights || [],
+        keyInsights: (aiResponse.key_insights || []) as unknown as Prisma.InputJsonValue,
         topRecommendation: aiResponse.top_recommendation,
         recommendationReasoning: aiResponse.recommendation_reasoning,
-        attentionSignals: aiResponse.attention_signals || [],
-        nextSuggestedActions: aiResponse.next_suggested_actions || [],
+        attentionSignals: (aiResponse.attention_signals || []) as unknown as Prisma.InputJsonValue,
+        nextSuggestedActions: (aiResponse.next_suggested_actions || []) as Prisma.InputJsonValue,
         modelUsed: config.ai.model,
         promptVersion: '1.0',
         tokensUsed: aiResponse.tokens_used || 0,
@@ -109,7 +111,18 @@ export class SnapshotService {
     );
 
     if (signals.length > 0) {
-      await notificationService.createNotificationsFromSignals(inputs.journey.userId, journeyId, signals, locale);
+      const notifications = await notificationService.createNotificationsFromSignals(
+        inputs.journey.userId,
+        journeyId,
+        signals,
+        locale
+      );
+
+      for (const notification of notifications) {
+        void pushService.sendNotification(notification.id).catch((error: any) => {
+          console.error(`Push trigger failed for notification ${notification.id}:`, error?.message || error);
+        });
+      }
     }
 
     await prisma.journey.update({
@@ -146,7 +159,9 @@ export class SnapshotService {
 
     const allSignals: SnapshotExtractedSignal[] = [];
     for (const conv of journey.conversations) {
-      const signals = Array.isArray(conv.extractedSignals) ? (conv.extractedSignals as SnapshotExtractedSignal[]) : [];
+      const signals = Array.isArray(conv.extractedSignals)
+        ? (conv.extractedSignals as unknown as SnapshotExtractedSignal[])
+        : [];
       allSignals.push(...signals);
     }
 
