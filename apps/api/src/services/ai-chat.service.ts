@@ -175,11 +175,16 @@ ${toolContext ? `工具返回上下文：\n${toolContext}\n` : ''}
   }
 
   private async runCarSearchTool(input: CarSearchToolInput) {
-    await weaviateService.ensureSchema().catch(() => undefined);
-    return weaviateService.searchCars(input.query, {
-      fuelType: input.fuel_type,
-      maxMsrp: input.budget_max ? input.budget_max * 10000 : undefined,
-    });
+    try {
+      await weaviateService.ensureSchema();
+      return await weaviateService.searchCars(input.query, {
+        fuelType: input.fuel_type,
+        maxMsrp: input.budget_max ? input.budget_max * 10000 : undefined,
+      });
+    } catch (error: any) {
+      console.warn('car_search tool unavailable:', error?.message || error);
+      return [];
+    }
   }
 
   private async runGetCarDetailTool(carId: string) {
