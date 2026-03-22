@@ -1,0 +1,151 @@
+services:
+  api:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+      target: production
+    env_file:
+      - .env.production
+    expose:
+      - "3000"
+    depends_on:
+      - postgres
+      - redis
+    restart: unless-stopped
+    command: ["sh", "entrypoint.sh"]
+    deploy:
+      resources:
+        limits:
+          memory: 512m
+    networks:
+      - app-network
+
+  web:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+      target: production
+    env_file:
+      - .env.production
+    expose:
+      - "3001"
+    restart: unless-stopped
+    command: ["node", "server.js"]
+    deploy:
+      resources:
+        limits:
+          memory: 256m
+    networks:
+      - app-network
+
+  nginx:
+    image: nginx:stable-alpine
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/conf.d:/etc/nginx/conf.d:ro
+      - ./ssl:/etc/nginx/ssl:ro
+    depends_on:
+      - api
+      - web
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 128m
+    networks:
+      - app-network
+
+  postgres:
+    image: postgres:16-alpine
+    env_file:
+      - .env.production
+    expose:
+      - "5432"
+    volumes:
+      - newcar_prod_postgres_data:/var/lib/postgresql/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    deploy:
+      resources:
+        limits:
+          memory: 1g
+    networks:
+      - app-network
+
+  redis:
+    image: redis:7-alpine
+    env_file:
+      - .env.production
+    command: ["redis-server", "--appendonly", "yes", "--requirepass", "${REDIS_PASSWORD}"]
+    expose:
+      - "6379"
+    volumes:
+      - newcar_prod_redis_data:/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli -a $$REDIS_PASSWORD ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    deploy:
+      resources:
+        limits:
+          memory: 256m
+    networks:
+      - app-network
+
+  weaviate:
+    image: cr.weaviate.io/semitechnologies/weaviate:1.28.2
+    env_file:
+      - .env.production
+    environment:
+      QUERY_DEFAULTS_LIMIT: 25
+      AUTHENTICATION_ANONYMOUS_ACCESS_ENABLED: "false"
+      AUTHENTICATION_APIKEY_ENABLED: "true"
+      AUTHENTICATION_APIKEY_ALLOWED_KEYS: ${WEAVIATE_API_KEY}
+      PERSISTENCE_DATA_PATH: "/var/lib/weaviate"
+      ENABLE_API_BASED_MODULES: "true"
+      ENABLE_MODULES: "text2vec-transformers"
+      TRANSFORMERS_INFERENCE_API: "http://t2v-transformers:8080"
+      CLUSTER_HOSTNAME: "node1"
+    expose:
+      - "8080"
+    volumes:
+      - newcar_prod_weaviate_data:/var/lib/weaviate
+    depends_on:
+      - t2v-transformers
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 2g
+    networks:
+      - app-network
+
+  t2v-transformers:
+    image: cr.weaviate.io/semitechnologies/transformers-inference:sentence-transformers-multi-qa-MiniLM-L6-cos-v1
+    expose:
+      - "8080"
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 1g
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge
+
+volumes:
+  newcar_prod_postgres_data:
+  newcar_prod_redis_data:
+  newcar_prod_weaviate_data:
