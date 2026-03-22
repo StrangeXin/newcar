@@ -71,6 +71,8 @@ model Journey {
   publishedJourney PublishedJourney?
   notifications    NotificationFeed[]
 
+  @@index([userId, status])
+  @@index([status, lastActivityAt])
   @@map("journeys")
 }
 
@@ -88,6 +90,7 @@ model BehaviorEvent {
 
   journey Journey @relation(fields: [journeyId], references: [id], onDelete: Cascade)
 
+  @@index([journeyId, timestamp])
   @@map("behavior_events")
 }
 
@@ -124,6 +127,7 @@ model CarCandidate {
   journey Journey @relation(fields: [journeyId], references: [id], onDelete: Cascade)
   car     Car     @relation(fields: [carId], references: [id])
 
+  @@index([journeyId, status])
   @@map("car_candidates")
 }
 
@@ -144,6 +148,7 @@ model JourneySnapshot {
 
   journey Journey @relation(fields: [journeyId], references: [id], onDelete: Cascade)
 
+  @@index([journeyId, generatedAt])
   @@map("journey_snapshots")
 }
 
@@ -242,6 +247,8 @@ model PublishedJourney {
   user    User    @relation(fields: [userId], references: [id])
   forks   JourneyFork[]
 
+  @@index([contentStatus, visibility, publishedAt])
+  @@index([contentStatus, visibility, forkCount, likeCount])
   @@map("published_journeys")
 }
 
@@ -275,5 +282,7 @@ model NotificationFeed {
   user    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   journey Journey? @relation(fields: [journeyId], references: [id], onDelete: Cascade)
 
+  @@index([userId, isRead, createdAt])
+  @@index([journeyId, createdAt])
   @@map("notification_feeds")
 }

@@ -4,6 +4,7 @@ import { snapshotService } from '../services/snapshot.service';
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 const SILENCE_THRESHOLD_DAYS = 7;
+const BATCH_SIZE = 5;
 
 export async function runDailySnapshotJob(): Promise<void> {
   const cutoffDate = new Date(Date.now() - SILENCE_THRESHOLD_DAYS * DAY_MS);
@@ -19,13 +20,29 @@ export async function runDailySnapshotJob(): Promise<void> {
   console.log(`Daily snapshot job: found ${activeJourneys.length} active journeys`);
 
   const results: Array<{ journeyId: string; success: boolean; snapshotId?: string; error?: string }> = [];
-  for (const journey of activeJourneys) {
-    try {
-      const snapshot = await snapshotService.generateSnapshot(journey.id, SnapshotTrigger.DAILY);
-      results.push({ journeyId: journey.id, success: true, snapshotId: snapshot.id });
-    } catch (err: any) {
-      console.error(`Snapshot failed for journey ${journey.id}:`, err?.message || err);
-      results.push({ journeyId: journey.id, success: false, error: err?.message || 'unknown_error' });
+
+  // Process journeys in batches, using Promise.allSettled for controlled concurrency
+  for (let i = 0; i < activeJourneys.length; i += BATCH_SIZE) {
+    const batch = activeJourneys.slice(i, i + BATCH_SIZE);
+
+    const batchResults = await Promise.allSettled(
+      batch.map(async (journey) => {
+        try {
+          const snapshot = await snapshotService.generateSnapshot(journey.id, SnapshotTrigger.DAILY);
+          return { journeyId: journey.id, success: snapshot !== null, snapshotId: snapshot?.id };
+        } catch (err: any) {
+          console.error(`Snapshot failed for journey ${journey.id}:`, err?.message || err);
+          return { journeyId: journey.id, success: false, error: err?.message || 'unknown_error' };
+        }
+      })
+    );
+
+    for (const result of batchResults) {
+      if (result.status === 'fulfilled') {
+        results.push(result.value);
+      } else {
+        results.push({ journeyId: 'unknown', success: false, error: result.reason?.message || 'unknown_error' });
+      }
     }
   }
 

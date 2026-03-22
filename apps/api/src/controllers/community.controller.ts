@@ -97,6 +97,8 @@ export class CommunityController {
         data: { likeCount: { increment: 1 } },
       });
 
+      void communityService.invalidateCommunityListCache();
+
       return res.json({ liked: true });
     } catch (error: any) {
       return res.status(500).json({ error: error.message });
@@ -138,6 +140,8 @@ export class CommunityController {
         });
       }
 
+      void communityService.invalidateCommunityListCache();
+
       return res.json({ liked: false, removed: true });
     } catch (error: any) {
       return res.status(500).json({ error: error.message });
@@ -147,6 +151,7 @@ export class CommunityController {
   async fork(req: AuthenticatedRequest, res: Response) {
     try {
       const result = await forkService.forkJourney(req.params.id, req.userId!);
+      void communityService.invalidateCommunityListCache();
       return res.status(201).json(result);
     } catch (error: any) {
       return res.status(400).json({ error: error.message });
@@ -202,6 +207,8 @@ export class CommunityController {
         where: { id: req.params.id },
         data: { commentCount: { increment: 1 } },
       });
+
+      void communityService.invalidateCommunityListCache();
 
       return res.status(201).json(comment);
     } catch (error: any) {

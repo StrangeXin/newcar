@@ -11,6 +11,8 @@ import {
 import { config } from '../config';
 import { DEFAULT_LOCALE, resolveLocaleFromUserSettings, t } from '../lib/i18n';
 import { prisma } from '../lib/prisma';
+import { redis } from '../lib/redis';
+import { snapshotSemaphore } from '../lib/concurrency';
 import { attentionSignalService } from './attention-signal.service';
 import { notificationService } from './notification.service';
 import { pushService } from './push.service';
@@ -52,6 +54,41 @@ export class SnapshotService {
     trigger: SnapshotTrigger = SnapshotTrigger.DAILY,
     acceptLanguage?: string
   ) {
+    // Step 1: Acquire Redis distributed lock to prevent concurrent generation for same journey
+    const lockKey = `snapshot_lock:${journeyId}`;
+    const lockAcquired = await redis.set(lockKey, '1', 'EX', 120, 'NX');
+    if (!lockAcquired) {
+      // Another process is already generating a snapshot for this journey
+      return null;
+    }
+
+    let lockReleased = false;
+    const releaseLock = async () => {
+      if (!lockReleased) {
+        lockReleased = true;
+        await redis.del(lockKey);
+      }
+    };
+
+    try {
+      // Step 2: Acquire semaphore permit
+      await snapshotSemaphore.acquire();
+
+      try {
+        return await this.doGenerateSnapshot(journeyId, trigger, acceptLanguage);
+      } finally {
+        snapshotSemaphore.release();
+      }
+    } finally {
+      await releaseLock();
+    }
+  }
+
+  private async doGenerateSnapshot(
+    journeyId: string,
+    trigger: SnapshotTrigger,
+    acceptLanguage?: string
+  ) {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
@@ -72,20 +109,29 @@ export class SnapshotService {
 
     const client = this.getClient();
     let aiResponse: SnapshotAiResponse;
+    let modelUsed = config.ai.model;
 
     try {
-      const response = await client.messages.create({
+      // Wrap AI call with 30s timeout
+      const aiCallPromise = client.messages.create({
         model: config.ai.model,
         max_tokens: config.ai.maxTokens * 2,
         system: t(locale, 'snapshot.systemPrompt'),
         messages: [{ role: 'user', content: prompt }],
       });
 
+      const timeoutPromise = new Promise<never>((_, reject) => {
+        setTimeout(() => reject(new Error('AI call timeout after 30s')), 30_000);
+      });
+
+      const response = await Promise.race([aiCallPromise, timeoutPromise]);
+
       const block = response.content[0];
       aiResponse = block.type === 'text' ? (JSON.parse(block.text) as SnapshotAiResponse) : this.generateFallbackSnapshot(inputs);
     } catch (err: any) {
       console.error('Snapshot AI error:', err?.message || err);
       aiResponse = this.generateFallbackSnapshot(inputs, locale);
+      modelUsed = err?.message?.includes('timeout') ? 'fallback-timeout' : modelUsed;
     }
 
     const snapshot = await prisma.journeySnapshot.create({
@@ -98,7 +144,7 @@ export class SnapshotService {
         recommendationReasoning: aiResponse.recommendation_reasoning,
         attentionSignals: (aiResponse.attention_signals || []) as unknown as Prisma.InputJsonValue,
         nextSuggestedActions: (aiResponse.next_suggested_actions || []) as Prisma.InputJsonValue,
-        modelUsed: config.ai.model,
+        modelUsed,
         promptVersion: '1.0',
         tokensUsed: aiResponse.tokens_used || 0,
       },

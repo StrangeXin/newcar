@@ -1,3 +1,5 @@
+import { createHash } from 'crypto';
+import { redis } from '../lib/redis';
 import { prisma } from '../lib/prisma';
 
 interface ListCommunityParams {
@@ -37,6 +39,24 @@ function toRequirements(input: unknown): JourneyRequirements {
       : undefined,
     useCases: Array.isArray(value.useCases) ? value.useCases.map(String) : undefined,
   };
+}
+
+function buildCommunityCacheKey(params: ListCommunityParams, viewerJourneyId?: string): string {
+  const keyData = JSON.stringify({ params, viewerJourneyId });
+  const hash = createHash('sha256').update(keyData).digest('hex').slice(0, 16);
+  return `community:list:${hash}`;
+}
+
+async function invalidateCommunityListCache(): Promise<void> {
+  // Use SCAN to avoid blocking Redis with KEYS command
+  let cursor = '0';
+  do {
+    const [nextCursor, keys] = await redis.scan(cursor, 'MATCH', 'community:list:*', 'COUNT', 100);
+    cursor = nextCursor;
+    if (keys.length > 0) {
+      await redis.del(...keys);
+    }
+  } while (cursor !== '0');
 }
 
 export class CommunityService {
@@ -90,6 +110,12 @@ export class CommunityService {
     const limit = params.limit ?? 20;
     const offset = params.offset ?? 0;
     const sort = params.sort ?? 'relevance';
+
+    const cacheKey = buildCommunityCacheKey(params, viewerJourneyId);
+    const cached = await redis.get(cacheKey);
+    if (cached) {
+      return JSON.parse(cached) as { items: unknown[]; total: number; limit: number; offset: number };
+    }
 
     const viewerJourney = viewerJourneyId
       ? await prisma.journey.findUnique({
@@ -180,12 +206,15 @@ export class CommunityService {
 
     filtered = scored.slice(offset, offset + limit);
 
-    return {
+    const result = {
       items: filtered,
       total: scored.length,
       limit,
       offset,
     };
+
+    await redis.set(cacheKey, JSON.stringify(result), 'EX', 60);
+    return result;
   }
 
   async getJourneyDetail(id: string) {
@@ -207,6 +236,11 @@ export class CommunityService {
     });
 
     return item;
+  }
+
+  /** Invalidate all community list cache entries (call after like, unlike, fork, publish) */
+  async invalidateCommunityListCache(): Promise<void> {
+    await invalidateCommunityListCache();
   }
 }
 

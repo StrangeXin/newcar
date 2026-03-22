@@ -1,6 +1,7 @@
 import { Response } from 'express';
 import { AuthenticatedRequest } from '../middleware/auth';
 import { publishService } from '../services/publish.service';
+import { communityService } from '../services/community.service';
 import { prisma } from '../lib/prisma';
 
 const VALID_FORMATS = ['story', 'report', 'template'];
@@ -48,6 +49,8 @@ export class PublishedJourneyController {
         publishedFormats,
         visibility,
       });
+
+      void communityService.invalidateCommunityListCache();
 
       return res.status(201).json(result);
     } catch (error) {
@@ -135,6 +138,8 @@ export class PublishedJourneyController {
         data: updateData,
       });
 
+      void communityService.invalidateCommunityListCache();
+
       return res.json(result);
     } catch (error) {
       return res.status(500).json({ error: (error as Error).message });
@@ -162,6 +167,8 @@ export class PublishedJourneyController {
         where: { id },
         data: { contentStatus: 'AUTHOR_DELETED' },
       });
+
+      void communityService.invalidateCommunityListCache();
 
       return res.json(result);
     } catch (error) {

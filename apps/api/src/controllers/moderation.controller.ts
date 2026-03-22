@@ -2,6 +2,7 @@ import { Response } from 'express';
 import { AuthenticatedRequest } from '../middleware/auth';
 import { prisma } from '../lib/prisma';
 import { moderationService } from '../services/moderation.service';
+import { communityService } from '../services/community.service';
 
 export class ModerationController {
   async queue(req: AuthenticatedRequest, res: Response) {
@@ -18,6 +19,7 @@ export class ModerationController {
   async approve(req: AuthenticatedRequest, res: Response) {
     try {
       const result = await moderationService.approveContent(req.params.id);
+      void communityService.invalidateCommunityListCache();
       return res.json(result);
     } catch (error: any) {
       return res.status(500).json({ error: error.message });
@@ -31,6 +33,7 @@ export class ModerationController {
         return res.status(400).json({ error: 'reason is required' });
       }
       const result = await moderationService.rejectContent(req.params.id, reason);
+      void communityService.invalidateCommunityListCache();
       return res.json(result);
     } catch (error: any) {
       return res.status(500).json({ error: error.message });
@@ -43,6 +46,7 @@ export class ModerationController {
         where: { id: req.params.id },
         data: { featured: true },
       });
+      void communityService.invalidateCommunityListCache();
       return res.json(result);
     } catch (error: any) {
       return res.status(500).json({ error: error.message });
