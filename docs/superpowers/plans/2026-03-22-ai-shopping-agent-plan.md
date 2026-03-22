@@ -6,7 +6,7 @@
 
 **Architecture:** 使用 `deepagents` 的 `createDeepAgent`，直接绑定 tools，框架自动处理 ReAct 循环。MiniMax 通过 `ChatAnthropic` + 自定义 `baseURL` 接入。Memory 分层：Redis 存短期 conversation history，Prisma 存持久化 signals/preferences。
 
-**Tech Stack:** `deepagents`, `langchain`, `@langchain/core`, `@langchain/anthropic`, `zod`, `@anthropic-ai/sdk`, `ioredis`, `Prisma`
+**Tech Stack:** `deepagents@^1.8.0`, `langchain`, `@langchain/core`, `@langchain/anthropic`, `zod`, `@anthropic-ai/sdk`, `ioredis`, `Prisma`
 
 ---
 
@@ -72,7 +72,7 @@ src/
 - [ ] **Step 1: 添加依赖**
 
 ```json
-"deepagents": "latest",
+"deepagents": "^1.8.0",
 "langchain": "^0.3.0",
 "@langchain/core": "^0.3.0",
 "@langchain/anthropic": "^0.3.0",
@@ -504,7 +504,7 @@ Expected: 返回包含具体车型推荐的文字回复
 
 ## 已知依赖/待确认
 
-1. **deepagents 版本** - pre-1.0，API 可能变化
+1. **deepagents 版本** - ^1.8.0
 2. **journeyService.updateStage / updateRequirements** - 需在 journey.service.ts 中添加
 3. **carCandidateService.removeCandidate** - 需确认方法签名
 4. **Weaviate 未运行** - 测试时 car_search 会降级
