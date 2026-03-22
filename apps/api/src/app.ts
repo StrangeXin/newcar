@@ -7,6 +7,7 @@ import { carRoutes, policyRoutes } from './routes/cars';
 import deviceRoutes from './routes/devices';
 import journeyRoutes from './routes/journey';
 import notificationRoutes from './routes/notifications';
+import { journeyPublishRoutes, publishedJourneyRoutes } from './routes/published-journeys';
 import sessionRoutes from './routes/session';
 import snapshotRoutes from './routes/snapshot';
 
@@ -27,6 +28,8 @@ export function createApp(): Express {
   app.use('/policies', policyRoutes);
   app.use('/', sessionRoutes);
   app.use('/journeys', journeyRoutes);
+  app.use('/journeys', journeyPublishRoutes);
+  app.use('/published-journeys', publishedJourneyRoutes);
   app.use('/snapshots', snapshotRoutes);
   app.use('/notifications', notificationRoutes);
   app.use('/devices', deviceRoutes);
