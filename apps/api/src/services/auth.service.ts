@@ -3,6 +3,7 @@ import jwt from 'jsonwebtoken';
 import { JwtPayload } from '@newcar/shared';
 import { config } from '../config';
 import { prisma } from '../lib/prisma';
+import { redis } from '../lib/redis';
 import { generateSessionId } from '../lib/utils';
 import { otpService } from './otp.service';
 
@@ -36,6 +37,7 @@ export class AuthService {
     }
 
     const sessionId = generateSessionId();
+    await this.createUserSession(sessionId, user.id);
     const accessToken = this.generateAccessToken(user.id, sessionId);
     const refreshToken = this.generateRefreshToken(user.id, sessionId);
 
@@ -60,6 +62,7 @@ export class AuthService {
     }
 
     const sessionId = generateSessionId();
+    await this.createUserSession(sessionId, user.id);
     const accessToken = this.generateAccessToken(user.id, sessionId);
     const refreshToken = this.generateRefreshToken(user.id, sessionId);
 
@@ -100,6 +103,20 @@ export class AuthService {
 
   verifyToken(token: string): JwtPayload {
     return jwt.verify(token, config.jwt.secret) as JwtPayload;
+  }
+
+  private async createUserSession(sessionId: string, userId: string): Promise<void> {
+    // 7 days TTL to match JWT access token expiry
+    const TTL_SECONDS = 7 * 24 * 60 * 60;
+    await redis.setex(
+      `session:${sessionId}`,
+      TTL_SECONDS,
+      JSON.stringify({
+        userId,
+        isGuest: false,
+        createdAt: new Date().toISOString(),
+      })
+    );
   }
 }
 

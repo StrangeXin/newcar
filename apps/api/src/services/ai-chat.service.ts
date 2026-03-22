@@ -69,8 +69,9 @@ export class AiChatService {
           content: m.content,
         })),
       });
-      const block = response.content[0];
-      aiContent = block.type === 'text' ? block.text : '';
+      // Find the first text block (skip thinking blocks from extended thinking)
+      const textBlock = response.content.find((block: any) => block.type === 'text');
+      aiContent = textBlock?.text ?? '';
     } catch (err: any) {
       console.error('AI API error:', err?.message || err);
       aiContent = '抱歉，我现在无法回答。请稍后再试。';
