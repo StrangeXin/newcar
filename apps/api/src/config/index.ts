@@ -27,6 +27,12 @@ export const config = {
   wechat: {
     appId: requireConfigValue(process.env.WECHAT_APP_ID, 'WECHAT_APP_ID'),
     appSecret: requireConfigValue(process.env.WECHAT_APP_SECRET, 'WECHAT_APP_SECRET'),
+    templateIds: {
+      PRICE_DROP: process.env.WECHAT_TEMPLATE_PRICE_DROP || '',
+      NEW_REVIEW: process.env.WECHAT_TEMPLATE_NEW_REVIEW || '',
+      POLICY_UPDATE: process.env.WECHAT_TEMPLATE_POLICY_UPDATE || '',
+      OTA_RECALL: process.env.WECHAT_TEMPLATE_OTA_RECALL || '',
+    },
   },
 
   otp: {
