@@ -15,6 +15,8 @@ function CommunityPageContent() {
   const value = useMemo<FeedFilterState>(
     () => ({
       fuel_type: searchParams.get('fuel_type') || undefined,
+      budget_range: searchParams.get('budget_range') || undefined,
+      use_case: searchParams.get('use_case') || undefined,
       result: searchParams.get('result') || undefined,
       has_template: searchParams.get('has_template') || undefined,
       sort: searchParams.get('sort') || 'relevance',
@@ -29,6 +31,15 @@ function CommunityPageContent() {
         params.set(key, val);
       }
     });
+    const budgetRange = next.budget_range;
+    if (budgetRange) {
+      const [min, max] = budgetRange.split('-');
+      params.set('budget_min', min);
+      params.set('budget_max', max);
+    }
+    if (next.use_case) {
+      params.set('use_cases', next.use_case);
+    }
     router.push(`/community${params.toString() ? `?${params.toString()}` : ''}`);
   };
 

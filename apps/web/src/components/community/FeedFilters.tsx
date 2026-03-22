@@ -4,6 +4,8 @@ import { useMemo } from 'react';
 
 export interface FeedFilterState {
   fuel_type?: string;
+  budget_range?: string;
+  use_case?: string;
   result?: string;
   has_template?: string;
   sort?: string;
@@ -29,7 +31,7 @@ export function FeedFilters({ value, onChange }: FeedFiltersProps) {
 
   return (
     <div className="rounded-2xl border border-black/10 bg-white/90 p-4 shadow-card">
-      <div className="grid gap-3 md:grid-cols-4">
+      <div className="grid gap-3 md:grid-cols-6">
         <select
           value={value.fuel_type || ''}
           onChange={(e) => update('fuel_type', e.target.value)}
@@ -40,6 +42,30 @@ export function FeedFilters({ value, onChange }: FeedFiltersProps) {
           <option value="PHEV">PHEV</option>
           <option value="HEV">HEV</option>
           <option value="ICE">ICE</option>
+        </select>
+
+        <select
+          value={value.budget_range || ''}
+          onChange={(e) => update('budget_range', e.target.value)}
+          className="rounded-xl border border-black/15 px-3 py-2 text-sm"
+        >
+          <option value="">全部预算</option>
+          <option value="0-15">15万以下</option>
+          <option value="15-25">15-25万</option>
+          <option value="25-35">25-35万</option>
+          <option value="35-999">35万以上</option>
+        </select>
+
+        <select
+          value={value.use_case || ''}
+          onChange={(e) => update('use_case', e.target.value)}
+          className="rounded-xl border border-black/15 px-3 py-2 text-sm"
+        >
+          <option value="">全部场景</option>
+          <option value="family">家用</option>
+          <option value="commute">通勤</option>
+          <option value="travel">越野/旅行</option>
+          <option value="business">商务</option>
         </select>
 
         <select
