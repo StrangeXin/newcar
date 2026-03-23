@@ -1,71 +1,305 @@
 'use client';
 
 import { create } from 'zustand';
-import { get, post } from '@/lib/api';
+import { buildJourneyChatWsUrl, get } from '@/lib/api';
+import { dispatchJourneySideEffect } from '@/lib/journey-workspace-events';
 
 export type ChatRole = 'USER' | 'ASSISTANT';
+export type ToolName = 'car_search' | 'car_detail' | 'journey_update' | 'add_candidate';
 
-export interface ChatMessage {
+type BaseMessage = {
+  id: string;
+  timestamp: string;
+};
+
+export type TextChatMessage = BaseMessage & {
+  kind: 'text';
   role: ChatRole;
   content: string;
-  timestamp: string;
+  isStreaming?: boolean;
+};
+
+export type ToolChatMessage = BaseMessage & {
+  kind: 'tool_status';
+  name: ToolName;
+  input: Record<string, unknown>;
+  status: 'running' | 'done';
+};
+
+export type SideEffectChatMessage = BaseMessage & {
+  kind: 'side_effect';
+  event: 'candidate_added' | 'journey_updated' | 'stage_changed';
+  data: any;
+};
+
+export type ChatMessage = TextChatMessage | ToolChatMessage | SideEffectChatMessage;
+
+interface HistoryResponse {
+  messages: Array<{
+    role: ChatRole;
+    content: string;
+    timestamp: string;
+  }>;
 }
 
 interface ChatState {
   messages: ChatMessage[];
   conversationId?: string;
   isLoading: boolean;
-  addMessage: (msg: ChatMessage) => void;
-  setLoading: (loading: boolean) => void;
+  isConnected: boolean;
+  activeJourneyId?: string;
+  socket?: WebSocket;
   loadHistory: (journeyId: string) => Promise<void>;
+  connect: (journeyId: string) => void;
+  disconnect: () => void;
   sendMessage: (journeyId: string, content: string) => Promise<void>;
 }
 
-interface HistoryResponse {
-  messages: ChatMessage[];
+function makeId(prefix: string) {
+  return `${prefix}-${crypto.randomUUID()}`;
 }
 
-interface ChatResponse {
-  message: string;
-  conversationId: string;
+function parseToolInput(input: unknown) {
+  return input && typeof input === 'object' ? (input as Record<string, unknown>) : {};
+}
+
+function waitForOpen(socket: WebSocket) {
+  if (socket.readyState === WebSocket.OPEN) {
+    return Promise.resolve();
+  }
+
+  return new Promise<void>((resolve, reject) => {
+    const onOpen = () => {
+      cleanup();
+      resolve();
+    };
+    const onError = () => {
+      cleanup();
+      reject(new Error('WebSocket connection failed'));
+    };
+    const cleanup = () => {
+      socket.removeEventListener('open', onOpen);
+      socket.removeEventListener('error', onError);
+    };
+
+    socket.addEventListener('open', onOpen, { once: true });
+    socket.addEventListener('error', onError, { once: true });
+  });
 }
 
 export const useChatStore = create<ChatState>((set, getState) => ({
   messages: [],
   conversationId: undefined,
   isLoading: false,
-  addMessage: (msg) => set((state) => ({ messages: [...state.messages, msg] })),
-  setLoading: (loading) => set({ isLoading: loading }),
+  isConnected: false,
+  activeJourneyId: undefined,
+  socket: undefined,
 
   loadHistory: async (journeyId) => {
     try {
       const history = await get<HistoryResponse>(`/journeys/${journeyId}/conversation/messages?limit=50`);
-      set({ messages: history.messages || [] });
+      set({
+        messages: (history.messages || []).map((message) => ({
+          id: makeId('history'),
+          kind: 'text',
+          role: message.role,
+          content: message.content,
+          timestamp: message.timestamp,
+        })),
+      });
     } catch {
       set({ messages: [] });
     }
   },
 
+  connect: (journeyId) => {
+    const { socket, activeJourneyId } = getState();
+    if (socket && activeJourneyId === journeyId && socket.readyState <= WebSocket.OPEN) {
+      return;
+    }
+
+    if (socket) {
+      socket.close();
+    }
+
+    const nextSocket = new WebSocket(buildJourneyChatWsUrl(journeyId));
+
+    nextSocket.addEventListener('open', () => {
+      set({ isConnected: true, activeJourneyId: journeyId });
+    });
+
+    nextSocket.addEventListener('close', () => {
+      set((state) => ({
+        isConnected: false,
+        socket: state.socket === nextSocket ? undefined : state.socket,
+      }));
+    });
+
+    nextSocket.addEventListener('message', (event) => {
+      const payload = JSON.parse(String(event.data)) as
+        | { type: 'token'; delta: string }
+        | { type: 'tool_start'; name: ToolName; input: Record<string, unknown> }
+        | { type: 'tool_done'; name: ToolName; result: unknown }
+        | { type: 'side_effect'; event: SideEffectChatMessage['event']; data: any }
+        | { type: 'done'; conversationId: string; fullContent: string }
+        | { type: 'error'; code: string; message: string };
+
+      if (payload.type === 'token') {
+        set((state) => {
+          const lastMessage = state.messages[state.messages.length - 1];
+          if (lastMessage?.kind === 'text' && lastMessage.role === 'ASSISTANT' && lastMessage.isStreaming) {
+            const nextMessages = [...state.messages];
+            nextMessages[nextMessages.length - 1] = {
+              ...lastMessage,
+              content: lastMessage.content + payload.delta,
+            };
+            return { messages: nextMessages };
+          }
+
+          return {
+            messages: [
+              ...state.messages,
+              {
+                id: makeId('assistant'),
+                kind: 'text',
+                role: 'ASSISTANT',
+                content: payload.delta,
+                timestamp: new Date().toISOString(),
+                isStreaming: true,
+              },
+            ],
+          };
+        });
+        return;
+      }
+
+      if (payload.type === 'tool_start') {
+        set((state) => ({
+          messages: [
+            ...state.messages,
+            {
+              id: makeId('tool'),
+              kind: 'tool_status',
+              name: payload.name,
+              input: parseToolInput(payload.input),
+              status: 'running',
+              timestamp: new Date().toISOString(),
+            },
+          ],
+          isLoading: true,
+        }));
+        return;
+      }
+
+      if (payload.type === 'tool_done') {
+        const toolName = payload.name;
+        set((state) => ({
+          messages: state.messages.map((message) =>
+            message.kind === 'tool_status' && message.name === toolName && message.status === 'running'
+              ? { ...message, status: 'done' }
+              : message
+          ),
+        }));
+
+        window.setTimeout(() => {
+          set((state) => ({
+            messages: state.messages.filter(
+              (message) =>
+                !(message.kind === 'tool_status' && message.name === toolName && message.status === 'done')
+            ),
+          }));
+        }, 900);
+        return;
+      }
+
+      if (payload.type === 'side_effect') {
+        const sideEffectMessage: SideEffectChatMessage = {
+          id: makeId('effect'),
+          kind: 'side_effect',
+          event: payload.event,
+          data: payload.data,
+          timestamp: new Date().toISOString(),
+        };
+
+        set((state) => ({
+          messages: [...state.messages, sideEffectMessage],
+        }));
+        dispatchJourneySideEffect({
+          event: payload.event,
+          journeyId,
+          data: payload.data,
+        });
+        return;
+      }
+
+      if (payload.type === 'done') {
+        set((state) => ({
+          conversationId: payload.conversationId,
+          isLoading: false,
+          messages: state.messages.map((message, index) =>
+            index === state.messages.length - 1 &&
+            message.kind === 'text' &&
+            message.role === 'ASSISTANT' &&
+            message.isStreaming
+              ? { ...message, isStreaming: false, content: payload.fullContent }
+              : message
+          ),
+        }));
+        return;
+      }
+
+      if (payload.type === 'error') {
+        set((state) => ({
+          isLoading: false,
+          messages: [
+            ...state.messages,
+            {
+              id: makeId('error'),
+              kind: 'text',
+              role: 'ASSISTANT',
+              content: payload.message,
+              timestamp: new Date().toISOString(),
+            },
+          ],
+        }));
+      }
+    });
+
+    set({ socket: nextSocket, activeJourneyId: journeyId });
+  },
+
+  disconnect: () => {
+    const { socket } = getState();
+    socket?.close();
+    set({ socket: undefined, isConnected: false, activeJourneyId: undefined });
+  },
+
   sendMessage: async (journeyId, content) => {
     const now = new Date().toISOString();
-    getState().addMessage({ role: 'USER', content, timestamp: now });
-    getState().setLoading(true);
+    set((state) => ({
+      messages: [
+        ...state.messages,
+        {
+          id: makeId('user'),
+          kind: 'text',
+          role: 'USER',
+          content,
+          timestamp: now,
+        },
+      ],
+      isLoading: true,
+    }));
 
-    try {
-      const response = await post<ChatResponse>(`/journeys/${journeyId}/chat`, { message: content });
-      set((state) => ({
-        conversationId: response.conversationId,
-        messages: [
-          ...state.messages,
-          {
-            role: 'ASSISTANT',
-            content: response.message,
-            timestamp: new Date().toISOString(),
-          },
-        ],
-      }));
-    } finally {
-      getState().setLoading(false);
+    if (!getState().socket || getState().activeJourneyId !== journeyId) {
+      getState().connect(journeyId);
     }
+
+    const socket = getState().socket;
+    if (!socket) {
+      throw new Error('WebSocket connection is unavailable');
+    }
+
+    await waitForOpen(socket);
+    socket.send(JSON.stringify({ type: 'message', content }));
   },
 }));

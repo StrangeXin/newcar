@@ -17,9 +17,19 @@ export default function JourneyPage() {
   }, [journey?.id]);
 
   return (
-    <main className="mx-auto min-h-screen w-full max-w-6xl px-4 py-4 lg:max-w-none lg:px-0 lg:py-0">
-      <div className="h-full rounded-2xl border border-black/10 bg-white/85 p-6 shadow-card">
-        <h1 className="text-xl font-bold">旅程看板</h1>
+    <main className="min-w-0">
+      <div className="rounded-[20px] border border-black/10 bg-white/75 p-4 shadow-card backdrop-blur md:rounded-2xl md:p-5 xl:bg-white/85">
+        <div className="flex items-center justify-between gap-3">
+          <div>
+            <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-[#e85d26]">Workspace</p>
+            <h1 className="mt-1 text-xl font-bold text-[#111]">旅程工作台</h1>
+          </div>
+          {journey ? (
+            <span className="rounded-full border border-black/10 bg-[#f3f4f6] px-3 py-1 text-xs font-semibold text-black/55">
+              {journey.title}
+            </span>
+          ) : null}
+        </div>
         {isLoading ? <p className="mt-3 text-sm text-black/60">正在加载旅程数据...</p> : null}
         {error ? <p className="mt-3 text-sm text-red-600">{error.message}</p> : null}
         {!isLoading && !journey && !error ? <div className="mt-4"><NewJourneyWizard onCreated={refresh} /></div> : null}

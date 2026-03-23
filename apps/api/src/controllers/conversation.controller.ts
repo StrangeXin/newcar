@@ -13,11 +13,13 @@ export class ConversationController {
         if (!journey) return res.status(404).json({ error: 'Journey not found' });
         if (journey.userId !== req.userId) return res.status(403).json({ error: 'Forbidden' });
       }
-      const conversation = await conversationService.getOrCreateConversation({
-        journeyId,
-        userId: req.userId,
-        sessionId: req.sessionId!,
-      });
+      const conversation = req.userId
+        ? await conversationService.getOrCreateByJourney(journeyId, req.userId)
+        : await conversationService.getOrCreateConversation({
+            journeyId,
+            userId: req.userId,
+            sessionId: req.sessionId!,
+          });
       return res.json(conversation);
     } catch (error: any) {
       return res.status(500).json({ error: error.message });

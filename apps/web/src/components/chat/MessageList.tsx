@@ -17,9 +17,9 @@ export function MessageList({ messages, isLoading }: MessageListProps) {
   }, [messages, isLoading]);
 
   return (
-    <div className="flex-1 space-y-3 overflow-y-auto px-4 py-4">
+    <div className="flex-1 space-y-3 overflow-y-auto bg-[linear-gradient(180deg,rgba(255,255,255,0.72),rgba(245,244,242,0.78))] px-4 py-4">
       {messages.length === 0 ? (
-        <p className="rounded-xl bg-black/5 px-3 py-2 text-sm text-black/55">
+        <p className="rounded-2xl border border-black/10 bg-[#f5f4f2] px-3 py-3 text-sm text-black/55">
           你好，我可以帮你梳理预算、用途并筛选候选车型。
         </p>
       ) : null}
@@ -30,7 +30,7 @@ export function MessageList({ messages, isLoading }: MessageListProps) {
 
       {isLoading ? (
         <div className="flex justify-start">
-          <div className="rounded-2xl rounded-tl-sm border border-black/10 bg-pearl px-3 py-2 text-sm text-black/60">
+          <div className="rounded-[2px_14px_14px_14px] border border-black/10 bg-[#f5f4f2] px-3 py-2 text-sm text-black/60">
             AI 思考中...
           </div>
         </div>

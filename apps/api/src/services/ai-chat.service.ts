@@ -1,20 +1,27 @@
 import Anthropic from '@anthropic-ai/sdk';
+import { MessageParam, ToolUseBlock } from '@anthropic-ai/sdk/resources/messages/messages';
+import { AddedReason, JourneyStage, MessageRole } from '@newcar/shared';
 import { config } from '../config';
+import { carCandidateService } from './car-candidate.service';
+import { carService, toYuanFromWan } from './car.service';
 import { conversationService } from './conversation.service';
-import { journeyService } from '../services/journey.service';
-import { MessageRole } from '@newcar/shared';
-import { weaviateService } from '../services/weaviate.service';
+import { journeyService } from './journey.service';
+import { chatTools, executeChatTool, type ChatSideEffect, type ChatToolName } from '../tools/chat-tools';
 
-interface UserPreferences {
-  budgetMin?: number;
-  budgetMax?: number;
-  vehicleType?: string;
-  fuelType?: string;
-  useCases?: string[];
-  brandPreference?: string;
-  location?: string;
- 智能化?: string;
-  space?: string;
+type StreamEvent =
+  | { type: 'token'; delta: string }
+  | { type: 'tool_start'; name: ChatToolName; input: Record<string, unknown> }
+  | { type: 'tool_done'; name: ChatToolName; result: unknown }
+  | { type: 'side_effect'; event: ChatSideEffect['event']; data: unknown }
+  | { type: 'done'; conversationId: string; fullContent: string }
+  | { type: 'error'; code: string; message: string };
+
+interface ChatOptions {
+  journeyId: string;
+  userId?: string;
+  sessionId?: string;
+  message: string;
+  onEvent?: (event: StreamEvent) => void;
 }
 
 export class AiChatService {
@@ -31,336 +38,285 @@ export class AiChatService {
     sessionId: string;
     message: string;
   }): Promise<{ message: string; conversationId: string; extractedSignals: any[] }> {
-    // 1. Get or create conversation
-    const conversation = await conversationService.getOrCreateConversation({
+    const result = await this.runChat({
       journeyId: data.journeyId,
       userId: data.userId,
       sessionId: data.sessionId,
+      message: data.message,
     });
 
-    // 2. Save user message
+    return {
+      message: result.fullContent,
+      conversationId: result.conversationId,
+      extractedSignals: result.extractedSignals,
+    };
+  }
+
+  async streamChat(data: ChatOptions): Promise<void> {
+    await this.runChat(data);
+  }
+
+  private async runChat(data: ChatOptions): Promise<{
+    fullContent: string;
+    conversationId: string;
+    extractedSignals: any[];
+  }> {
+    const journey = await journeyService.getJourneyDetail(data.journeyId);
+    if (!journey) {
+      throw new Error('Journey not found');
+    }
+
+    const conversation = data.userId
+      ? await conversationService.getOrCreateByJourney(data.journeyId, data.userId)
+      : await conversationService.getOrCreateConversation({
+          journeyId: data.journeyId,
+          userId: data.userId,
+          sessionId: data.sessionId || data.journeyId,
+        });
+
+    const sessionId = conversation.sessionId;
+
     await conversationService.addMessage({
       journeyId: data.journeyId,
-      sessionId: data.sessionId,
+      sessionId,
       userId: data.userId,
       role: MessageRole.USER,
       content: data.message,
     });
 
-    // 3. Get conversation history (last 20 messages)
     const history = await conversationService.getConversationHistory({
       journeyId: data.journeyId,
-      sessionId: data.sessionId,
+      sessionId,
       userId: data.userId,
       limit: 20,
     });
 
-    // 4. Get existing journey requirements
-    const journey = await journeyService.getJourneyDetail(data.journeyId);
-    const existingRequirements = (journey?.requirements as Record<string, any>) || {};
+    const messages: MessageParam[] = history.map((message: any) => ({
+      role: message.role === MessageRole.USER ? 'user' : 'assistant',
+      content: message.content,
+    }));
 
-    // 5. Extract and save preferences from current message
-    const extractedPrefs = this.extractPreferences(data.message);
-    const signals = this.buildSignals(extractedPrefs, existingRequirements);
+    const existingRequirements = (journey.requirements as Record<string, unknown>) || {};
+    const extractedSignals = this.buildSignals(data.message, existingRequirements);
 
-    // 6. Save extracted preferences to journey
-    if (Object.keys(extractedPrefs).length > 0) {
-      await this.savePreferences(data.journeyId, extractedPrefs, existingRequirements);
+    if (extractedSignals.length > 0) {
+      await conversationService.extractSignals(conversation.id, extractedSignals);
     }
 
-    // 7. Run tools for context
-    const toolContext = await this.runToolsForMessage(data.message, extractedPrefs);
+    if (!config.ai.apiKey) {
+      const fallback =
+        '我已经收到你的问题，但当前 AI 服务还没有配置完成。先告诉我你的预算、车型和用途，我可以继续帮你整理需求。';
+      await conversationService.addMessage({
+        journeyId: data.journeyId,
+        sessionId,
+        userId: data.userId,
+        role: MessageRole.ASSISTANT,
+        content: fallback,
+      });
+      data.onEvent?.({ type: 'token', delta: fallback });
+      data.onEvent?.({
+        type: 'done',
+        conversationId: conversation.id,
+        fullContent: fallback,
+      });
+      return {
+        fullContent: fallback,
+        conversationId: conversation.id,
+        extractedSignals,
+      };
+    }
 
-    // 8. Build user profile summary for AI context
-    const userProfile = this.buildUserProfile(existingRequirements, extractedPrefs);
-
-    // 9. Build system prompt with user context
-    const systemPrompt = this.buildSystemPrompt(userProfile, toolContext);
-
-    // 10. Call AI API
     const client = this.getClient();
-    let aiContent: string;
-    try {
-      const response = await client.messages.create({
+    const systemPrompt = this.buildSystemPrompt(journey.title, existingRequirements);
+    let fullContent = '';
+    let toolRounds = 0;
+
+    while (toolRounds < 6) {
+      const stream = client.messages.stream({
         model: config.ai.model,
         max_tokens: config.ai.maxTokens,
         system: systemPrompt,
-        messages: history.map((m: any) => ({
-          role: m.role === 'USER' ? 'user' : 'assistant',
-          content: m.content,
-        })),
+        messages,
+        tools: chatTools as any,
       });
-      const textBlock = response.content.find((block: any) => block.type === 'text');
-      aiContent = textBlock?.text ?? '';
-    } catch (err: any) {
-      console.error('AI API error:', err?.message || err);
-      aiContent = '抱歉，我现在无法回答。请稍后再试。';
+
+      let streamedText = '';
+      stream.on('text', (delta) => {
+        streamedText += delta;
+        data.onEvent?.({ type: 'token', delta });
+      });
+
+      const finalMessage = await stream.finalMessage();
+      messages.push({
+        role: 'assistant',
+        content: finalMessage.content as MessageParam['content'],
+      });
+
+      if (streamedText) {
+        fullContent += streamedText;
+      }
+
+      const toolUses = finalMessage.content.filter(
+        (block): block is ToolUseBlock => block.type === 'tool_use'
+      );
+
+      if (toolUses.length === 0) {
+        break;
+      }
+
+      toolRounds += 1;
+      const toolResults: Array<{
+        type: 'tool_result';
+        tool_use_id: string;
+        content: string;
+      }> = [];
+
+      for (const toolUse of toolUses) {
+        const toolName = toolUse.name as ChatToolName;
+        const toolInput = (toolUse.input ?? {}) as Record<string, unknown>;
+        data.onEvent?.({ type: 'tool_start', name: toolName, input: toolInput });
+
+        const toolResult = await executeChatTool(toolName, toolInput, {
+          journeyId: data.journeyId,
+          userId: data.userId,
+        });
+
+        await conversationService.addToolCall({
+          conversationId: conversation.id,
+          toolCall: {
+            name: toolName,
+            args: toolInput,
+            result: toolResult.output,
+          },
+        });
+
+        data.onEvent?.({ type: 'tool_done', name: toolName, result: toolResult.output });
+
+        for (const sideEffect of toolResult.sideEffects) {
+          data.onEvent?.({
+            type: 'side_effect',
+            event: sideEffect.event,
+            data: sideEffect.data,
+          });
+        }
+
+        toolResults.push({
+          type: 'tool_result',
+          tool_use_id: toolUse.id,
+          content: JSON.stringify(toolResult.output, null, 2),
+        });
+      }
+
+      messages.push({
+        role: 'user',
+        content: toolResults,
+      });
     }
 
-    // 11. Save AI response
+    if (!fullContent.trim()) {
+      fullContent = '我已经更新了旅程信息。接下来我们可以继续缩小车型范围，或者开始做深度对比。';
+    }
+
     await conversationService.addMessage({
       journeyId: data.journeyId,
-      sessionId: data.sessionId,
+      sessionId,
       userId: data.userId,
       role: MessageRole.ASSISTANT,
-      content: aiContent,
+      content: fullContent,
     });
 
-    // 12. Update journey activity
-    await journeyService.updateAiConfidenceScore(data.journeyId, 0.7);
+    await journeyService.updateAiConfidenceScore(
+      data.journeyId,
+      this.estimateConfidenceScore(existingRequirements, fullContent)
+    );
+
+    data.onEvent?.({
+      type: 'done',
+      conversationId: conversation.id,
+      fullContent,
+    });
 
     return {
-      message: aiContent,
+      fullContent,
       conversationId: conversation.id,
-      extractedSignals: signals,
+      extractedSignals,
     };
   }
 
-  private extractPreferences(message: string): Partial<UserPreferences> {
-    const prefs: Partial<UserPreferences> = {};
+  private buildSystemPrompt(title: string, requirements: Record<string, unknown>) {
+    return [
+      '你是新车购买旅程工作台中的 AI 购车助手。',
+      '目标不是闲聊，而是帮助用户更快完成购车决策，并在必要时调用工具更新旅程状态。',
+      '请使用简洁、专业、友好的中文回答。',
+      '当用户提到预算、用途、能源偏好、风格偏好、阶段变化时，优先调用 journey_update。',
+      '当用户想找车、要推荐、想补充候选时，优先使用 car_search；明确点名车型时使用 car_detail。',
+      '只有在用户明确表达“加入候选”“把这款加进去”等意图时调用 add_candidate。',
+      '如果工具已经完成结构化动作，请在回答里自然确认结果，并给出下一步建议。',
+      `当前旅程标题：${title}`,
+      `当前已知需求：${JSON.stringify(requirements, null, 2)}`,
+    ].join('\n');
+  }
 
-    // 预算
-    const budgetMatch = message.match(/(\d+)\s*万左右?/);
-    if (budgetMatch) {
-      prefs.budgetMax = parseInt(budgetMatch[1]);
-    }
-    const budgetRangeMatch = message.match(/(\d+)-(\d+)\s*万/);
-    if (budgetRangeMatch) {
-      prefs.budgetMin = parseInt(budgetRangeMatch[1]);
-      prefs.budgetMax = parseInt(budgetRangeMatch[2]);
-    }
+  private buildSignals(message: string, requirements: Record<string, unknown>) {
+    const signals: Array<{
+      type: string;
+      value: string;
+      confidence: number;
+      updatedAt: string;
+    }> = [];
+    const now = new Date().toISOString();
 
-    // 车型
-    if (message.includes('SUV') || message.includes('越野') || message.includes('运动型')) {
-      prefs.vehicleType = 'SUV';
-    } else if (message.includes('轿车') || message.includes('三厢')) {
-      prefs.vehicleType = 'SEDAN';
-    } else if (message.includes('MPV') || message.includes('七座') || message.includes('商务')) {
-      prefs.vehicleType = 'MPV';
-    }
-
-    // 能源类型
-    if (message.includes('纯电') || message.includes('电车') || message.includes('BEV')) {
-      prefs.fuelType = 'BEV';
-    } else if (message.includes('混动') || message.includes('PHEV') || message.includes('双擎')) {
-      prefs.fuelType = 'PHEV';
-    } else if (message.includes('燃油') || message.includes('油车') || message.includes('汽油')) {
-      prefs.fuelType = 'ICE';
-    }
-
-    // 用车场景
-    if (message.includes('通勤') || message.includes('上下班') || message.includes('日常')) {
-      prefs.useCases = prefs.useCases || [];
-      if (!prefs.useCases.includes('commute')) prefs.useCases.push('commute');
-    }
-    if (message.includes('家庭') || message.includes('家用')) {
-      prefs.useCases = prefs.useCases || [];
-      if (!prefs.useCases.includes('family')) prefs.useCases.push('family');
-    }
-    if (message.includes('长途') || message.includes('自驾游') || message.includes('旅行')) {
-      prefs.useCases = prefs.useCases || [];
-      if (!prefs.useCases.includes('road_trip')) prefs.useCases.push('road_trip');
+    const rangeMatch = message.match(/(\d+)\s*[-到]\s*(\d+)\s*万/);
+    if (rangeMatch) {
+      signals.push({
+        type: 'REQUIREMENT',
+        value: `${rangeMatch[1]}-${rangeMatch[2]}万`,
+        confidence: 0.86,
+        updatedAt: now,
+      });
     }
 
-    // 地区
-    if (message.includes('南方')) {
-      prefs.location = 'south';
-    } else if (message.includes('北方')) {
-      prefs.location = 'north';
+    const singleBudgetMatch = message.match(/(\d+)\s*万/);
+    if (!rangeMatch && singleBudgetMatch) {
+      signals.push({
+        type: 'REQUIREMENT',
+        value: `${singleBudgetMatch[1]}万预算`,
+        confidence: 0.72,
+        updatedAt: now,
+      });
     }
 
-    // 人数
-    const peopleMatch = message.match(/(\d+)\s*个人?/);
-    if (peopleMatch) {
-      const count = parseInt(peopleMatch[1]);
-      if (count <= 2) {
-        prefs.space = 'compact';
-      } else if (count <= 4) {
-        prefs.space = 'medium';
-      } else {
-        prefs.space = 'large';
+    for (const keyword of ['SUV', '轿车', 'MPV', '纯电', '增程', '混动', '家用', '通勤', '长途']) {
+      if (message.includes(keyword)) {
+        signals.push({
+          type: 'PREFERENCE',
+          value: keyword,
+          confidence: 0.7,
+          updatedAt: now,
+        });
       }
     }
 
-    // 智能化
-    if (message.includes('智能') || message.includes('智驾') || message.includes('辅助驾驶')) {
-      prefs.智能化 = 'high';
-    }
-
-    // 品牌偏好
-    if (message.includes('国产') || message.includes('自主品牌')) {
-      prefs.brandPreference = 'domestic';
-    } else if (message.includes('合资') || message.includes('外资')) {
-      prefs.brandPreference = 'imported';
-    }
-
-    return prefs;
-  }
-
-  private buildSignals(newPrefs: Partial<UserPreferences>, existing: Record<string, any>): any[] {
-    const signals = [];
-
-    if (newPrefs.budgetMax || newPrefs.budgetMin) {
+    if (signals.length === 0 && Object.keys(requirements).length > 0) {
       signals.push({
-        type: 'BUDGET',
-        value: newPrefs.budgetMin ? `${newPrefs.budgetMin}-${newPrefs.budgetMax}` : String(newPrefs.budgetMax),
-        confidence: 0.8,
-        updatedAt: new Date().toISOString(),
-      });
-    }
-    if (newPrefs.fuelType) {
-      signals.push({
-        type: 'PREFERENCE',
-        value: newPrefs.fuelType,
-        confidence: 0.7,
-        updatedAt: new Date().toISOString(),
-      });
-    }
-    if (newPrefs.vehicleType) {
-      signals.push({
-        type: 'PREFERENCE',
-        value: `vehicle_${newPrefs.vehicleType}`,
-        confidence: 0.7,
-        updatedAt: new Date().toISOString(),
+        type: 'CONCERN',
+        value: '延续现有需求上下文',
+        confidence: 0.5,
+        updatedAt: now,
       });
     }
 
     return signals;
   }
 
-  private async savePreferences(
-    journeyId: string,
-    newPrefs: Partial<UserPreferences>,
-    existing: Record<string, any>
-  ): Promise<void> {
-    const merged: Record<string, any> = { ...existing };
-
-    if (newPrefs.budgetMin) merged.budgetMin = newPrefs.budgetMin;
-    if (newPrefs.budgetMax) merged.budgetMax = newPrefs.budgetMax;
-    if (newPrefs.vehicleType) merged.vehicleType = newPrefs.vehicleType;
-    if (newPrefs.fuelType) merged.fuelTypePreference = [newPrefs.fuelType];
-    if (newPrefs.useCases) merged.useCases = newPrefs.useCases;
-    if (newPrefs.location) merged.location = newPrefs.location;
-    if (newPrefs.space) merged.spaceRequirement = newPrefs.space;
-    if (newPrefs.智能化) merged.智能化 = newPrefs.智能化;
-    if (newPrefs.brandPreference) merged.brandPreference = newPrefs.brandPreference;
-
-    try {
-      await journeyService.updateRequirements(journeyId, {
-        budgetMin: merged.budgetMin,
-        budgetMax: merged.budgetMax,
-        fuelTypePreference: merged.fuelTypePreference,
-        useCases: merged.useCases,
-        stylePreference: merged.vehicleType,
-      });
-      console.log('Preferences saved:', merged);
-    } catch (err) {
-      console.error('Failed to save preferences:', err);
-    }
-  }
-
-  private buildUserProfile(existing: Record<string, any>, newPrefs: Partial<UserPreferences>): string {
-    const profile: string[] = [];
-
-    // Budget
-    if (existing.budgetMin || existing.budgetMax || newPrefs.budgetMax) {
-      const min = existing.budgetMin || newPrefs.budgetMin;
-      const max = existing.budgetMax || newPrefs.budgetMax;
-      if (min && max) {
-        profile.push(`预算: ${min}-${max}万`);
-      } else if (max) {
-        profile.push(`预算: ${max}万左右`);
-      }
-    }
-
-    // Vehicle type
-    const vehicleType = existing.vehicleType || newPrefs.vehicleType;
-    if (vehicleType) {
-      profile.push(`车型偏好: ${vehicleType}`);
-    }
-
-    // Fuel type
-    const fuelType = existing.fuelTypePreference?.[0] || newPrefs.fuelType;
-    if (fuelType) {
-      const fuelMap: Record<string, string> = { BEV: '纯电', PHEV: '混动', ICE: '燃油' };
-      profile.push(`能源类型: ${fuelMap[fuelType] || fuelType}`);
-    }
-
-    // Use cases
-    const useCases = existing.useCases || newPrefs.useCases;
-    if (useCases?.length) {
-      const useCaseMap: Record<string, string> = {
-        commute: '日常通勤',
-        family: '家庭出行',
-        road_trip: '长途自驾',
-      };
-      profile.push(`用车场景: ${useCases.map(u => useCaseMap[u] || u).join(', ')}`);
-    }
-
-    // Location
-    const location = existing.location || newPrefs.location;
-    if (location) {
-      profile.push(`所在地区: ${location === 'south' ? '南方' : '北方'}`);
-    }
-
-    // Smart/智能化
-    const smartLevel = existing.智能化 || newPrefs.智能化;
-    if (smartLevel) {
-      profile.push(`智能化要求: ${smartLevel === 'high' ? '高' : '一般'}`);
-    }
-
-    // Brand preference
-    const brand = existing.brandPreference || newPrefs.brandPreference;
-    if (brand) {
-      profile.push(`品牌偏好: ${brand === 'domestic' ? '国产' : brand === 'imported' ? '合资/进口' : brand}`);
-    }
-
-    return profile.length > 0
-      ? `【用户已知信息】\n${profile.join('\n')}\n\n请基于以上已知信息回答，不要重复询问用户已提供的信息。`
-      : '';
-  }
-
-  private async runToolsForMessage(
-    message: string,
-    prefs: Partial<UserPreferences>
-  ): Promise<string> {
-    try {
-      if (message.includes('想买') || message.includes('搜索') || message.includes('找') ||
-          message.includes('推荐') || message.includes('对比')) {
-        const results = await weaviateService.searchCars('', {
-          fuelType: prefs.fuelType as any,
-          maxMsrp: prefs.budgetMax ? prefs.budgetMax * 10000 : undefined,
-          carType: prefs.vehicleType as any,
-        });
-
-        if (results.length > 0) {
-          return `\n\n【车型搜索结果】\n${results.slice(0, 5).map((car, i) =>
-            `${i + 1}. ${car.brand} ${car.model} ${car.variant} - ${(car.msrp / 10000).toFixed(1)}万`
-          ).join('\n')}`;
-        }
-      }
-    } catch (err) {
-      console.error('Tool error:', err);
-    }
-    return '';
-  }
-
-  private buildSystemPrompt(userProfile: string, toolContext: string): string {
-    return `你是用户的购车助手，帮助用户完成购车决策。
-
-你的职责：
-1. 了解用户需求（预算、用车场景、家庭情况等）
-2. 搜索和推荐合适的候选车型
-3. 帮助用户对比和分析候选车型
-4. 跟踪用户的偏好变化
-
-【重要规则】
-- 用户已提供的信息不要重复询问
-- 如果用户已经说了预算、车型、用途等，直接使用，不要再问
-- 先根据已知信息推荐车型，如果信息不够再追问缺失的关键项
-- 每次回复尽量给出具体的车型推荐，而不是继续提问
-
-请用友好、专业的语气与用户交流。${userProfile}${toolContext}`;
+  private estimateConfidenceScore(requirements: Record<string, unknown>, response: string) {
+    let score = 0.45;
+    if (requirements.budgetMin || requirements.budgetMax) score += 0.12;
+    if (Array.isArray(requirements.useCases) && requirements.useCases.length > 0) score += 0.12;
+    if (Array.isArray(requirements.fuelTypePreference) && requirements.fuelTypePreference.length > 0) score += 0.1;
+    if (requirements.stylePreference) score += 0.08;
+    if (response.length > 80) score += 0.05;
+    return Math.min(0.95, Number(score.toFixed(2)));
   }
 }
 

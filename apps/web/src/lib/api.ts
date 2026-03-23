@@ -1,6 +1,6 @@
 import { getToken } from './auth';
 
-const BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
+export const BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
 
 type HttpMethod = 'GET' | 'POST' | 'PATCH' | 'DELETE';
 
@@ -55,4 +55,14 @@ export function patch<T>(path: string, body?: unknown): Promise<T> {
 
 export function del<T>(path: string): Promise<T> {
   return request<T>(path, 'DELETE');
+}
+
+export function buildJourneyChatWsUrl(journeyId: string) {
+  const token = typeof window !== 'undefined' ? getToken() : undefined;
+  const url = new URL(`/ws/journeys/${journeyId}/chat`, BASE_URL);
+  url.protocol = url.protocol === 'https:' ? 'wss:' : 'ws:';
+  if (token) {
+    url.searchParams.set('token', token);
+  }
+  return url.toString();
 }

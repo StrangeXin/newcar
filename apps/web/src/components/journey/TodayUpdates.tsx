@@ -1,8 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { patch } from '@/lib/api';
 import { useNotifications } from '@/hooks/useNotifications';
+import { JOURNEY_SIDE_EFFECT_EVENT } from '@/lib/journey-workspace-events';
 
 const TYPE_ICON: Record<string, string> = {
   PRICE_DROP: '📉',
@@ -17,6 +18,14 @@ export function TodayUpdates() {
   const [processingId, setProcessingId] = useState<string | null>(null);
   const unread = notifications.filter((item) => !item.isRead);
 
+  useEffect(() => {
+    const handleSideEffect = () => {
+      void refresh();
+    };
+    window.addEventListener(JOURNEY_SIDE_EFFECT_EVENT, handleSideEffect);
+    return () => window.removeEventListener(JOURNEY_SIDE_EFFECT_EVENT, handleSideEffect);
+  }, [refresh]);
+
   async function markRead(notificationId: string) {
     try {
       setProcessingId(notificationId);
@@ -28,10 +37,10 @@ export function TodayUpdates() {
   }
 
   return (
-    <section className="rounded-2xl border border-black/10 bg-white p-5 shadow-card">
+    <section className="rounded-[18px] border border-black/10 bg-white/90 p-4 shadow-card xl:p-5">
       <div className="flex items-center justify-between">
         <h3 className="text-base font-bold">今日新动态</h3>
-        <span className="text-xs font-semibold text-black/50">{unread.length} 条未读</span>
+        <span className="rounded-full bg-[#f3f4f6] px-2.5 py-1 text-xs font-semibold text-black/50">{unread.length} 条未读</span>
       </div>
       {isLoading ? <p className="mt-4 text-sm text-black/60">加载中...</p> : null}
       {!isLoading && unread.length === 0 ? (
@@ -39,7 +48,7 @@ export function TodayUpdates() {
       ) : null}
       <ul className="mt-4 space-y-3">
         {unread.map((item) => (
-          <li key={item.id} className="rounded-xl border border-black/10 bg-pearl px-3 py-3">
+          <li key={item.id} className="rounded-xl border border-[#e5e7eb] bg-white px-3 py-3 transition hover:border-black/15">
             <button
               type="button"
               onClick={() => markRead(item.id)}

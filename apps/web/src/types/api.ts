@@ -1,5 +1,6 @@
 export interface Journey {
   id: string;
+  userId?: string;
   title: string;
   stage: string;
   status: string;
@@ -40,6 +41,7 @@ export interface CarInfo {
   variant: string;
   type: string;
   fuelType: string;
+  baseSpecs?: Record<string, unknown> | null;
   msrp?: number | null;
 }
 

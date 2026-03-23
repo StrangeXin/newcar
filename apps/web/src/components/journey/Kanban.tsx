@@ -22,7 +22,7 @@ export function Kanban({ journeyId }: KanbanProps) {
   const { candidates, isLoading, refresh } = useCandidates(journeyId);
 
   return (
-    <div className="space-y-4">
+    <div className="grid gap-3 xl:gap-4">
       <TodayUpdates />
       <AiSummary journeyId={journeyId} />
       <CandidateList candidates={candidates} isLoading={isLoading} refresh={refresh} />

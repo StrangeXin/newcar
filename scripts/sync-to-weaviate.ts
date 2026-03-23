@@ -1,4 +1,5 @@
 import { PrismaClient } from '@prisma/client';
+import { createHash } from 'crypto';
 import { weaviateClient } from '../apps/api/src/lib/weaviate';
 import { weaviateService } from '../apps/api/src/services/weaviate.service';
 
@@ -18,6 +19,11 @@ function buildSpecsSummary(car: {
   return `${car.brand}${car.model} ${car.variant}，${car.fuelType} ${car.type}，MSRP ${msrpWan}，规格信息：${specsText}`;
 }
 
+function toStableUuid(scope: string, id: string) {
+  const hex = createHash('sha1').update(`${scope}:${id}`).digest('hex').slice(0, 32);
+  return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-5${hex.slice(13, 16)}-a${hex.slice(17, 20)}-${hex.slice(20, 32)}`;
+}
+
 async function syncCars() {
   const cars = await prisma.car.findMany();
 
@@ -25,7 +31,7 @@ async function syncCars() {
     await weaviateClient.data
       .creator()
       .withClassName('Car')
-      .withId(car.id)
+      .withId(toStableUuid('car', car.id))
       .withProperties({
         carId: car.id,
         brand: car.brand,
@@ -51,7 +57,7 @@ async function syncReviews() {
     await weaviateClient.data
       .creator()
       .withClassName('CarReview')
-      .withId(review.id)
+      .withId(toStableUuid('review', review.id))
       .withProperties({
         reviewId: review.id,
         carId: review.carId,

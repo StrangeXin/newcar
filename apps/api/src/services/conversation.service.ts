@@ -39,6 +39,26 @@ export class ConversationService {
     return conversation;
   }
 
+  async getOrCreateByJourney(journeyId: string, userId: string) {
+    let conversation = await prisma.conversation.findFirst({
+      where: {
+        journeyId,
+        userId,
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    if (!conversation) {
+      conversation = await this.createConversation({
+        journeyId,
+        userId,
+        sessionId: journeyId,
+      });
+    }
+
+    return conversation;
+  }
+
   async addMessage(data: {
     journeyId: string;
     sessionId: string;
@@ -112,7 +132,13 @@ export class ConversationService {
     const conversation = await prisma.conversation.findFirst({
       where: {
         journeyId: data.journeyId,
-        sessionId: data.sessionId,
+        ...(data.userId
+          ? {
+              userId: data.userId,
+            }
+          : {
+              sessionId: data.sessionId,
+            }),
       },
       orderBy: { createdAt: 'desc' },
     });
@@ -134,7 +160,13 @@ export class ConversationService {
     const conversation = await prisma.conversation.findFirst({
       where: {
         journeyId: data.journeyId,
-        sessionId: data.sessionId,
+        ...(data.userId
+          ? {
+              userId: data.userId,
+            }
+          : {
+              sessionId: data.sessionId,
+            }),
       },
       orderBy: { createdAt: 'desc' },
     });
