@@ -276,6 +276,7 @@ export class AiChatService {
     const lowerMessage = data.message.toLowerCase();
     const budgetMatch = data.message.match(/(\d+(?:\.\d+)?)\s*万/);
     const requirements: Record<string, unknown> = {};
+    const namedCarQuery = this.extractNamedCarQuery(data.message);
 
     if (budgetMatch) {
       requirements.budgetMax = Number(budgetMatch[1]);
@@ -303,6 +304,12 @@ export class AiChatService {
       });
     }
 
+    if (namedCarQuery && /详情|参数|配置|口碑|试驾|门店/.test(data.message)) {
+      await this.emitMockTool(data, 'car_detail', {
+        query: namedCarQuery,
+      });
+    }
+
     let candidateAdded = false;
     let targetCarName = '理想 L6';
     if (/理想\s*l6|理想l6|l6/.test(lowerMessage)) {
@@ -327,19 +334,27 @@ export class AiChatService {
       }
     }
 
-    const finalText = [
-      `已按你的需求更新旅程画像${budgetMatch ? `，预算控制在 ${budgetMatch[1]} 万以内` : ''}。`,
-      '我也切到了更适合继续筛选的深度对比阶段。',
-      candidateAdded
-        ? `并且已经把 ${targetCarName} 加入候选列表，接下来可以继续比较空间、续航和落地价。`
-        : `${targetCarName} 目前已在候选中，接下来可以继续比较空间、续航和落地价。`,
-    ].join('');
+    const finalText = namedCarQuery && /试驾|门店/.test(data.message)
+      ? `我已经调出 ${namedCarQuery} 的车型详情。试驾门店功能还在接入中，现阶段你可以先继续比较配置、价格和口碑，我也可以帮你把它加入候选继续跟进。`
+      : [
+          `已按你的需求更新旅程画像${budgetMatch ? `，预算控制在 ${budgetMatch[1]} 万以内` : ''}。`,
+          '我也切到了更适合继续筛选的深度对比阶段。',
+          candidateAdded
+            ? `并且已经把 ${targetCarName} 加入候选列表，接下来可以继续比较空间、续航和落地价。`
+            : `${targetCarName} 目前已在候选中，接下来可以继续比较空间、续航和落地价。`,
+        ].join('');
 
     for (const chunk of finalText.match(/.{1,12}/g) || [finalText]) {
       data.onEvent?.({ type: 'token', delta: chunk });
     }
 
     return finalText;
+  }
+
+  private extractNamedCarQuery(message: string) {
+    const normalized = message.replace(/\s+/g, '');
+    const candidates = ['深蓝S7', '理想L6', '理想L7', '小鹏G6', '问界M7', '特斯拉ModelY'];
+    return candidates.find((candidate) => normalized.includes(candidate)) || '';
   }
 
   private async emitMockTool(

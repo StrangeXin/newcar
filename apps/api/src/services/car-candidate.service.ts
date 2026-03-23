@@ -17,10 +17,11 @@ export class CarCandidateService {
         carId: data.carId,
         status: CandidateStatus.ACTIVE,
       },
+      include: { car: true },
     });
 
     if (existing) {
-      throw new Error('Car already in candidate list');
+      return existing;
     }
 
     return prisma.carCandidate.create({
