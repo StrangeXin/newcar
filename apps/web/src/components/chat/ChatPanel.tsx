@@ -30,14 +30,14 @@ export function ChatPanel({ onClose }: { onClose?: () => void }) {
   }
 
   return (
-    <aside className="flex h-full min-h-[calc(100vh-2rem)] flex-col overflow-hidden rounded-[20px] border border-black/10 bg-white/88 shadow-card backdrop-blur">
-      <div className="flex items-center justify-between border-b border-black/10 px-4 py-4">
+    <aside className="chat-panel flex h-full min-h-[calc(100vh-2rem)] flex-col overflow-hidden rounded-[16px] border border-black/10 bg-white/90 shadow-[0_2px_12px_rgba(0,0,0,0.06)]">
+      <div className="flex items-center gap-[7px] border-b border-black/5 px-4 py-3">
+        <span className={`h-[7px] w-[7px] rounded-full ${isConnected ? 'bg-[#22c55e]' : 'bg-[#d1d5db]'}`} />
         <div>
-          <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-[#7c3aed]">Copilot</p>
-          <h2 className="mt-1 text-base font-bold">AI 购车助手</h2>
+          <h2 className="text-[13px] font-extrabold text-[#111]">AI 助手</h2>
         </div>
+        <p className="ml-auto text-[9px] text-[#9ca3af]">实时同步</p>
         <div className="flex items-center gap-2">
-          <span className={`h-2.5 w-2.5 rounded-full ${isConnected ? 'bg-[#22c55e]' : 'bg-[#d1d5db]'}`} />
           {onClose ? (
             <button type="button" onClick={onClose} className="rounded-full border border-black/10 px-2 py-1 text-xs font-semibold text-black/55">
               关闭

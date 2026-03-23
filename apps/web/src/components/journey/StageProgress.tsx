@@ -32,17 +32,17 @@ export function StageProgress() {
   }, [journey?.id, refresh]);
 
   return (
-    <aside className="h-full rounded-[18px] border border-black/10 bg-white/90 p-4 shadow-card md:p-4 lg:p-3 xl:p-5">
-      <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-[#e85d26] md:hidden lg:block">Journey Stage</p>
-      <h2 className="mt-1 text-lg font-extrabold text-[#111] md:hidden lg:block">旅程进度</h2>
-      <ol className="mt-4 flex flex-wrap gap-2 md:mt-0 md:flex-row lg:mt-4 lg:flex-col lg:gap-2">
+    <aside className="h-full rounded-[16px] border border-black/10 bg-white/90 p-4 shadow-[0_2px_12px_rgba(0,0,0,0.06)] md:px-4 md:py-3 lg:p-3.5 xl:p-5">
+      <p className="text-[9px] font-bold uppercase tracking-[0.12em] text-[#e85d26] md:hidden lg:block">Journey Stage</p>
+      <h2 className="mt-1 text-[15px] font-extrabold text-[#111] md:hidden lg:block">旅程进度</h2>
+      <ol className="mt-4 flex flex-wrap gap-1.5 md:mt-0 md:flex-row lg:mt-4 lg:flex-col lg:gap-[5px]">
         {STAGES.map((stage, index) => {
           const completed = index < currentIndex;
           const active = index === currentIndex;
           return (
             <li
               key={stage.key}
-              className={`flex items-center gap-3 rounded-[10px] border px-3 py-2 text-sm font-semibold ${
+              className={`flex items-center gap-2 rounded-[10px] border px-2.5 py-1.5 text-[11px] font-semibold whitespace-nowrap lg:px-[9px] lg:py-[7px] lg:text-[12px] ${
                 active
                   ? 'border-[#111] bg-[#111] text-white'
                   : completed
@@ -51,7 +51,7 @@ export function StageProgress() {
               }`}
             >
               <span
-                className={`inline-flex h-5 w-5 items-center justify-center rounded-full text-[10px] font-bold ${
+                className={`inline-flex h-5 w-5 items-center justify-center rounded-full text-[9px] font-bold ${
                   active
                     ? 'bg-white/20 text-white'
                     : completed
@@ -67,18 +67,18 @@ export function StageProgress() {
         })}
       </ol>
       <div className="mt-4 hidden rounded-2xl border border-[#e9d5ff] bg-[#faf5ff] p-3 lg:block">
-        <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-[#7c3aed]">AI Confidence</p>
-        <p className="mt-1 text-3xl font-extrabold text-[#6d28d9]">{confidence || 0}%</p>
-        <div className="mt-2 h-1.5 rounded-full bg-[#e9d5ff]">
-          <div className="h-1.5 rounded-full bg-[linear-gradient(90deg,#8b5cf6,#6d28d9)]" style={{ width: `${confidence || 8}%` }} />
+        <p className="text-[9px] font-bold uppercase tracking-[0.08em] text-[#7c3aed]">AI 置信度</p>
+        <p className="mt-0.5 text-[28px] font-extrabold leading-none text-[#6d28d9]">{confidence || 0}%</p>
+        <div className="mt-[5px] h-[3px] rounded-full bg-[#e9d5ff]">
+          <div className="h-[3px] rounded-full bg-[linear-gradient(90deg,#8b5cf6,#6d28d9)]" style={{ width: `${confidence || 8}%` }} />
         </div>
-        <p className="mt-2 text-[11px] leading-5 text-[#7c3aed]">AI 已经对你的需求形成初步画像，继续聊天会让建议更准。</p>
+        <p className="mt-[3px] text-[9px] leading-[1.45] text-[#7c3aed]">已收集预算、车型偏好，继续聊可提升</p>
       </div>
       <Link
         href="/journey/publish"
-        className="mt-4 hidden w-full rounded-xl border border-black/15 bg-white px-4 py-2 text-center text-sm font-semibold text-black/75 xl:block"
+        className="mt-4 hidden w-full rounded-[10px] border border-black/15 bg-white px-4 py-[9px] text-center text-[11px] font-bold text-black/75 xl:block"
       >
-        发布历程
+        发布我的旅程 →
       </Link>
     </aside>
   );

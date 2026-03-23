@@ -29,19 +29,19 @@ export function ChatInput({ disabled, onSend }: ChatInputProps) {
 
   return (
     <div className="border-t border-black/10 bg-white/90 p-3">
-      <div className="mb-3 flex flex-wrap gap-2">
+      <div className="mb-[7px] flex flex-wrap gap-1">
         {quickActions.map((action) => (
           <button
             key={action}
             type="button"
             onClick={() => setValue(action)}
-            className="rounded-full border border-black/10 bg-[#f3f4f6] px-3 py-1.5 text-xs font-semibold text-black/65 transition hover:bg-black/5"
+            className="rounded-full border border-[#e5e7eb] bg-[#f3f4f6] px-[9px] py-[3px] text-[10px] font-medium text-[#374151] transition hover:bg-black/5"
           >
             {action}
           </button>
         ))}
       </div>
-      <div className="flex items-end gap-2">
+      <div className="flex items-end gap-[5px]">
         <textarea
           value={value}
           onChange={(e) => setValue(e.target.value)}
@@ -49,13 +49,13 @@ export function ChatInput({ disabled, onSend }: ChatInputProps) {
           disabled={disabled}
           rows={2}
           placeholder="问我任何购车问题…"
-          className="min-h-[44px] flex-1 resize-none rounded-2xl border border-black/15 bg-white px-4 py-3 text-sm outline-none ring-[#8b5cf6]/25 transition focus:ring-2 disabled:cursor-not-allowed disabled:opacity-60"
+          className="min-h-[34px] flex-1 resize-none rounded-[10px] border-[1.5px] border-[#d1d5db] bg-white px-[11px] py-[7px] text-[11px] outline-none ring-[#8b5cf6]/25 transition focus:ring-2 disabled:cursor-not-allowed disabled:opacity-60"
         />
         <button
           type="button"
           onClick={() => void submit()}
           disabled={disabled || !value.trim()}
-          className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#111] text-lg font-semibold text-white disabled:cursor-not-allowed disabled:opacity-60"
+          className="flex h-[34px] w-[34px] items-center justify-center rounded-[9px] bg-[#111] text-[13px] font-semibold text-white disabled:cursor-not-allowed disabled:opacity-60"
         >
           ↑
         </button>

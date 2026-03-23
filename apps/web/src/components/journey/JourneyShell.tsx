@@ -21,8 +21,8 @@ export function JourneyShell({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="min-h-screen pb-24 lg:pb-0">
-      <div className="mx-auto grid max-w-[1920px] gap-3 px-3 py-3 xl:gap-4 xl:px-4 xl:py-4 2xl:grid-cols-[260px_minmax(0,1fr)_400px] xl:grid-cols-[220px_minmax(0,1fr)_340px] lg:grid-cols-[180px_minmax(0,1fr)_280px] md:grid-cols-[minmax(0,1fr)_300px] md:grid-rows-[auto_minmax(0,1fr)]">
-        <div className="hidden md:block lg:row-span-1 xl:row-span-1 md:col-span-full lg:col-span-1">
+      <div className="mx-auto grid max-w-[1920px] gap-2.5 px-2.5 py-2.5 xl:gap-3.5 xl:px-4 xl:py-4 2xl:grid-cols-[260px_minmax(0,1fr)_400px] xl:grid-cols-[220px_minmax(0,1fr)_340px] lg:grid-cols-[180px_minmax(0,1fr)_280px] md:grid-cols-[minmax(0,1fr)_300px] md:grid-rows-[auto_minmax(0,1fr)]">
+        <div className="hidden md:block md:col-span-full lg:col-span-1">
           <StageProgress />
         </div>
         <div className="min-w-0">{children}</div>
@@ -34,9 +34,9 @@ export function JourneyShell({ children }: { children: React.ReactNode }) {
       <button
         type="button"
         onClick={() => setMobileChatOpen(true)}
-        className="fixed bottom-20 right-4 z-30 rounded-full bg-[#111] px-4 py-3 text-sm font-semibold text-white shadow-card md:hidden"
+        className="fixed bottom-20 right-4 z-30 flex h-14 w-14 items-center justify-center rounded-full bg-[linear-gradient(135deg,#667eea,#764ba2)] text-xl font-semibold text-white shadow-[0_4px_20px_rgba(102,126,234,0.4)] md:hidden"
       >
-        AI 助手
+        ···
       </button>
 
       {mobileChatOpen ? (

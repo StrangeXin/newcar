@@ -11,10 +11,10 @@ interface CandidateListProps {
 
 export function CandidateList({ candidates, isLoading, refresh }: CandidateListProps) {
   return (
-    <section className="rounded-[18px] border border-black/10 bg-white/90 p-4 shadow-card xl:p-5">
+    <section className="rounded-[16px] border border-black/10 bg-white/90 p-[14px] shadow-[0_2px_12px_rgba(0,0,0,0.06)] xl:px-4 xl:py-[14px]">
       <div className="flex items-center justify-between gap-3">
-        <h3 className="text-base font-bold">候选车型</h3>
-        <span className="rounded-full bg-[#f3f4f6] px-2.5 py-1 text-xs font-semibold text-black/50">{candidates.length} 款</span>
+        <h3 className="text-[13px] font-extrabold text-[#111]">候选车型</h3>
+        <span className="rounded-full bg-[#f3f4f6] px-2 py-[2px] text-[10px] font-semibold text-black/50">{candidates.length} 辆</span>
       </div>
       {isLoading ? <p className="mt-4 text-sm text-black/60">加载中...</p> : null}
       {!isLoading && candidates.length === 0 ? (

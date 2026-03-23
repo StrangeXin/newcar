@@ -15,8 +15,8 @@ export function MessageBubble({ message }: MessageBubbleProps) {
     return (
       <div className="flex justify-start">
         <div className="max-w-[88%] rounded-2xl border border-[#e9d5ff] bg-[#faf5ff] px-3 py-2 text-sm text-[#6d28d9] transition-opacity">
-          <p className="font-semibold">正在{message.name === 'car_search' ? '搜索车型' : message.name === 'car_detail' ? '读取车型详情' : message.name === 'journey_update' ? '更新旅程' : '加入候选'}…</p>
-          {summary ? <p className="mt-1 text-xs text-[#7c3aed]/80">{summary}</p> : null}
+          <p className="text-[10px] font-medium text-[#7c3aed]">正在{message.name === 'car_search' ? '搜索车型' : message.name === 'car_detail' ? '读取车型详情' : message.name === 'journey_update' ? '更新旅程' : '加入候选'}…</p>
+          {summary ? <p className="mt-1 text-[10px] text-[#7c3aed]/80">{summary}</p> : null}
         </div>
       </div>
     );
@@ -44,13 +44,13 @@ export function MessageBubble({ message }: MessageBubbleProps) {
   return (
     <div className={`flex ${isUser ? 'justify-end' : 'justify-start'}`}>
       <div
-        className={`max-w-[85%] px-3 py-2.5 text-sm ${
+        className={`max-w-[85%] px-3 py-2 text-[11px] ${
           isUser
             ? 'rounded-[14px_14px_2px_14px] bg-[#1a1a1a] text-white'
             : 'rounded-[2px_14px_14px_14px] border border-black/10 bg-[#f5f4f2] text-black/80'
         }`}
       >
-        <p className="whitespace-pre-wrap leading-6">
+        <p className="whitespace-pre-wrap leading-[1.6]">
           {message.content}
           {message.isStreaming ? <span className="ml-0.5 animate-pulse text-[#8b5cf6]">|</span> : null}
         </p>

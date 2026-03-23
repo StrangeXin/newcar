@@ -59,14 +59,14 @@ export function AiSummary({ journeyId }: AiSummaryProps) {
   }
 
   return (
-    <section className="rounded-[18px] border border-black/10 bg-white/90 p-4 shadow-card xl:p-5">
+    <section className="rounded-[16px] border border-black/10 bg-white/90 p-[14px] shadow-[0_2px_12px_rgba(0,0,0,0.06)] xl:px-4 xl:py-[14px]">
       <div className="flex items-center justify-between gap-3">
-        <h3 className="text-base font-bold">AI 历程摘要</h3>
+        <h3 className="text-[13px] font-extrabold text-[#111]">AI 旅程摘要</h3>
         <button
           type="button"
           onClick={refreshSnapshot}
           disabled={isRefreshing}
-          className="rounded-lg border border-black/20 bg-white px-3 py-1.5 text-xs font-semibold"
+          className="rounded-[7px] border-[1.5px] border-[#e5e7eb] bg-white px-[9px] py-[3px] text-[10px] font-semibold"
         >
           {isRefreshing ? '刷新中...' : '刷新快照'}
         </button>
@@ -79,29 +79,29 @@ export function AiSummary({ journeyId }: AiSummaryProps) {
 
       {snapshot ? (
         <div className="mt-4 space-y-4">
-          <p className="text-sm leading-7 text-black/75">{snapshot.narrativeSummary || '暂无摘要'}</p>
+          <p className="text-[11px] leading-[1.7] text-[#4b5563]">{snapshot.narrativeSummary || '暂无摘要'}</p>
 
           <div>
-            <h4 className="text-sm font-semibold">关键洞察</h4>
+            <h4 className="text-[10px] font-bold text-[#374151]">关键洞察</h4>
             <ul className="mt-2 space-y-2">
               {insights.slice(0, 3).map((item) => (
-                <li key={item.insight} className={`rounded-xl border-l-[3px] p-3 text-sm ${getInsightTone(item.confidence)}`}>
-                  <p className="font-semibold text-ink">{item.insight}</p>
-                  <p className="mt-1 text-black/65">{item.evidence}</p>
-                  <p className="mt-1 text-xs text-black/55">置信度：{Math.round(item.confidence * 100)}%</p>
+                <li key={item.insight} className={`rounded-[9px] border-l-[3px] px-[11px] py-[9px] text-sm ${getInsightTone(item.confidence)}`}>
+                  <p className="text-[11px] font-bold text-ink">{item.insight}</p>
+                  <p className="mt-1 text-[10px] leading-[1.4] text-black/65">{item.evidence}</p>
+                  <p className="mt-1 text-[9px] text-black/55">置信度 {Math.round(item.confidence * 100)}%</p>
                 </li>
               ))}
             </ul>
           </div>
 
           <div>
-            <h4 className="text-sm font-semibold">下一步建议</h4>
-            <div className="mt-2 flex flex-wrap gap-2">
+            <h4 className="text-[10px] font-bold text-[#374151]">AI 建议下一步</h4>
+            <div className="mt-[5px] flex flex-wrap gap-1">
               {actions.slice(0, 3).map((action) => (
                 <button
                   key={action}
                   type="button"
-                  className="rounded-full border border-black/10 bg-[#f3f4f6] px-3 py-1.5 text-sm font-medium text-black/70"
+                  className="rounded-full border border-[#e5e7eb] bg-[#f3f4f6] px-[9px] py-[3px] text-[10px] font-medium text-[#374151]"
                 >
                   {action}
                 </button>

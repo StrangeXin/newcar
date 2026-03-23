@@ -37,18 +37,18 @@ export function TodayUpdates() {
   }
 
   return (
-    <section className="rounded-[18px] border border-black/10 bg-white/90 p-4 shadow-card xl:p-5">
+    <section className="rounded-[16px] border border-black/10 bg-white/90 p-[14px] shadow-[0_2px_12px_rgba(0,0,0,0.06)] xl:px-4 xl:py-[14px]">
       <div className="flex items-center justify-between">
-        <h3 className="text-base font-bold">今日新动态</h3>
-        <span className="rounded-full bg-[#f3f4f6] px-2.5 py-1 text-xs font-semibold text-black/50">{unread.length} 条未读</span>
+        <h3 className="text-[13px] font-extrabold text-[#111]">今日新动态</h3>
+        <span className="rounded-full bg-[#f3f4f6] px-2 py-[2px] text-[10px] font-semibold text-black/50">{unread.length} 条未读</span>
       </div>
       {isLoading ? <p className="mt-4 text-sm text-black/60">加载中...</p> : null}
       {!isLoading && unread.length === 0 ? (
         <p className="mt-4 rounded-xl bg-black/5 p-3 text-sm text-black/55">今日暂无新动态</p>
       ) : null}
-      <ul className="mt-4 space-y-3">
+      <ul className="mt-3 space-y-[7px]">
         {unread.map((item) => (
-          <li key={item.id} className="rounded-xl border border-[#e5e7eb] bg-white px-3 py-3 transition hover:border-black/15">
+          <li key={item.id} className="rounded-[10px] border border-[#e5e7eb] bg-[#f9fafb] px-[11px] py-[9px] transition hover:border-black/15">
             <button
               type="button"
               onClick={() => markRead(item.id)}
@@ -56,18 +56,18 @@ export function TodayUpdates() {
               className="w-full text-left"
             >
               <div className="flex items-start justify-between gap-2">
-                <p className="text-sm font-semibold text-ink">
+                <p className="text-[11px] font-bold text-ink">
                   <span className="mr-2">{TYPE_ICON[item.type] || '📢'}</span>
                   {item.title}
                 </p>
-                <span className="text-xs text-black/45">
+                <span className="text-[9px] text-[#9ca3af]">
                   {new Date(item.createdAt).toLocaleTimeString('zh-CN', {
                     hour: '2-digit',
                     minute: '2-digit',
                   })}
                 </span>
               </div>
-              <p className="mt-1 text-sm text-black/65">{item.body || '查看详情'}</p>
+              <p className="mt-1 text-[10px] leading-[1.4] text-black/65">{item.body || '查看详情'}</p>
             </button>
           </li>
         ))}

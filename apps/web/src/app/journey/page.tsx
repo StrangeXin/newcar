@@ -18,7 +18,7 @@ export default function JourneyPage() {
 
   return (
     <main className="min-w-0">
-      <div className="rounded-[20px] border border-black/10 bg-white/75 p-4 shadow-card backdrop-blur md:rounded-2xl md:p-5 xl:bg-white/85">
+      <div className="rounded-[16px] border border-black/10 bg-white/80 p-[14px] shadow-[0_2px_12px_rgba(0,0,0,0.06)] backdrop-blur xl:bg-white/85 xl:p-4">
         <div className="flex items-center justify-between gap-3">
           <div>
             <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-[#e85d26]">Workspace</p>
