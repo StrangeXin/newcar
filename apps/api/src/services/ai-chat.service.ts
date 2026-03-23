@@ -21,10 +21,27 @@ interface ChatOptions {
   userId?: string;
   sessionId?: string;
   message: string;
+  traceId?: string;
   onEvent?: (event: StreamEvent) => void;
 }
 
 export class AiChatService {
+  private logChat(traceId: string | undefined, event: string, details?: Record<string, unknown>) {
+    if (!config.ai.debug) {
+      return;
+    }
+
+    console.log(
+      '[ai-chat]',
+      JSON.stringify({
+        ts: new Date().toISOString(),
+        traceId,
+        event,
+        ...(details || {}),
+      })
+    );
+  }
+
   private getClient(): Anthropic {
     return new Anthropic({
       apiKey: config.ai.apiKey,
@@ -61,8 +78,16 @@ export class AiChatService {
     conversationId: string;
     extractedSignals: any[];
   }> {
+    this.logChat(data.traceId, 'chat_start', {
+      journeyId: data.journeyId,
+      userId: data.userId,
+      hasSessionId: Boolean(data.sessionId),
+      messageLength: data.message.length,
+    });
+
     const journey = await journeyService.getJourneyDetail(data.journeyId);
     if (!journey) {
+      this.logChat(data.traceId, 'chat_abort_missing_journey', { journeyId: data.journeyId });
       throw new Error('Journey not found');
     }
 
@@ -75,6 +100,10 @@ export class AiChatService {
         });
 
     const sessionId = conversation.sessionId;
+    this.logChat(data.traceId, 'conversation_ready', {
+      conversationId: conversation.id,
+      sessionId,
+    });
 
     await conversationService.addMessage({
       journeyId: data.journeyId,
@@ -95,6 +124,10 @@ export class AiChatService {
       role: message.role === MessageRole.USER ? 'user' : 'assistant',
       content: message.content,
     }));
+    this.logChat(data.traceId, 'history_loaded', {
+      conversationId: conversation.id,
+      messageCount: messages.length,
+    });
 
     const existingRequirements = (journey.requirements as Record<string, unknown>) || {};
     const extractedSignals = this.buildSignals(data.message, existingRequirements);
@@ -104,6 +137,7 @@ export class AiChatService {
     }
 
     if (config.ai.e2eMock) {
+      this.logChat(data.traceId, 'mock_chat_start', { conversationId: conversation.id });
       const fullContent = await this.runMockChat(data, existingRequirements);
 
       await conversationService.addMessage({
@@ -123,6 +157,10 @@ export class AiChatService {
         type: 'done',
         conversationId: conversation.id,
         fullContent,
+      });
+      this.logChat(data.traceId, 'mock_chat_done', {
+        conversationId: conversation.id,
+        fullContentLength: fullContent.length,
       });
 
       return {
@@ -148,6 +186,9 @@ export class AiChatService {
         conversationId: conversation.id,
         fullContent: fallback,
       });
+      this.logChat(data.traceId, 'chat_fallback_no_api_key', {
+        conversationId: conversation.id,
+      });
       return {
         fullContent: fallback,
         conversationId: conversation.id,
@@ -159,8 +200,16 @@ export class AiChatService {
     const systemPrompt = this.buildSystemPrompt(journey.title, existingRequirements);
     let fullContent = '';
     let toolRounds = 0;
+    const executedTools: ChatToolName[] = [];
 
     while (toolRounds < 6) {
+      const round = toolRounds + 1;
+      this.logChat(data.traceId, 'llm_round_start', {
+        conversationId: conversation.id,
+        round,
+        messageCount: messages.length,
+      });
+
       const stream = client.messages.stream({
         model: config.ai.model,
         max_tokens: config.ai.maxTokens,
@@ -175,7 +224,47 @@ export class AiChatService {
         data.onEvent?.({ type: 'token', delta });
       });
 
-      const finalMessage = await stream.finalMessage();
+      let finalMessage;
+      try {
+        finalMessage = await Promise.race([
+          stream.finalMessage(),
+          new Promise<never>((_, reject) =>
+            setTimeout(() => reject(new Error(`AI round timeout after ${config.ai.roundTimeoutMs}ms`)), config.ai.roundTimeoutMs)
+          ),
+        ]);
+      } catch (error) {
+        this.logChat(data.traceId, 'llm_round_error', {
+          conversationId: conversation.id,
+          round,
+          error: error instanceof Error ? error.message : String(error),
+          streamedTextLength: streamedText.length,
+          executedTools,
+        });
+        if (toolRounds > 0 || executedTools.length > 0) {
+          if (streamedText) {
+            fullContent += streamedText;
+          }
+          fullContent = fullContent.trim() || this.buildToolCompletionFallback(executedTools);
+          this.logChat(data.traceId, 'llm_round_fallback_done', {
+            conversationId: conversation.id,
+            round,
+            fallbackReason: error instanceof Error ? error.message : String(error),
+            fullContentLength: fullContent.length,
+          });
+          break;
+        }
+        throw error;
+      }
+
+      this.logChat(data.traceId, 'llm_round_final_message', {
+        conversationId: conversation.id,
+        round,
+        streamedTextLength: streamedText.length,
+        contentBlockTypes: Array.isArray(finalMessage.content)
+          ? finalMessage.content.map((block: any) => block.type)
+          : [],
+      });
+
       messages.push({
         role: 'assistant',
         content: finalMessage.content as MessageParam['content'],
@@ -189,7 +278,22 @@ export class AiChatService {
         (block): block is ToolUseBlock => block.type === 'tool_use'
       );
 
+      this.logChat(data.traceId, 'llm_round_tool_summary', {
+        conversationId: conversation.id,
+        round,
+        toolUses: toolUses.map((toolUse) => ({
+          id: toolUse.id,
+          name: toolUse.name,
+          inputKeys: Object.keys((toolUse.input ?? {}) as Record<string, unknown>),
+        })),
+      });
+
       if (toolUses.length === 0) {
+        this.logChat(data.traceId, 'llm_round_completed_without_tools', {
+          conversationId: conversation.id,
+          round,
+          fullContentLength: fullContent.length,
+        });
         break;
       }
 
@@ -203,6 +307,13 @@ export class AiChatService {
       for (const toolUse of toolUses) {
         const toolName = toolUse.name as ChatToolName;
         const toolInput = (toolUse.input ?? {}) as Record<string, unknown>;
+        executedTools.push(toolName);
+        this.logChat(data.traceId, 'tool_start', {
+          conversationId: conversation.id,
+          round,
+          toolName,
+          input: toolInput,
+        });
         data.onEvent?.({ type: 'tool_start', name: toolName, input: toolInput });
 
         const toolResult = await executeChatTool(toolName, toolInput, {
@@ -220,8 +331,24 @@ export class AiChatService {
         });
 
         data.onEvent?.({ type: 'tool_done', name: toolName, result: toolResult.output });
+        this.logChat(data.traceId, 'tool_done', {
+          conversationId: conversation.id,
+          round,
+          toolName,
+          sideEffectCount: toolResult.sideEffects.length,
+          resultKeys:
+            toolResult.output && typeof toolResult.output === 'object'
+              ? Object.keys(toolResult.output as Record<string, unknown>)
+              : [],
+        });
 
         for (const sideEffect of toolResult.sideEffects) {
+          this.logChat(data.traceId, 'tool_side_effect', {
+            conversationId: conversation.id,
+            round,
+            toolName,
+            sideEffect: sideEffect.event,
+          });
           data.onEvent?.({
             type: 'side_effect',
             event: sideEffect.event,
@@ -243,7 +370,9 @@ export class AiChatService {
     }
 
     if (!fullContent.trim()) {
-      fullContent = '我已经更新了旅程信息。接下来我们可以继续缩小车型范围，或者开始做深度对比。';
+      fullContent = executedTools.length > 0
+        ? this.buildToolCompletionFallback(executedTools)
+        : '我已经更新了旅程信息。接下来我们可以继续缩小车型范围，或者开始做深度对比。';
     }
 
     await conversationService.addMessage({
@@ -263,6 +392,11 @@ export class AiChatService {
       type: 'done',
       conversationId: conversation.id,
       fullContent,
+    });
+    this.logChat(data.traceId, 'chat_done', {
+      conversationId: conversation.id,
+      fullContentLength: fullContent.length,
+      executedTools,
     });
 
     return {
@@ -362,6 +496,11 @@ export class AiChatService {
     name: ChatToolName,
     input: Record<string, unknown>
   ) {
+    this.logChat(data.traceId, 'mock_tool_start', {
+      journeyId: data.journeyId,
+      toolName: name,
+      input,
+    });
     const sanitizedInput = Object.fromEntries(Object.entries(input).filter(([, value]) => value !== undefined));
     data.onEvent?.({ type: 'tool_start', name, input: sanitizedInput });
     const result = await executeChatTool(name, sanitizedInput, {
@@ -369,6 +508,11 @@ export class AiChatService {
       userId: data.userId,
     });
     data.onEvent?.({ type: 'tool_done', name, result: result.output });
+    this.logChat(data.traceId, 'mock_tool_done', {
+      journeyId: data.journeyId,
+      toolName: name,
+      sideEffectCount: result.sideEffects.length,
+    });
     for (const sideEffect of result.sideEffects) {
       data.onEvent?.({
         type: 'side_effect',
@@ -390,6 +534,30 @@ export class AiChatService {
       `当前旅程标题：${title}`,
       `当前已知需求：${JSON.stringify(requirements, null, 2)}`,
     ].join('\n');
+  }
+
+  private buildToolCompletionFallback(toolNames: ChatToolName[]) {
+    const uniqueTools = [...new Set(toolNames)];
+    const actions: string[] = [];
+
+    if (uniqueTools.includes('journey_update')) {
+      actions.push('更新了旅程画像');
+    }
+    if (uniqueTools.includes('car_search')) {
+      actions.push('整理了相关车型');
+    }
+    if (uniqueTools.includes('car_detail')) {
+      actions.push('补充了车型详情');
+    }
+    if (uniqueTools.includes('add_candidate')) {
+      actions.push('同步了候选列表');
+    }
+
+    if (actions.length === 0) {
+      return '我已经更新了旅程信息。接下来我们可以继续缩小车型范围，或者开始做深度对比。';
+    }
+
+    return `我已经${actions.join('，')}。接下来我可以继续帮你比较差异、补充参数，或者把下一步决策拆得更清楚。`;
   }
 
   private buildSignals(message: string, requirements: Record<string, unknown>) {
