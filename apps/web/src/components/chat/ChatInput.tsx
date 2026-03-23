@@ -48,9 +48,9 @@ export function ChatInput({ disabled, onSend }: ChatInputProps) {
           onChange={(e) => setValue(e.target.value)}
           onKeyDown={onKeyDown}
           disabled={disabled}
-          rows={2}
+          rows={1}
           placeholder="问我任何购车问题…"
-          className="min-h-[38px] flex-1 resize-none rounded-[10px] border-[1.5px] border-[#d1d5db] bg-white px-[10px] py-[8px] text-[11px] outline-none ring-[#8b5cf6]/25 transition focus:ring-2 disabled:cursor-not-allowed disabled:opacity-60"
+          className="h-[38px] min-h-[38px] flex-1 resize-none rounded-[10px] border-[1.5px] border-[#d1d5db] bg-white px-[10px] py-[8px] text-[11px] leading-[1.2] outline-none ring-[#8b5cf6]/25 transition focus:ring-2 disabled:cursor-not-allowed disabled:opacity-60"
         />
         <button
           data-testid="chat-send"

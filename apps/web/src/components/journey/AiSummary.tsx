@@ -62,7 +62,7 @@ export function AiSummary({ journeyId }: AiSummaryProps) {
 
   return (
     <section className="rounded-ws-lg border border-workspace-border bg-workspace-surface p-ws14 shadow-workspace">
-      <div className="flex items-center justify-between gap-[10px]">
+      <div className="flex min-h-[28px] items-center justify-between gap-[10px]">
         <h3 className="text-[13px] font-extrabold text-[#111]">AI 旅程摘要</h3>
         <button
           type="button"

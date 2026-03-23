@@ -51,8 +51,8 @@ function StageItem({ index, label, active, completed, fullWidth = false }: Stage
 function DesktopStageProgress({ currentIndex, confidence }: { currentIndex: number; confidence: number }) {
   return (
     <aside className="hidden h-full min-h-0 w-full flex-col overflow-hidden rounded-ws-lg border border-workspace-border bg-workspace-surface p-ws14 shadow-workspace xl:flex">
-      <p className="text-[9px] font-bold uppercase tracking-[0.12em] text-[#e85d26]">Journey Stage</p>
-      <h2 className="mt-1 text-[15px] font-extrabold text-[#111]">旅程进度</h2>
+      <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-[#e85d26]">Journey Stage</p>
+      <h2 className="mt-1 text-[18px] font-extrabold text-[#111]">旅程进度</h2>
 
       <ol className="mt-[10px] flex flex-1 flex-col gap-[6px]">
         {STAGES.map((stage, index) => (

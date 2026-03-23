@@ -40,7 +40,7 @@ export function TodayUpdates() {
 
   return (
     <section className="rounded-ws-lg border border-workspace-border bg-workspace-surface p-ws14 shadow-workspace">
-      <div className="flex items-center justify-between">
+      <div className="flex min-h-[28px] items-center justify-between">
         <h3 className="text-[13px] font-extrabold text-[#111]">今日新动态</h3>
         <span className="inline-flex items-center justify-center rounded-full border border-workspace-chipBorder bg-workspace-chipBg px-[10px] py-1 text-[10px] font-semibold leading-[1.2] text-black/50">
           {displayItems.length} 条未读

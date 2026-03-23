@@ -18,7 +18,7 @@ export function CandidateList({ candidates, isLoading, refresh }: CandidateListP
       data-testid="candidate-list"
       className="flex h-full min-h-0 flex-col rounded-ws-lg border border-workspace-border bg-workspace-surface p-ws14 shadow-workspace"
     >
-      <div className="flex items-center justify-between gap-[10px]">
+      <div className="flex min-h-[28px] items-center justify-between gap-[10px]">
         <h3 className="text-[13px] font-extrabold text-[#111]">候选车型</h3>
         <span className="inline-flex items-center justify-center rounded-full border border-workspace-chipBorder bg-workspace-chipBg px-[10px] py-1 text-[10px] font-semibold leading-[1.2] text-black/50">
           {displayCandidates.length} 辆
