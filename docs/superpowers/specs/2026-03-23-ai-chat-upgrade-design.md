@@ -68,6 +68,7 @@ Express HTTP Server
 | 后端 | `apps/api/src/index.ts` | 改为 `http.createServer(app)` 显式创建 server，挂载 ws.Server |
 | 后端 | `apps/api/src/controllers/chat-ws.controller.ts` | 新增 WS 连接处理 |
 | 后端 | `apps/api/src/services/ai-chat.service.ts` | 完全重写（tool use + streaming） |
+| 后端 | `apps/api/src/services/conversation.service.ts` | 新增 `getOrCreateByJourney(journeyId, userId)` 方法 |
 | 后端 | `apps/api/src/tools/` | 新增 4 个工具定义文件 |
 | 前端 | `apps/web/src/store/chat.store.ts` | 重写（HTTP → WebSocket） |
 | 前端 | `apps/web/src/components/chat/MessageBubble.tsx` | 增加 streaming 状态 |
@@ -96,8 +97,8 @@ ws://api/ws/journeys/:journeyId/chat?token=<jwt>
 // 发送用户消息
 {
   type: "message",
-  content: string,
-  sessionId: string  // 从 localStorage 持久化读取（key: `chat_session_${journeyId}`），确保刷新后复用同一会话历史
+  content: string
+  // 注意：无 sessionId —— 后端通过 journeyId（路由参数）+ userId（JWT）唯一定位会话
 }
 ```
 
@@ -125,7 +126,17 @@ ws://api/ws/journeys/:journeyId/chat?token=<jwt>
 { type: "error", code: string, message: string }
 ```
 
-**副作用事件触发时机**：工具写入 DB 后立即推送，不等 AI 全部回复完成。用户在对话途中即可看到候选车面板更新。
+### 会话（Conversation）唯一性
+
+会话由后端以 **`journeyId + userId`** 为唯一键管理，与设备无关。
+
+- `conversationService` 新增方法 `getOrCreateByJourney(journeyId, userId)`，按 `journeyId + userId` 查找 Conversation 记录
+- DB 中 `sessionId` 字段填写固定值 `journeyId`（不需要 schema 迁移，保持向后兼容）
+- 旧 HTTP 端点（`POST /journeys/:id/chat`）及其 sessionId 逻辑保持不变
+
+**多端效果**：同一用户从手机、电脑、刷新页面重新连接，读到的都是同一条完整对话历史。
+
+
 
 ---
 
