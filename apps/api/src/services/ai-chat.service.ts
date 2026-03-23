@@ -3,7 +3,7 @@ import { MessageParam, ToolUseBlock } from '@anthropic-ai/sdk/resources/messages
 import { AddedReason, JourneyStage, MessageRole } from '@newcar/shared';
 import { config } from '../config';
 import { carCandidateService } from './car-candidate.service';
-import { carService, toYuanFromWan } from './car.service';
+import { carService } from './car.service';
 import { conversationService } from './conversation.service';
 import { journeyService } from './journey.service';
 import { chatTools, executeChatTool, type ChatSideEffect, type ChatToolName } from '../tools/chat-tools';
@@ -101,6 +101,35 @@ export class AiChatService {
 
     if (extractedSignals.length > 0) {
       await conversationService.extractSignals(conversation.id, extractedSignals);
+    }
+
+    if (config.ai.e2eMock) {
+      const fullContent = await this.runMockChat(data, existingRequirements);
+
+      await conversationService.addMessage({
+        journeyId: data.journeyId,
+        sessionId,
+        userId: data.userId,
+        role: MessageRole.ASSISTANT,
+        content: fullContent,
+      });
+
+      await journeyService.updateAiConfidenceScore(
+        data.journeyId,
+        this.estimateConfidenceScore(existingRequirements, fullContent)
+      );
+
+      data.onEvent?.({
+        type: 'done',
+        conversationId: conversation.id,
+        fullContent,
+      });
+
+      return {
+        fullContent,
+        conversationId: conversation.id,
+        extractedSignals,
+      };
     }
 
     if (!config.ai.apiKey) {
@@ -241,6 +270,97 @@ export class AiChatService {
       conversationId: conversation.id,
       extractedSignals,
     };
+  }
+
+  private async runMockChat(data: ChatOptions, existingRequirements: Record<string, unknown>) {
+    const lowerMessage = data.message.toLowerCase();
+    const budgetMatch = data.message.match(/(\d+(?:\.\d+)?)\s*万/);
+    const requirements: Record<string, unknown> = {};
+
+    if (budgetMatch) {
+      requirements.budgetMax = Number(budgetMatch[1]);
+    }
+    if (/家用|家庭|带娃/.test(data.message)) {
+      requirements.useCases = ['family'];
+    }
+    if (/增程|插混|phev/.test(lowerMessage)) {
+      requirements.fuelTypePreference = ['PHEV'];
+    }
+
+    if (Object.keys(requirements).length > 0 || /推荐|候选|对比|加入/.test(data.message)) {
+      await this.emitMockTool(data, 'journey_update', {
+        requirements: Object.keys(requirements).length > 0 ? requirements : undefined,
+        stage: /推荐|候选|对比|加入/.test(data.message) ? JourneyStage.COMPARISON : undefined,
+      });
+    }
+
+    if (/推荐|候选|理想|l6/.test(lowerMessage)) {
+      await this.emitMockTool(data, 'car_search', {
+        query: /理想|l6/.test(lowerMessage) ? 'L6' : 'SUV',
+        budgetMax: typeof requirements.budgetMax === 'number' ? requirements.budgetMax : undefined,
+        fuelType: Array.isArray(requirements.fuelTypePreference) ? String(requirements.fuelTypePreference[0]) : undefined,
+        limit: 3,
+      });
+    }
+
+    let candidateAdded = false;
+    let targetCarName = '理想 L6';
+    if (/理想\s*l6|理想l6|l6/.test(lowerMessage)) {
+      const cars = await carService.searchCars({ q: 'L6', limit: 10 });
+      const targetCar =
+        cars.find((car) => car.brand.includes('理想') && car.model.toLowerCase().includes('l6')) || cars[0];
+
+      if (targetCar) {
+        targetCarName = `${targetCar.brand} ${targetCar.model}`;
+        const alreadyAdded = await carCandidateService.getCandidatesByJourney(data.journeyId).then((candidates) =>
+          candidates.some((candidate) => candidate.carId === targetCar.id && candidate.status !== 'ELIMINATED')
+        );
+
+        if (!alreadyAdded) {
+          await this.emitMockTool(data, 'add_candidate', {
+            carId: targetCar.id,
+            priceAtAdd: targetCar.msrp || undefined,
+            userNotes: 'E2E mock: 满足家用增程 SUV 的核心需求。',
+          });
+          candidateAdded = true;
+        }
+      }
+    }
+
+    const finalText = [
+      `已按你的需求更新旅程画像${budgetMatch ? `，预算控制在 ${budgetMatch[1]} 万以内` : ''}。`,
+      '我也切到了更适合继续筛选的深度对比阶段。',
+      candidateAdded
+        ? `并且已经把 ${targetCarName} 加入候选列表，接下来可以继续比较空间、续航和落地价。`
+        : `${targetCarName} 目前已在候选中，接下来可以继续比较空间、续航和落地价。`,
+    ].join('');
+
+    for (const chunk of finalText.match(/.{1,12}/g) || [finalText]) {
+      data.onEvent?.({ type: 'token', delta: chunk });
+    }
+
+    return finalText;
+  }
+
+  private async emitMockTool(
+    data: ChatOptions,
+    name: ChatToolName,
+    input: Record<string, unknown>
+  ) {
+    const sanitizedInput = Object.fromEntries(Object.entries(input).filter(([, value]) => value !== undefined));
+    data.onEvent?.({ type: 'tool_start', name, input: sanitizedInput });
+    const result = await executeChatTool(name, sanitizedInput, {
+      journeyId: data.journeyId,
+      userId: data.userId,
+    });
+    data.onEvent?.({ type: 'tool_done', name, result: result.output });
+    for (const sideEffect of result.sideEffects) {
+      data.onEvent?.({
+        type: 'side_effect',
+        event: sideEffect.event,
+        data: sideEffect.data,
+      });
+    }
   }
 
   private buildSystemPrompt(title: string, requirements: Record<string, unknown>) {

@@ -41,6 +41,7 @@ export const config = {
 
   ai: {
     apiKey: process.env.AI_API_KEY || '',
+    e2eMock: process.env.AI_E2E_MOCK === '1',
     model: process.env.AI_MODEL || 'MiniMax-M2.7',
     maxTokens: parseInt(process.env.AI_MAX_TOKENS || '1024', 10),
     baseURL: process.env.AI_BASE_URL || 'https://api.minimaxi.com/anthropic',

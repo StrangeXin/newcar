@@ -43,6 +43,7 @@ export function ChatInput({ disabled, onSend }: ChatInputProps) {
       </div>
       <div className="flex items-end gap-[5px]">
         <textarea
+          data-testid="chat-input"
           value={value}
           onChange={(e) => setValue(e.target.value)}
           onKeyDown={onKeyDown}
@@ -52,6 +53,7 @@ export function ChatInput({ disabled, onSend }: ChatInputProps) {
           className="min-h-[34px] flex-1 resize-none rounded-[10px] border-[1.5px] border-[#d1d5db] bg-white px-[11px] py-[7px] text-[11px] outline-none ring-[#8b5cf6]/25 transition focus:ring-2 disabled:cursor-not-allowed disabled:opacity-60"
         />
         <button
+          data-testid="chat-send"
           type="button"
           onClick={() => void submit()}
           disabled={disabled || !value.trim()}

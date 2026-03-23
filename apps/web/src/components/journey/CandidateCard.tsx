@@ -93,17 +93,23 @@ export function CandidateCard({ candidate, onUpdated }: CandidateCardProps) {
   }, [candidate.carId, candidate.journeyId]);
 
   return (
-    <article className={`rounded-[12px] border-[1.5px] border-[#f0f0f0] bg-white px-[14px] py-3 shadow-[0_1px_6px_rgba(0,0,0,0.07)] transition ${isEliminated ? 'opacity-50' : ''}`}>
+    <article
+      data-testid="candidate-card"
+      data-candidate-name={`${candidate.car.brand} ${candidate.car.model}`}
+      className={`rounded-[12px] border-[1.5px] border-[#f0f0f0] bg-white px-[14px] py-3 shadow-[0_1px_6px_rgba(0,0,0,0.07)] transition ${isEliminated ? 'opacity-50' : ''}`}
+    >
       <div className="flex items-start justify-between gap-3">
         <div className="flex items-start gap-3">
           <div className="flex h-[34px] w-[46px] items-center justify-center rounded-[8px] bg-[linear-gradient(135deg,#dbeafe,#93c5fd)] text-[20px] text-white">
             🚗
           </div>
           <div>
-          <h4 className={`text-[12px] font-bold text-ink ${isEliminated ? 'line-through' : ''}`}>
-            {candidate.car.brand} {candidate.car.model}
-          </h4>
-          <p className="mt-0.5 text-[10px] text-[#6b7280]">{candidate.car.fuelType === 'PHEV' ? '增程' : candidate.car.fuelType} · {seats}座 {candidate.car.type}</p>
+            <h4 className={`text-[12px] font-bold text-ink ${isEliminated ? 'line-through' : ''}`}>
+              {candidate.car.brand} {candidate.car.model}
+            </h4>
+            <p className="mt-0.5 text-[10px] text-[#6b7280]">
+              {candidate.car.fuelType === 'PHEV' ? '增程' : candidate.car.fuelType} · {seats}座 {candidate.car.type}
+            </p>
           </div>
         </div>
         <div className="text-right">

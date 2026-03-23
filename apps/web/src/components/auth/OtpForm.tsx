@@ -74,6 +74,7 @@ export function OtpForm() {
             手机号
           </label>
           <input
+            data-testid="login-phone-input"
             id="phone"
             type="tel"
             autoComplete="tel"
@@ -83,6 +84,7 @@ export function OtpForm() {
             className="w-full rounded-xl border border-black/15 bg-white px-4 py-3 text-sm outline-none ring-ember/30 transition focus:ring-2"
           />
           <button
+            data-testid="send-otp-button"
             type="submit"
             disabled={loading}
             className="w-full rounded-xl bg-ink px-4 py-3 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-60"
@@ -96,6 +98,7 @@ export function OtpForm() {
             验证码
           </label>
           <input
+            data-testid="login-otp-input"
             id="otp"
             inputMode="numeric"
             value={otp}
@@ -104,6 +107,7 @@ export function OtpForm() {
             className="w-full rounded-xl border border-black/15 bg-white px-4 py-3 text-sm outline-none ring-ember/30 transition focus:ring-2"
           />
           <button
+            data-testid="verify-otp-button"
             type="submit"
             disabled={loading}
             className="w-full rounded-xl bg-ink px-4 py-3 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-60"
@@ -121,7 +125,7 @@ export function OtpForm() {
       )}
 
       {hintOtp ? (
-        <p className="rounded-lg bg-amber-50 px-3 py-2 text-xs text-amber-700">
+        <p data-testid="otp-hint" className="rounded-lg bg-amber-50 px-3 py-2 text-xs text-amber-700">
           开发环境验证码：{hintOtp}
         </p>
       ) : null}

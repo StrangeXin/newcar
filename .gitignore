@@ -10,3 +10,6 @@ dist/
 !apps/api/.env.example
 .turbo/
 apps/web/.next/
+test-results/
+playwright-report/
+.DS_Store

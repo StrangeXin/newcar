@@ -78,6 +78,7 @@ export function NewJourneyWizard({ onCreated }: NewJourneyWizardProps) {
             旅程标题
           </label>
           <input
+            data-testid="journey-title-input"
             id="title"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
@@ -89,6 +90,7 @@ export function NewJourneyWizard({ onCreated }: NewJourneyWizardProps) {
         <div>
           <label className="mb-2 block text-sm font-semibold text-black/70">预算范围（万元）</label>
           <select
+            data-testid="journey-budget-select"
             value={budgetRange}
             onChange={(e) => setBudgetRange(e.target.value)}
             className="w-full rounded-xl border border-black/15 bg-white px-4 py-3 text-sm outline-none ring-ember/30 focus:ring-2"
@@ -146,6 +148,7 @@ export function NewJourneyWizard({ onCreated }: NewJourneyWizardProps) {
         {error ? <p className="text-sm text-red-600">{error}</p> : null}
 
         <button
+          data-testid="start-journey-button"
           type="submit"
           disabled={loading}
           className="w-full rounded-xl bg-ink px-4 py-3 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-60"

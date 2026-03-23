@@ -42,6 +42,8 @@ export function StageProgress() {
           return (
             <li
               key={stage.key}
+              data-testid={`stage-${stage.key.toLowerCase()}`}
+              data-active={active ? 'true' : 'false'}
               className={`flex items-center gap-2 rounded-[10px] border px-2.5 py-1.5 text-[11px] font-semibold whitespace-nowrap lg:px-[9px] lg:py-[7px] lg:text-[12px] ${
                 active
                   ? 'border-[#111] bg-[#111] text-white'

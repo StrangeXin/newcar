@@ -30,7 +30,7 @@ export function ChatPanel({ onClose }: { onClose?: () => void }) {
   }
 
   return (
-    <aside className="chat-panel flex h-full min-h-[calc(100vh-2rem)] flex-col overflow-hidden rounded-[16px] border border-black/10 bg-white/90 shadow-[0_2px_12px_rgba(0,0,0,0.06)]">
+    <aside data-testid="chat-panel" className="chat-panel flex h-full min-h-[calc(100vh-2rem)] flex-col overflow-hidden rounded-[16px] border border-black/10 bg-white/90 shadow-[0_2px_12px_rgba(0,0,0,0.06)]">
       <div className="flex items-center gap-[7px] border-b border-black/5 px-4 py-3">
         <span className={`h-[7px] w-[7px] rounded-full ${isConnected ? 'bg-[#22c55e]' : 'bg-[#d1d5db]'}`} />
         <div>

@@ -11,7 +11,7 @@ interface CandidateListProps {
 
 export function CandidateList({ candidates, isLoading, refresh }: CandidateListProps) {
   return (
-    <section className="rounded-[16px] border border-black/10 bg-white/90 p-[14px] shadow-[0_2px_12px_rgba(0,0,0,0.06)] xl:px-4 xl:py-[14px]">
+    <section data-testid="candidate-list" className="rounded-[16px] border border-black/10 bg-white/90 p-[14px] shadow-[0_2px_12px_rgba(0,0,0,0.06)] xl:px-4 xl:py-[14px]">
       <div className="flex items-center justify-between gap-3">
         <h3 className="text-[13px] font-extrabold text-[#111]">候选车型</h3>
         <span className="rounded-full bg-[#f3f4f6] px-2 py-[2px] text-[10px] font-semibold text-black/50">{candidates.length} 辆</span>
