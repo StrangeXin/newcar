@@ -1,0 +1,680 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<title>完整工作台预览 · 响应式断点</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'PingFang SC', sans-serif;
+  background: #111;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ===== TOOLBAR ===== */
+.toolbar {
+  background: #0a0a0a;
+  border-bottom: 1px solid #222;
+  padding: 10px 20px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  flex-shrink: 0;
+}
+.toolbar-section { display: flex; align-items: center; gap: 6px; }
+.toolbar-label { font-size: 10px; color: #555; font-weight: 700; text-transform: uppercase; letter-spacing: .1em; }
+.viewport-btns { display: flex; gap: 4px; }
+.vp-btn {
+  background: #1a1a1a;
+  border: 1px solid #333;
+  border-radius: 6px;
+  padding: 5px 11px;
+  font-size: 11px;
+  color: #666;
+  cursor: pointer;
+  font-weight: 600;
+  transition: all .15s;
+  font-family: inherit;
+}
+.vp-btn:hover { border-color: #555; color: #aaa; }
+.vp-btn.active { background: #fff; color: #111; border-color: #fff; }
+.current-vp { margin-left: auto; font-size: 11px; color: #444; font-weight: 700; }
+.current-vp span { color: #888; }
+
+/* ===== PREVIEW AREA ===== */
+.preview-area {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding: 28px 24px;
+  overflow: auto;
+}
+.preview-frame {
+  background: #f0ede8;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 0 0 6px #1a1a1a, 0 0 0 10px #0a0a0a;
+  transition: width .3s ease, height .3s ease;
+  position: relative;
+  flex-shrink: 0;
+}
+
+/* ===== RESPONSIVE GRID ===== */
+.workspace {
+  display: grid;
+  gap: 10px;
+  padding: 14px;
+  box-sizing: border-box;
+  height: 100%;
+}
+
+/* ≥1920px — wider layout for large screens */
+@media (min-width: 1920px) {
+  .workspace {
+    grid-template-columns: 260px 1fr 400px;
+    gap: 14px;
+    padding: 18px;
+  }
+  .stage-panel { padding: 22px 18px; }
+  .stage-title { font-size: 18px; }
+  .stage-item { font-size: 13px; padding: 9px 12px; }
+  .ai-confidence { padding: 14px; }
+  .ai-conf-value { font-size: 28px; }
+  .publish-btn { font-size: 13px; padding: 10px; }
+  .section-card { padding: 18px 22px; }
+  .section-title { font-size: 15px; }
+  .cand-card { padding: 16px 18px; }
+  .cand-name { font-size: 14px; }
+  .cand-price { font-size: 16px; }
+  .chat-panel { }
+  .chat-header { padding: 16px 20px; }
+  .chat-title { font-size: 15px; }
+  .msg-ai-text, .msg-user-bubble { font-size: 13px; padding: 10px 14px; }
+  .chat-car-card { padding: 11px 14px; }
+  .quick-chip { font-size: 11px; padding: 4px 11px; }
+  .input-box { font-size: 12px; padding: 9px 13px; min-height: 38px; }
+}
+
+/* ≥1280px — full 3-column */
+@media (min-width: 1280px) and (max-width: 1919px) {
+  .workspace {
+    grid-template-columns: 220px 1fr 340px;
+  }
+}
+
+/* 1024px–1279px — compress sidebars */
+@media (min-width: 1024px) and (max-width: 1279px) {
+  .workspace {
+    grid-template-columns: 180px 1fr 280px;
+  }
+  .stage-panel { padding: 14px 12px; }
+  .ai-confidence,
+  .publish-btn,
+  .stage-label,
+  .stage-title { display: none; }
+  .stage-list { margin-top: 0; }
+  .section-card { padding: 12px 14px; }
+  .cand-card { padding: 10px 12px; }
+  .chat-messages { padding: 10px; }
+  .chat-input-area { padding: 8px 10px 12px; }
+  .quick-chips { display: none; }
+}
+
+/* 768px–1023px — 2-column, stage as horizontal bar */
+@media (min-width: 768px) and (max-width: 1023px) {
+  .workspace {
+    grid-template-columns: 1fr 300px;
+    grid-template-rows: auto 1fr;
+  }
+  .stage-panel-col {
+    grid-column: 1 / -1;
+  }
+  .stage-panel {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 16px;
+    border-radius: 14px;
+    flex-wrap: wrap;
+  }
+  .stage-label,
+  .stage-title,
+  .ai-confidence,
+  .publish-btn { display: none; }
+  .stage-list {
+    flex-direction: row;
+    margin-top: 0;
+    gap: 4px;
+  }
+  .stage-item { padding: 5px 10px; font-size: 11px; }
+}
+
+/* <768px — single column, chat below */
+@media (max-width: 767px) {
+  .workspace {
+    grid-template-columns: 1fr;
+    gap: 8px;
+    padding: 10px;
+  }
+  .stage-panel-col,
+  .chat-panel { display: none; }
+  .chat-panel-col { display: block; order: 3; }
+  .chat-panel-col .chat-panel {
+    display: flex;
+    height: 70vh;
+    border-radius: 20px 20px 0 0;
+  }
+}
+
+/* ===== COMPONENT STYLES ===== */
+.stage-panel {
+  background: rgba(255,255,255,0.9);
+  border-radius: 16px;
+  border: 1px solid rgba(0,0,0,.08);
+  box-shadow: 0 2px 12px rgba(0,0,0,.06);
+  padding: 18px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  overflow: hidden;
+}
+.stage-label { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: .12em; color: #e85d26; }
+.stage-title { font-size: 15px; font-weight: 800; color: #111; margin-top: 2px; }
+.stage-list { margin-top: 10px; display: flex; flex-direction: column; gap: 5px; flex: 1; }
+.stage-item {
+  display: flex; align-items: center; gap: 8px;
+  border-radius: 10px; padding: 7px 9px; font-size: 12px; font-weight: 600;
+  border: 1.5px solid transparent; transition: all .2s; white-space: nowrap;
+}
+.stage-item.done { background: rgba(34,197,94,.08); color: #16a34a; border-color: rgba(34,197,94,.2); }
+.stage-item.active { background: #111; color: #fff; }
+.stage-item.todo { background: rgba(0,0,0,.04); color: rgba(0,0,0,.4); border-color: rgba(0,0,0,.08); }
+.stage-dot { width: 20px; height: 20px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 9px; font-weight: 700; flex-shrink: 0; }
+.stage-item.done .stage-dot { background: rgba(34,197,94,.2); color: #16a34a; }
+.stage-item.active .stage-dot { background: rgba(255,255,255,.2); color: #fff; }
+.stage-item.todo .stage-dot { background: rgba(0,0,0,.08); color: rgba(0,0,0,.4); }
+
+.ai-confidence {
+  margin-top: 10px; background: #faf5ff; border-radius: 12px; padding: 10px;
+  border: 1px solid #e9d5ff;
+}
+.ai-conf-label { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; color: #7c3aed; }
+.ai-conf-value { font-size: 22px; font-weight: 800; color: #6d28d9; margin-top: 2px; }
+.ai-conf-bar { margin-top: 5px; height: 3px; background: #e9d5ff; border-radius: 99px; overflow: hidden; }
+.ai-conf-fill { height: 100%; background: linear-gradient(90deg,#8b5cf6,#6d28d9); border-radius: 99px; width: 72%; }
+.ai-conf-desc { font-size: 9px; color: #7c3aed; margin-top: 3px; line-height: 1.4; }
+
+.publish-btn {
+  margin-top: 10px; width: 100%; background: #fff; border: 1.5px solid rgba(0,0,0,.15);
+  border-radius: 10px; padding: 8px; font-size: 11px; font-weight: 700; color: #333; cursor: pointer;
+  text-align: center; font-family: inherit;
+}
+
+/* Kanban */
+.kanban-panel {
+  overflow-y: auto;
+  display: flex; flex-direction: column; gap: 10px;
+}
+.section-card {
+  background: rgba(255,255,255,.9);
+  border-radius: 16px;
+  border: 1px solid rgba(0,0,0,.08);
+  box-shadow: 0 2px 12px rgba(0,0,0,.06);
+  padding: 14px 16px;
+}
+.section-header { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 12px; }
+.section-title { font-size: 13px; font-weight: 800; color: #111; }
+.section-badge { font-size: 10px; font-weight: 600; background: #f3f4f6; color: #6b7280; padding: 2px 8px; border-radius: 20px; }
+
+.update-list { display: flex; flex-direction: column; gap: 7px; }
+.update-item {
+  display: flex; align-items: flex-start; gap: 9px;
+  background: #f9fafb; border-radius: 10px; padding: 9px 11px;
+  border: 1px solid #e5e7eb;
+}
+.update-icon { font-size: 16px; flex-shrink: 0; margin-top: 1px; }
+.update-title { font-size: 11px; font-weight: 700; color: #111; }
+.update-body { font-size: 10px; color: #6b7280; margin-top: 1px; line-height: 1.4; }
+.update-time { font-size: 9px; color: #9ca3af; margin-left: auto; flex-shrink: 0; }
+
+.ai-summary-text { font-size: 11px; color: #4b5563; line-height: 1.7; margin-bottom: 10px; }
+.insight-list { display: flex; flex-direction: column; gap: 6px; }
+.insight-item { border-radius: 9px; padding: 9px 11px; border-left: 3px solid; }
+.insight-item.high { background: #f0fdf4; border-color: #22c55e; }
+.insight-item.med { background: #eff6ff; border-color: #3b82f6; }
+.insight-title { font-size: 11px; font-weight: 700; color: #111; }
+.insight-desc { font-size: 10px; color: #6b7280; margin-top: 2px; line-height: 1.4; }
+.insight-conf { font-size: 9px; color: #9ca3af; margin-top: 2px; }
+
+.next-actions { margin-top: 10px; }
+.next-action-title { font-size: 10px; font-weight: 700; color: #374151; margin-bottom: 5px; }
+.action-chips { display: flex; flex-wrap: wrap; gap: 4px; }
+.action-chip {
+  background: #f3f4f6; border: 1px solid #e5e7eb; border-radius: 20px;
+  padding: 3px 9px; font-size: 10px; color: #374151; cursor: pointer; white-space: nowrap;
+}
+
+.candidate-grid { display: flex; flex-direction: column; gap: 9px; }
+.cand-card {
+  background: #fff; border-radius: 12px; padding: 12px 14px;
+  box-shadow: 0 1px 6px rgba(0,0,0,.07); border: 1.5px solid #f0f0f0;
+}
+.cand-card.elim { opacity: .5; }
+.cand-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; }
+.cand-icon { width: 46px; height: 34px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0; }
+.cand-name { font-size: 12px; font-weight: 700; color: #111; }
+.cand-sub { font-size: 10px; color: #6b7280; margin-top: 1px; }
+.cand-price { font-size: 14px; font-weight: 800; color: #111; text-align: right; }
+.cand-price-label { font-size: 9px; color: #9ca3af; }
+.cand-score-row { display: flex; justify-content: space-between; align-items: center; margin: 8px 0 3px; }
+.cand-score-label { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: #6b7280; }
+.cand-score-val { font-size: 11px; font-weight: 800; }
+.cand-bar { height: 3px; background: #e5e7eb; border-radius: 99px; overflow: hidden; }
+.cand-bar-fill { height: 100%; border-radius: 99px; }
+.cand-note { margin-top: 7px; border-radius: 7px; padding: 5px 9px; font-size: 10px; line-height: 1.5; }
+.cand-note.ai { background: #f5f3ff; color: #7c3aed; }
+.cand-note.user { background: #f9fafb; color: #6b7280; border: 1px dashed #e5e7eb; }
+.cand-actions { display: flex; gap: 5px; margin-top: 8px; }
+.btn-win { flex: 1; background: #111; color: #fff; border: none; border-radius: 7px; padding: 6px 0; font-size: 10px; font-weight: 700; cursor: pointer; font-family: inherit; }
+.btn-elim { flex: 1; background: #fff; color: #6b7280; border: 1.5px solid #e5e7eb; border-radius: 7px; padding: 6px 0; font-size: 10px; cursor: pointer; font-family: inherit; }
+.btn-note { background: #f9fafb; border: 1.5px solid #e5e7eb; border-radius: 7px; padding: 6px 9px; font-size: 10px; cursor: pointer; font-family: inherit; }
+
+/* Chat */
+.chat-panel {
+  background: rgba(255,255,255,.9);
+  border-radius: 16px;
+  border: 1px solid rgba(0,0,0,.08);
+  box-shadow: 0 2px 12px rgba(0,0,0,.06);
+  display: flex; flex-direction: column; overflow: hidden;
+  height: 100%;
+}
+.chat-header {
+  padding: 12px 16px; border-bottom: 1px solid rgba(0,0,0,.06);
+  display: flex; align-items: center; gap: 7px; flex-shrink: 0;
+}
+.chat-online-dot { width: 7px; height: 7px; border-radius: 50%; background: #22c55e; flex-shrink: 0; }
+.chat-title { font-size: 13px; font-weight: 800; }
+.chat-subtitle { font-size: 9px; color: #9ca3af; margin-left: auto; }
+.chat-messages { flex: 1; overflow-y: auto; padding: 12px; display: flex; flex-direction: column; gap: 10px; }
+
+.msg-row { display: flex; gap: 7px; align-items: flex-start; }
+.msg-row.user { justify-content: flex-end; }
+.msg-avatar { width: 26px; height: 26px; border-radius: 50%; background: linear-gradient(135deg,#667eea,#764ba2); flex-shrink: 0; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 8px; font-weight: 700; }
+.msg-user-bubble { background: #1a1a1a; color: #fff; border-radius: 14px 14px 2px 14px; padding: 8px 12px; font-size: 11px; max-width: 75%; line-height: 1.6; }
+.msg-ai-body { display: flex; flex-direction: column; gap: 5px; max-width: 88%; }
+.msg-ai-text { background: #f5f4f2; border-radius: 2px 14px 14px 14px; padding: 8px 12px; font-size: 11px; color: #333; line-height: 1.6; }
+.msg-streaming { background: #f5f4f2; border-radius: 2px 14px 14px 14px; padding: 8px 12px; font-size: 11px; color: #333; line-height: 1.6; }
+.cursor { display: inline-block; width: 2px; height: 11px; background: #6366f1; margin-left: 1px; vertical-align: middle; animation: blink 1s step-end infinite; }
+@keyframes blink { 50% { opacity: 0; } }
+
+.msg-tool { display: flex; align-items: center; gap: 5px; background: #faf5ff; border: 1px solid #e9d5ff; border-radius: 7px; padding: 5px 9px; }
+.msg-tool-text { font-size: 10px; color: #7c3aed; font-weight: 500; }
+.dots { display: flex; gap: 2px; margin-left: auto; }
+.dot { width: 3px; height: 3px; border-radius: 50%; background: #c4b5fd; }
+
+.chat-car-card {
+  background: #fff; border: 1px solid #e5e7eb; border-radius: 10px; padding: 9px 11px;
+  display: flex; align-items: center; gap: 9px; box-shadow: 0 1px 4px rgba(0,0,0,.05);
+}
+.chat-car-icon { width: 40px; height: 30px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 16px; flex-shrink: 0; }
+.chat-car-name { font-size: 11px; font-weight: 700; color: #111; }
+.chat-car-sub { font-size: 9px; color: #6b7280; margin-top: 1px; }
+.chat-car-bar { margin-top: 3px; height: 3px; background: #e5e7eb; border-radius: 99px; overflow: hidden; }
+.chat-car-bar-fill { height: 100%; border-radius: 99px; }
+.btn-add { background: #1a1a1a; color: #fff; border: none; border-radius: 7px; padding: 5px 8px; font-size: 10px; font-weight: 600; cursor: pointer; white-space: nowrap; font-family: inherit; }
+
+.side-effect-chip {
+  display: flex; align-items: center; gap: 5px; padding: 5px 9px;
+  border-radius: 7px; font-size: 10px; font-weight: 500;
+}
+.side-effect-chip.added { background: #f0fdf4; border: 1px solid #bbf7d0; color: #15803d; }
+.chip-view { margin-left: auto; font-size: 9px; color: #60a5fa; text-decoration: underline; cursor: pointer; }
+
+.chat-input-area { padding: 9px 12px 12px; border-top: 1px solid rgba(0,0,0,.06); flex-shrink: 0; }
+.quick-chips { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 7px; }
+.quick-chip {
+  background: #f3f4f6; border: 1px solid #e5e7eb; border-radius: 20px;
+  padding: 3px 9px; font-size: 10px; color: #374151; cursor: pointer; white-space: nowrap; font-family: inherit;
+}
+.input-row { display: flex; align-items: flex-end; gap: 5px; }
+.input-box {
+  flex: 1; border: 1.5px solid #d1d5db; border-radius: 10px; padding: 7px 11px;
+  font-size: 11px; color: #9ca3af; min-height: 34px; line-height: 1.5;
+  font-family: inherit; resize: none; outline: none; background: #fff;
+}
+.send-btn {
+  width: 34px; height: 34px; background: #111; border: none; border-radius: 9px;
+  display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0;
+}
+.send-icon { color: #fff; font-size: 13px; }
+
+/* Floating chat button for md breakpoint */
+.chat-fab {
+  display: none;
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  width: 56px;
+  height: 56px;
+  background: linear-gradient(135deg,#667eea,#764ba2);
+  border: none;
+  border-radius: 50%;
+  box-shadow: 0 4px 20px rgba(102,126,234,.4);
+  cursor: pointer;
+  z-index: 200;
+  font-size: 22px;
+  color: #fff;
+  align-items: center;
+  justify-content: center;
+}
+</style>
+</head>
+<body>
+
+<!-- TOOLBAR -->
+<div class="toolbar">
+  <div class="toolbar-section">
+    <span class="toolbar-label">Viewport</span>
+    <div class="viewport-btns">
+      <button class="vp-btn" data-w="375" onclick="setViewport(this)">375px</button>
+      <button class="vp-btn" data-w="768" onclick="setViewport(this)">768px</button>
+      <button class="vp-btn" data-w="1024" onclick="setViewport(this)">1024px</button>
+      <button class="vp-btn active" data-w="1280" onclick="setViewport(this)">1280px</button>
+      <button class="vp-btn" data-w="1440" onclick="setViewport(this)">1440px</button>
+      <button class="vp-btn" data-w="1920" onclick="setViewport(this)">1920px</button>
+    </div>
+  </div>
+  <div class="current-vp">当前: <span id="vp-label">1280px</span></div>
+</div>
+
+<!-- PREVIEW -->
+<div class="preview-area">
+  <div class="preview-frame" id="preview-frame" style="width:1280px; height:720px;">
+    <div class="workspace">
+
+      <!-- LEFT: Stage -->
+      <div class="stage-panel">
+        <div class="stage-label">Journey Stage</div>
+        <div class="stage-title">旅程进度</div>
+        <div class="stage-list">
+          <div class="stage-item done"><span class="stage-dot">✓</span>需求确认</div>
+          <div class="stage-item done"><span class="stage-dot">✓</span>候选筛选</div>
+          <div class="stage-item active"><span class="stage-dot">3</span>深度对比</div>
+          <div class="stage-item todo"><span class="stage-dot">4</span>决策强化</div>
+          <div class="stage-item todo"><span class="stage-dot">5</span>购买执行</div>
+        </div>
+        <div class="ai-confidence">
+          <div class="ai-conf-label">AI 置信度</div>
+          <div class="ai-conf-value">72%</div>
+          <div class="ai-conf-bar"><div class="ai-conf-fill"></div></div>
+          <div class="ai-conf-desc">已收集预算、车型偏好，继续聊可提升</div>
+        </div>
+        <div class="publish-btn">发布我的旅程 →</div>
+      </div>
+
+      <!-- CENTER: Kanban -->
+      <div class="kanban-panel">
+
+        <div class="section-card">
+          <div class="section-header">
+            <div class="section-title">今日新动态</div>
+            <div class="section-badge">2 条未读</div>
+          </div>
+          <div class="update-list">
+            <div class="update-item">
+              <div class="update-icon">📉</div>
+              <div>
+                <div class="update-title">理想 L6 限时优惠</div>
+                <div class="update-body">本月下订立减 8000 元</div>
+              </div>
+              <div class="update-time">10:24</div>
+            </div>
+            <div class="update-item">
+              <div class="update-icon">📝</div>
+              <div>
+                <div class="update-title">小鹏 G6 新增长续航版</div>
+                <div class="update-body">CLTC 706km，售价 22.99 万</div>
+              </div>
+              <div class="update-time">09:05</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="section-card">
+          <div class="section-header">
+            <div class="section-title">AI 旅程摘要</div>
+            <button style="background:#fff;border:1.5px solid #e5e7eb;border-radius:7px;padding:3px 9px;font-size:10px;cursor:pointer;font-weight:600;font-family:inherit;">刷新快照</button>
+          </div>
+          <div class="ai-summary-text">你的核心需求已趋于清晰：30万以内家用SUV，增程或混动优先，家庭出行+通勤兼顾。目前候选列表进入深度对比阶段。</div>
+          <div class="insight-list">
+            <div class="insight-item high">
+              <div class="insight-title">价格敏感度高</div>
+              <div class="insight-desc">多次提及"30万以内"，对超预算方案快速排除</div>
+              <div class="insight-conf">置信度 91%</div>
+            </div>
+            <div class="insight-item med">
+              <div class="insight-title">续航焦虑中等</div>
+              <div class="insight-desc">询问过纯电续航，但最终更看重不限号政策</div>
+              <div class="insight-conf">置信度 74%</div>
+            </div>
+          </div>
+          <div class="next-actions">
+            <div class="next-action-title">AI 建议下一步</div>
+            <div class="action-chips">
+              <div class="action-chip">📊 查看用车成本对比</div>
+              <div class="action-chip">🏪 预约试驾理想 L6</div>
+              <div class="action-chip">💬 问问车主反馈</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="section-card">
+          <div class="section-header">
+            <div class="section-title">候选车型</div>
+            <div class="section-badge">3 辆</div>
+          </div>
+          <div class="candidate-grid">
+
+            <div class="cand-card">
+              <div class="cand-top">
+                <div style="display:flex;align-items:center;gap:9px;">
+                  <div class="cand-icon" style="background:linear-gradient(135deg,#dbeafe,#93c5fd);">🚗</div>
+                  <div>
+                    <div class="cand-name">理想 L6</div>
+                    <div class="cand-sub">增程 · 五座 SUV</div>
+                  </div>
+                </div>
+                <div>
+                  <div class="cand-price">27.98万</div>
+                  <div class="cand-price-label">起售价</div>
+                </div>
+              </div>
+              <div class="cand-score-row">
+                <span class="cand-score-label">AI 匹配度</span>
+                <span class="cand-score-val" style="color:#6366f1;">92%</span>
+              </div>
+              <div class="cand-bar"><div class="cand-bar-fill" style="width:92%;background:linear-gradient(90deg,#6366f1,#8b5cf6);"></div></div>
+              <div class="cand-note ai">💡 符合家用通勤需求，增程不限号</div>
+              <div class="cand-actions">
+                <button class="btn-win">选定</button>
+                <button class="btn-elim">淘汰</button>
+                <button class="btn-note">✏️</button>
+              </div>
+            </div>
+
+            <div class="cand-card">
+              <div class="cand-top">
+                <div style="display:flex;align-items:center;gap:9px;">
+                  <div class="cand-icon" style="background:linear-gradient(135deg,#d1fae5,#6ee7b7);">🚗</div>
+                  <div>
+                    <div class="cand-name">小鹏 G6</div>
+                    <div class="cand-sub">纯电 · 五座 SUV</div>
+                  </div>
+                </div>
+                <div>
+                  <div class="cand-price">20.99万</div>
+                  <div class="cand-price-label">起售价</div>
+                </div>
+              </div>
+              <div class="cand-score-row">
+                <span class="cand-score-label">AI 匹配度</span>
+                <span class="cand-score-val" style="color:#10b981;">85%</span>
+              </div>
+              <div class="cand-bar"><div class="cand-bar-fill" style="width:85%;background:linear-gradient(90deg,#10b981,#059669);"></div></div>
+              <div class="cand-note ai">💡 城市通勤纯电首选，价格在预算内</div>
+              <div class="cand-actions">
+                <button class="btn-win">选定</button>
+                <button class="btn-elim">淘汰</button>
+                <button class="btn-note">✏️</button>
+              </div>
+            </div>
+
+            <div class="cand-card elim">
+              <div class="cand-top">
+                <div style="display:flex;align-items:center;gap:9px;">
+                  <div class="cand-icon" style="background:#f3f4f6;">🚗</div>
+                  <div>
+                    <div class="cand-name" style="text-decoration:line-through;color:#9ca3af;">问界 M7</div>
+                    <div class="cand-sub">增程 · 六座</div>
+                  </div>
+                </div>
+                <div>
+                  <div class="cand-price" style="color:#9ca3af;">32.98万</div>
+                  <div class="cand-price-label">超出预算</div>
+                </div>
+              </div>
+              <div class="cand-note user">已淘汰 · 超出 30 万预算</div>
+              <div class="cand-actions">
+                <button class="btn-elim" style="flex:1;">恢复候选</button>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+      </div><!-- end kanban -->
+
+      <!-- RIGHT: Chat -->
+      <div class="chat-panel">
+        <div class="chat-header">
+          <div class="chat-online-dot"></div>
+          <div class="chat-title">AI 购车助手</div>
+          <div class="chat-subtitle">旅程模式</div>
+        </div>
+
+        <div class="chat-messages">
+
+          <div class="msg-row user">
+            <div class="msg-user-bubble">帮我找一下预算30万以内的增程SUV</div>
+          </div>
+
+          <div class="msg-row">
+            <div class="msg-avatar">AI</div>
+            <div class="msg-ai-body">
+              <div class="msg-ai-text">好的，我来帮你搜索一下</div>
+              <div class="msg-tool">
+                <span style="font-size:12px;">🔍</span>
+                <span class="msg-tool-text">正在搜索「30万 增程 SUV」…</span>
+                <div class="dots"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="msg-row">
+            <div class="msg-avatar">AI</div>
+            <div class="msg-ai-body">
+              <div class="msg-ai-text">找到 2 款非常匹配的车型 👇</div>
+              <div class="chat-car-card">
+                <div class="chat-car-icon" style="background:linear-gradient(135deg,#dbeafe,#93c5fd);">🚗</div>
+                <div style="flex:1;min-width:0;">
+                  <div class="chat-car-name">理想 L6</div>
+                  <div class="chat-car-sub">增程 · 五座 · 27.98万起</div>
+                  <div class="chat-car-bar"><div class="chat-car-bar-fill" style="width:92%;background:#6366f1;"></div></div>
+                </div>
+                <button class="btn-add">+ 加入</button>
+              </div>
+              <div class="chat-car-card">
+                <div class="chat-car-icon" style="background:linear-gradient(135deg,#d1fae5,#6ee7b7);">🚗</div>
+                <div style="flex:1;min-width:0;">
+                  <div class="chat-car-name">小鹏 G6</div>
+                  <div class="chat-car-sub">纯电 · 五座 · 20.99万起</div>
+                  <div class="chat-car-bar"><div class="chat-car-bar-fill" style="width:85%;background:#10b981;"></div></div>
+                </div>
+                <button class="btn-add">+ 加入</button>
+              </div>
+              <div class="side-effect-chip added">
+                <span>✓</span> 理想 L6 已加入候选列表
+                <span class="chip-view">查看</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="msg-row user">
+            <div class="msg-user-bubble">理想 L6 口碑怎么样？</div>
+          </div>
+
+          <div class="msg-row">
+            <div class="msg-avatar">AI</div>
+            <div class="msg-ai-body">
+              <div class="msg-streaming">理想 L6 整体口碑不错，空间和增程体验获高频认可<span class="cursor"></span></div>
+            </div>
+          </div>
+
+        </div>
+
+        <div class="chat-input-area">
+          <div class="quick-chips">
+            <div class="quick-chip">📊 帮我对比两款车</div>
+            <div class="quick-chip">💰 算一下用车成本</div>
+            <div class="quick-chip">🏪 附近哪里可试驾</div>
+          </div>
+          <div class="input-row">
+            <textarea class="input-box" rows="1" placeholder="问我任何购车问题…"></textarea>
+            <button class="send-btn"><span class="send-icon">↑</span></button>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- end workspace -->
+  </div><!-- end preview-frame -->
+</div><!-- end preview-area -->
+
+<!-- Floating chat button (for md breakpoint) -->
+<button class="chat-fab" id="chat-fab" onclick="toggleChat()">💬</button>
+
+<script>
+const PRESETS = {
+  375: { w: 375, h: 667, label: '375px (Mobile)' },
+  768: { w: 768, h: 600, label: '768px (Tablet)' },
+  1024: { w: 1024, h: 640, label: '1024px (Laptop)' },
+  1280: { w: 1280, h: 720, label: '1280px (Desktop)' },
+  1440: { w: 1440, h: 800, label: '1440px (Wide)' },
+  1920: { w: 1920, h: 900, label: '1920px (Full HD)' },
+};
+
+function setViewport(btn) {
+  document.querySelectorAll('.vp-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  const w = parseInt(btn.dataset.w);
+  const preset = PRESETS[w];
+  const frame = document.getElementById('preview-frame');
+  frame.style.width = preset.w + 'px';
+  frame.style.height = preset.h + 'px';
+  document.getElementById('vp-label').textContent = preset.label;
+}
+
+// Auto-set height for current width
+window.addEventListener('resize', () => {
+  const active = document.querySelector('.vp-btn.active');
+  if (active) setViewport(active);
+});
+</script>
+</body>
+</html>
