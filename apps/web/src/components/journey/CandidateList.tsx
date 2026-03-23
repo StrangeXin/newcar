@@ -2,6 +2,7 @@
 
 import { Candidate } from '@/types/api';
 import { CandidateCard } from './CandidateCard';
+import { mockCandidates } from './workspace-mock-data';
 
 interface CandidateListProps {
   candidates: Candidate[];
@@ -10,18 +11,22 @@ interface CandidateListProps {
 }
 
 export function CandidateList({ candidates, isLoading, refresh }: CandidateListProps) {
+  const displayCandidates = candidates.length > 0 ? candidates : mockCandidates;
+
   return (
-    <section data-testid="candidate-list" className="rounded-[16px] border border-black/10 bg-white/90 p-[14px] shadow-[0_2px_12px_rgba(0,0,0,0.06)] xl:px-4 xl:py-[14px]">
-      <div className="flex items-center justify-between gap-3">
+    <section
+      data-testid="candidate-list"
+      className="flex h-full min-h-0 flex-col rounded-ws-lg border border-workspace-border bg-workspace-surface p-ws14 shadow-workspace"
+    >
+      <div className="flex items-center justify-between gap-[10px]">
         <h3 className="text-[13px] font-extrabold text-[#111]">候选车型</h3>
-        <span className="rounded-full bg-[#f3f4f6] px-2 py-[2px] text-[10px] font-semibold text-black/50">{candidates.length} 辆</span>
+        <span className="inline-flex items-center justify-center rounded-full border border-workspace-chipBorder bg-workspace-chipBg px-[10px] py-1 text-[10px] font-semibold leading-[1.2] text-black/50">
+          {displayCandidates.length} 辆
+        </span>
       </div>
-      {isLoading ? <p className="mt-4 text-sm text-black/60">加载中...</p> : null}
-      {!isLoading && candidates.length === 0 ? (
-        <p className="mt-4 rounded-xl bg-black/5 p-3 text-sm text-black/55">暂无候选车型</p>
-      ) : null}
-      <div className="mt-4 space-y-3">
-        {candidates.map((candidate) => (
+      {isLoading ? <p className="mt-4 text-[11px] text-black/60">加载中...</p> : null}
+      <div className="mt-[10px] flex min-h-0 flex-1 flex-col gap-[10px] overflow-y-auto pr-1">
+        {displayCandidates.map((candidate) => (
           <CandidateCard key={candidate.id} candidate={candidate} onUpdated={refresh} />
         ))}
       </div>

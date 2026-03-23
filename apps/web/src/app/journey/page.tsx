@@ -17,28 +17,19 @@ export default function JourneyPage() {
   }, [journey?.id]);
 
   return (
-    <main className="min-w-0">
-      <div className="rounded-[16px] border border-black/10 bg-white/80 p-[14px] shadow-[0_2px_12px_rgba(0,0,0,0.06)] backdrop-blur xl:bg-white/85 xl:p-4">
-        <div className="flex items-center justify-between gap-3">
-          <div>
-            <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-[#e85d26]">Workspace</p>
-            <h1 className="mt-1 text-xl font-bold text-[#111]">旅程工作台</h1>
-          </div>
-          {journey ? (
-            <span className="rounded-full border border-black/10 bg-[#f3f4f6] px-3 py-1 text-xs font-semibold text-black/55">
-              {journey.title}
-            </span>
-          ) : null}
+    <main className="flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
+      {isLoading ? (
+        <div className="rounded-ws-lg border border-workspace-border bg-workspace-surface p-ws14 text-[11px] text-black/60 shadow-workspace">
+          正在加载旅程数据...
         </div>
-        {isLoading ? <p className="mt-3 text-sm text-black/60">正在加载旅程数据...</p> : null}
-        {error ? <p className="mt-3 text-sm text-red-600">{error.message}</p> : null}
-        {!isLoading && !journey && !error ? <div className="mt-4"><NewJourneyWizard onCreated={refresh} /></div> : null}
-        {journey && !error ? (
-          <div className="mt-4">
-            <Kanban journeyId={journey.id} />
-          </div>
-        ) : null}
-      </div>
+      ) : null}
+      {error ? (
+        <div className="rounded-ws-lg border border-red-200 bg-workspace-surface p-ws14 text-[11px] text-red-600 shadow-workspace">
+          {error.message}
+        </div>
+      ) : null}
+      {!isLoading && !journey && !error ? <NewJourneyWizard onCreated={refresh} /> : null}
+      {journey && !error ? <Kanban journeyId={journey.id} /> : null}
     </main>
   );
 }

@@ -10,18 +10,14 @@ interface CandidateCardProps {
   onUpdated: () => Promise<unknown>;
 }
 
-const STATUS_LABEL: Record<Candidate['status'], string> = {
-  ACTIVE: '活跃',
-  ELIMINATED: '已淘汰',
-  WINNER: '已选定',
-};
-
 export function CandidateCard({ candidate, onUpdated }: CandidateCardProps) {
   const [busy, setBusy] = useState(false);
   const [showNotes, setShowNotes] = useState(false);
   const [notes, setNotes] = useState(candidate.userNotes || '');
+  const isMock = candidate.journeyId === 'mock-journey';
 
   async function eliminate() {
+    if (isMock) return;
     try {
       setBusy(true);
       await patch(`/journeys/${candidate.journeyId}/candidates/${candidate.id}`, {
@@ -34,6 +30,7 @@ export function CandidateCard({ candidate, onUpdated }: CandidateCardProps) {
   }
 
   async function restore() {
+    if (isMock) return;
     try {
       setBusy(true);
       await patch(`/journeys/${candidate.journeyId}/candidates/${candidate.id}`, {
@@ -46,6 +43,7 @@ export function CandidateCard({ candidate, onUpdated }: CandidateCardProps) {
   }
 
   async function markWinner() {
+    if (isMock) return;
     try {
       setBusy(true);
       await post(`/journeys/${candidate.journeyId}/candidates/${candidate.id}/winner`, {});
@@ -56,6 +54,7 @@ export function CandidateCard({ candidate, onUpdated }: CandidateCardProps) {
   }
 
   async function saveNotes() {
+    if (isMock) return;
     try {
       setBusy(true);
       await patch(`/journeys/${candidate.journeyId}/candidates/${candidate.id}/notes`, { notes });
@@ -66,7 +65,6 @@ export function CandidateCard({ candidate, onUpdated }: CandidateCardProps) {
   }
 
   const score = Math.round((candidate.aiMatchScore || 0) * 100);
-  const displayPrice = candidate.priceAtAdd || candidate.car.msrp || 0;
   const isEliminated = candidate.status === 'ELIMINATED';
   const seats =
     candidate.car.baseSpecs &&
@@ -75,8 +73,33 @@ export function CandidateCard({ candidate, onUpdated }: CandidateCardProps) {
     'seats' in candidate.car.baseSpecs
       ? Number((candidate.car.baseSpecs as Record<string, unknown>).seats || 5)
       : 5;
+  const brandTheme =
+    candidate.car.brand.includes('理想')
+      ? {
+          icon: 'bg-[linear-gradient(135deg,#dbeafe,#93c5fd)]',
+          bar: 'bg-[linear-gradient(90deg,#6366f1,#8b5cf6)]',
+          score: 'text-[#6366f1]',
+        }
+      : candidate.car.brand.includes('小鹏')
+        ? {
+            icon: 'bg-[linear-gradient(135deg,#d1fae5,#6ee7b7)]',
+            bar: 'bg-[linear-gradient(90deg,#10b981,#059669)]',
+            score: 'text-[#10b981]',
+          }
+        : {
+            icon: 'bg-[#f3f4f6]',
+            bar: 'bg-[linear-gradient(90deg,#9ca3af,#6b7280)]',
+            score: 'text-[#9ca3af]',
+          };
+  const seatLabel = seats === 5 ? '五座' : seats === 6 ? '六座' : `${seats}座`;
+  const priceLabel = isEliminated ? '超出预算' : '起售价';
+  const noteTone = isEliminated ? 'bg-[#f9fafb] text-[#6b7280] border border-dashed border-[#e5e7eb]' : 'bg-[#f5f3ff] text-[#7c3aed]';
 
   useEffect(() => {
+    if (isMock) {
+      return;
+    }
+
     const start = Date.now();
     void trackEvent(candidate.journeyId, 'CAR_VIEW', 'CAR', candidate.carId, {
       carId: candidate.carId,
@@ -90,57 +113,57 @@ export function CandidateCard({ candidate, onUpdated }: CandidateCardProps) {
         duration_sec: durationSec,
       });
     };
-  }, [candidate.carId, candidate.journeyId]);
+  }, [candidate.carId, candidate.journeyId, isMock]);
 
   return (
     <article
       data-testid="candidate-card"
       data-candidate-name={`${candidate.car.brand} ${candidate.car.model}`}
-      className={`rounded-[12px] border-[1.5px] border-[#f0f0f0] bg-white px-[14px] py-3 shadow-[0_1px_6px_rgba(0,0,0,0.07)] transition ${isEliminated ? 'opacity-50' : ''}`}
+      className={`rounded-[10px] border-[1.5px] border-[#f0f0f0] bg-white px-[14px] py-[14px] shadow-[0_1px_6px_rgba(0,0,0,0.07)] transition ${isEliminated ? 'opacity-50' : ''}`}
     >
-      <div className="flex items-start justify-between gap-3">
-        <div className="flex items-start gap-3">
-          <div className="flex h-[34px] w-[46px] items-center justify-center rounded-[8px] bg-[linear-gradient(135deg,#dbeafe,#93c5fd)] text-[20px] text-white">
+      <div className="flex items-start justify-between gap-[10px]">
+        <div className="flex items-start gap-[10px]">
+          <div className={`flex h-[34px] w-[46px] items-center justify-center rounded-[8px] text-[20px] text-white ${brandTheme.icon}`}>
             🚗
           </div>
           <div>
-            <h4 className={`text-[12px] font-bold text-ink ${isEliminated ? 'line-through' : ''}`}>
+            <h4 className={`text-[12px] font-bold text-ink ${isEliminated ? 'line-through text-[#9ca3af]' : ''}`}>
               {candidate.car.brand} {candidate.car.model}
             </h4>
             <p className="mt-0.5 text-[10px] text-[#6b7280]">
-              {candidate.car.fuelType === 'PHEV' ? '增程' : candidate.car.fuelType} · {seats}座 {candidate.car.type}
+              {candidate.car.fuelType === 'PHEV' ? '增程' : candidate.car.fuelType === 'BEV' ? '纯电' : candidate.car.fuelType} · {seatLabel} {candidate.car.type}
             </p>
           </div>
         </div>
         <div className="text-right">
-          <p className="text-[14px] font-extrabold text-[#111]">{candidate.car.msrp ? `${(candidate.car.msrp / 10000).toFixed(2)}万` : '暂无'}</p>
-          <p className="text-[9px] text-[#9ca3af]">起售价</p>
+          <p className={`text-[14px] font-extrabold ${isEliminated ? 'text-[#9ca3af]' : 'text-[#111]'}`}>{candidate.car.msrp ? `${(candidate.car.msrp / 10000).toFixed(2)}万` : '暂无'}</p>
+          <p className="text-[9px] text-[#9ca3af]">{priceLabel}</p>
         </div>
       </div>
 
-      <div className="mt-2">
-        <div className="mb-[3px] flex items-center justify-between text-[9px] text-black/60">
+      <div className="mt-[10px]">
+        <div className="mb-1 flex items-center justify-between text-[9px] text-black/60">
           <span className="font-bold uppercase tracking-[0.05em] text-[#6b7280]">AI 匹配度</span>
-          <span className="text-[11px] font-extrabold text-[#6366f1]">{score}%</span>
+          <span className={`text-[11px] font-extrabold ${brandTheme.score}`}>{score}%</span>
         </div>
         <div className="h-[3px] rounded-full bg-[#e5e7eb]">
-          <div className="h-[3px] rounded-full bg-[linear-gradient(90deg,#6366f1,#8b5cf6)] transition-all" style={{ width: `${score}%` }} />
+          <div className={`h-[3px] rounded-full transition-all ${brandTheme.bar}`} style={{ width: `${score}%` }} />
         </div>
       </div>
 
-      <div className="mt-[7px] rounded-[7px] bg-[#f5f3ff] px-[9px] py-[5px] text-[10px] leading-[1.5] text-[#7c3aed]">
+      <div className={`mt-[10px] rounded-[8px] px-[10px] py-[6px] text-[10px] leading-[1.5] ${noteTone}`}>
         {isEliminated
           ? candidate.eliminationReason || '这款车当前被移出候选。'
-          : candidate.userNotes || 'AI 认为它和你的当前需求匹配度较高，值得继续观察。'}
+          : `💡 ${candidate.userNotes || '符合家用通勤需求，值得继续观察。'}`}
       </div>
 
-      <div className="mt-2 flex gap-[5px]">
+      <div className="mt-[10px] flex gap-[6px]">
         {isEliminated ? (
           <button
             type="button"
             onClick={restore}
             disabled={busy}
-            className="flex-1 rounded-[7px] border-[1.5px] border-[#e5e7eb] bg-white px-3 py-1.5 text-[10px] font-semibold text-[#6b7280]"
+            className="flex-1 rounded-[8px] border-[1.5px] border-[#e5e7eb] bg-white px-[10px] py-[6px] text-[10px] font-semibold text-[#6b7280]"
           >
             恢复候选
           </button>
@@ -149,16 +172,16 @@ export function CandidateCard({ candidate, onUpdated }: CandidateCardProps) {
             <button
               type="button"
               onClick={markWinner}
-              disabled={busy || candidate.status === 'WINNER'}
-              className="flex-1 rounded-[7px] bg-[#111] px-3 py-1.5 text-[10px] font-bold text-white"
+              disabled={isMock || busy || candidate.status === 'WINNER'}
+              className="flex-1 rounded-[8px] bg-[#111] px-[10px] py-[6px] text-[10px] font-bold text-white"
             >
               选定
             </button>
             <button
               type="button"
               onClick={eliminate}
-              disabled={busy || candidate.status === 'ELIMINATED'}
-              className="flex-1 rounded-[7px] border-[1.5px] border-[#e5e7eb] bg-white px-3 py-1.5 text-[10px] font-medium text-[#6b7280]"
+              disabled={isMock || busy || candidate.status === 'ELIMINATED'}
+              className="flex-1 rounded-[8px] border-[1.5px] border-[#e5e7eb] bg-white px-[10px] py-[6px] text-[10px] font-medium text-[#6b7280]"
             >
               淘汰
             </button>
@@ -167,26 +190,27 @@ export function CandidateCard({ candidate, onUpdated }: CandidateCardProps) {
         <button
           type="button"
           onClick={() => setShowNotes((v) => !v)}
-          className="rounded-[7px] border-[1.5px] border-[#e5e7eb] bg-[#f9fafb] px-[9px] py-1.5 text-[10px] font-medium text-[#374151]"
+          disabled={isMock}
+          className="rounded-[8px] border-[1.5px] border-[#e5e7eb] bg-[#f9fafb] px-[10px] py-[6px] text-[10px] font-medium text-[#374151]"
         >
           ✏️
         </button>
       </div>
 
       {showNotes ? (
-        <div className="mt-3 space-y-2">
+        <div className="mt-[10px] space-y-[10px]">
           <textarea
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
             rows={3}
-            className="w-full rounded-[7px] border border-black/15 bg-white px-3 py-2 text-[11px] outline-none ring-ember/30 focus:ring-2"
+            className="w-full rounded-[8px] border border-black/15 bg-white px-[10px] py-[10px] text-[11px] outline-none ring-ember/30 focus:ring-2"
             placeholder="记录你的评价和顾虑..."
           />
           <button
             type="button"
             onClick={saveNotes}
-            disabled={busy}
-            className="rounded-[7px] border border-black/20 px-3 py-1.5 text-[10px] font-semibold"
+            disabled={isMock || busy}
+            className="rounded-[8px] border border-black/20 px-[10px] py-[6px] text-[10px] font-semibold"
           >
             保存备注
           </button>

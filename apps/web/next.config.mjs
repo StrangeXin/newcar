@@ -1,9 +1,11 @@
 import withBundleAnalyzer from '@next/bundle-analyzer';
+import { PHASE_DEVELOPMENT_SERVER } from 'next/constants.js';
 
-/** @type {import('next').NextConfig} */
-const nextConfig = {
+const createNextConfig = (phase) => ({
   reactStrictMode: true,
   output: 'standalone',
+  // Keep dev/build artifacts separate so `next build` does not corrupt an active `next dev`.
+  distDir: phase === PHASE_DEVELOPMENT_SERVER ? '.next-dev' : '.next',
   images: {
     remotePatterns: [
       {
@@ -20,8 +22,9 @@ const nextConfig = {
       },
     ],
   },
-};
+});
 
-export default withBundleAnalyzer({
-  enabled: process.env.ANALYZE === 'true',
-})(nextConfig);
+export default (phase) =>
+  withBundleAnalyzer({
+    enabled: process.env.ANALYZE === 'true',
+  })(createNextConfig(phase));

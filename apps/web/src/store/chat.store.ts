@@ -1,6 +1,7 @@
 'use client';
 
 import { create } from 'zustand';
+import { Candidate, CarInfo } from '@/types/api';
 import { buildJourneyChatWsUrl, get } from '@/lib/api';
 import { dispatchJourneySideEffect } from '@/lib/journey-workspace-events';
 
@@ -32,7 +33,19 @@ export type SideEffectChatMessage = BaseMessage & {
   data: any;
 };
 
-export type ChatMessage = TextChatMessage | ToolChatMessage | SideEffectChatMessage;
+export type CarResultChatMessage = BaseMessage & {
+  kind: 'car_results';
+  journeyId: string;
+  cars: Array<
+    Pick<CarInfo, 'id' | 'brand' | 'model' | 'type' | 'fuelType' | 'msrp'> & {
+      matchScore?: number;
+      subtitle?: string;
+      addedCandidate?: Candidate | null;
+    }
+  >;
+};
+
+export type ChatMessage = TextChatMessage | ToolChatMessage | SideEffectChatMessage | CarResultChatMessage;
 
 interface HistoryResponse {
   messages: Array<{
@@ -61,6 +74,28 @@ function makeId(prefix: string) {
 
 function parseToolInput(input: unknown) {
   return input && typeof input === 'object' ? (input as Record<string, unknown>) : {};
+}
+
+function parseCarResults(result: unknown): CarResultChatMessage['cars'] {
+  if (!result || typeof result !== 'object' || !('cars' in result) || !Array.isArray((result as any).cars)) {
+    return [];
+  }
+
+  return (result as any).cars.map((car: any, index: number) => ({
+    id: String(car.id),
+    brand: String(car.brand || ''),
+    model: String(car.model || ''),
+    type: String(car.type || ''),
+    fuelType: String(car.fuelType || ''),
+    msrp: typeof car.msrp === 'number' ? car.msrp : null,
+    matchScore: [92, 85, 73][index] || 68,
+    subtitle:
+      typeof car.fuelType === 'string'
+        ? `${car.fuelType === 'PHEV' ? '增程' : car.fuelType === 'BEV' ? '纯电' : car.fuelType} · ${car.type || ''} · ${
+            typeof car.msrp === 'number' ? `${(car.msrp / 10000).toFixed(2)}万起` : '暂无价格'
+          }`
+        : undefined,
+  }));
 }
 
 function waitForOpen(socket: WebSocket) {
@@ -193,13 +228,28 @@ export const useChatStore = create<ChatState>((set, getState) => ({
 
       if (payload.type === 'tool_done') {
         const toolName = payload.name;
-        set((state) => ({
-          messages: state.messages.map((message) =>
+        set((state) => {
+          const nextMessages: ChatMessage[] = state.messages.map((message) =>
             message.kind === 'tool_status' && message.name === toolName && message.status === 'running'
-              ? { ...message, status: 'done' }
+              ? ({ ...message, status: 'done' } as ToolChatMessage)
               : message
-          ),
-        }));
+          );
+
+          if (toolName === 'car_search') {
+            const cars = parseCarResults(payload.result);
+            if (cars.length > 0) {
+              nextMessages.push({
+                id: makeId('car-results'),
+                kind: 'car_results',
+                journeyId,
+                cars,
+                timestamp: new Date().toISOString(),
+              });
+            }
+          }
+
+          return { messages: nextMessages };
+        });
 
         window.setTimeout(() => {
           set((state) => ({
@@ -222,7 +272,18 @@ export const useChatStore = create<ChatState>((set, getState) => ({
         };
 
         set((state) => ({
-          messages: [...state.messages, sideEffectMessage],
+          messages: state.messages.map((message) =>
+            payload.event === 'candidate_added' && message.kind === 'car_results'
+              ? {
+                  ...message,
+                  cars: message.cars.map((car) =>
+                    car.id === payload.data?.carId || car.id === payload.data?.car?.id
+                      ? { ...car, addedCandidate: payload.data }
+                      : car
+                  ),
+                }
+              : message
+          ).concat(sideEffectMessage),
         }));
         dispatchJourneySideEffect({
           event: payload.event,

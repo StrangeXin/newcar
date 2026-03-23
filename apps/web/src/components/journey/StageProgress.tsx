@@ -13,10 +13,101 @@ const STAGES = [
   { key: 'PURCHASE', label: '购买执行' },
 ];
 
+type StageItemProps = {
+  index: number;
+  label: string;
+  active: boolean;
+  completed: boolean;
+  fullWidth?: boolean;
+};
+
+function StageItem({ index, label, active, completed, fullWidth = false }: StageItemProps) {
+  const toneClass = active
+    ? 'border-[#111] bg-[#111] text-white'
+    : completed
+      ? 'border-[#bbf7d0] bg-[#f0fdf4] text-[#16a34a]'
+      : 'border-black/10 bg-black/[0.03] text-black/45';
+
+  const dotClass = active
+    ? 'bg-white/20 text-white'
+    : completed
+      ? 'bg-[#22c55e]/15 text-[#16a34a]'
+      : 'bg-black/10 text-black/55';
+
+  return (
+    <li
+      data-testid={`stage-${STAGES[index].key.toLowerCase()}`}
+      data-active={active ? 'true' : 'false'}
+      className={`flex items-center gap-[6px] rounded-[10px] border border-[1.5px] px-[10px] py-[8px] text-[12px] font-semibold whitespace-nowrap ${fullWidth ? 'w-full' : ''} ${toneClass}`}
+    >
+      <span className={`inline-flex h-5 w-5 items-center justify-center rounded-full text-[9px] font-bold ${dotClass}`}>
+        {completed ? '✓' : index + 1}
+      </span>
+      {label}
+    </li>
+  );
+}
+
+function DesktopStageProgress({ currentIndex, confidence }: { currentIndex: number; confidence: number }) {
+  return (
+    <aside className="hidden h-full min-h-0 w-full flex-col overflow-hidden rounded-ws-lg border border-workspace-border bg-workspace-surface p-ws14 shadow-workspace xl:flex">
+      <p className="text-[9px] font-bold uppercase tracking-[0.12em] text-[#e85d26]">Journey Stage</p>
+      <h2 className="mt-1 text-[15px] font-extrabold text-[#111]">旅程进度</h2>
+
+      <ol className="mt-[10px] flex flex-1 flex-col gap-[6px]">
+        {STAGES.map((stage, index) => (
+          <StageItem
+            key={stage.key}
+            index={index}
+            label={stage.label}
+            active={index === currentIndex}
+            completed={index < currentIndex}
+            fullWidth
+          />
+        ))}
+      </ol>
+
+      <div className="mt-[10px] rounded-[10px] border border-[#e9d5ff] bg-[#faf5ff] p-[10px]">
+        <p className="text-[9px] font-bold uppercase tracking-[0.08em] text-[#7c3aed]">AI 置信度</p>
+        <p className="mt-0.5 text-[22px] font-extrabold leading-none text-[#6d28d9]">{confidence || 0}%</p>
+        <div className="mt-[6px] h-[3px] rounded-full bg-[#e9d5ff]">
+          <div className="h-[3px] rounded-full bg-[linear-gradient(90deg,#8b5cf6,#6d28d9)]" style={{ width: `${confidence || 8}%` }} />
+        </div>
+        <p className="mt-1 text-[9px] leading-[1.4] text-[#7c3aed]">已收集预算、车型偏好，继续聊可提升</p>
+      </div>
+
+      <Link
+        href="/journey/publish"
+        className="mt-[10px] block w-full rounded-[10px] border-[1.5px] border-black/15 bg-white px-[10px] py-[8px] text-center text-[11px] font-bold text-black/75"
+      >
+        发布我的旅程 →
+      </Link>
+    </aside>
+  );
+}
+
+function CompactStageProgress({ currentIndex }: { currentIndex: number }) {
+  return (
+    <aside className="hidden w-full flex-wrap items-center gap-[10px] rounded-ws-lg border border-workspace-border bg-workspace-surface p-ws14 shadow-workspace md:flex xl:hidden">
+      <ol className="flex w-full flex-wrap gap-[6px]">
+        {STAGES.map((stage, index) => (
+          <StageItem
+            key={stage.key}
+            index={index}
+            label={stage.label}
+            active={index === currentIndex}
+            completed={index < currentIndex}
+          />
+        ))}
+      </ol>
+    </aside>
+  );
+}
+
 export function StageProgress() {
   const { journey, refresh } = useJourney();
   const currentStage = journey?.stage || 'AWARENESS';
-  const currentIndex = STAGES.findIndex((s) => s.key === currentStage);
+  const currentIndex = STAGES.findIndex((stage) => stage.key === currentStage);
   const confidence = Math.round((journey?.aiConfidenceScore || 0) * 100);
 
   useEffect(() => {
@@ -32,56 +123,9 @@ export function StageProgress() {
   }, [journey?.id, refresh]);
 
   return (
-    <aside className="h-full rounded-[16px] border border-black/10 bg-white/90 p-4 shadow-[0_2px_12px_rgba(0,0,0,0.06)] md:px-4 md:py-3 lg:p-3.5 xl:p-5">
-      <p className="text-[9px] font-bold uppercase tracking-[0.12em] text-[#e85d26] md:hidden lg:block">Journey Stage</p>
-      <h2 className="mt-1 text-[15px] font-extrabold text-[#111] md:hidden lg:block">旅程进度</h2>
-      <ol className="mt-4 flex flex-wrap gap-1.5 md:mt-0 md:flex-row lg:mt-4 lg:flex-col lg:gap-[5px]">
-        {STAGES.map((stage, index) => {
-          const completed = index < currentIndex;
-          const active = index === currentIndex;
-          return (
-            <li
-              key={stage.key}
-              data-testid={`stage-${stage.key.toLowerCase()}`}
-              data-active={active ? 'true' : 'false'}
-              className={`flex items-center gap-2 rounded-[10px] border px-2.5 py-1.5 text-[11px] font-semibold whitespace-nowrap lg:px-[9px] lg:py-[7px] lg:text-[12px] ${
-                active
-                  ? 'border-[#111] bg-[#111] text-white'
-                  : completed
-                    ? 'border-[#bbf7d0] bg-[#f0fdf4] text-[#16a34a]'
-                    : 'border-black/10 bg-black/[0.03] text-black/45'
-              }`}
-            >
-              <span
-                className={`inline-flex h-5 w-5 items-center justify-center rounded-full text-[9px] font-bold ${
-                  active
-                    ? 'bg-white/20 text-white'
-                    : completed
-                      ? 'bg-[#22c55e]/15 text-[#16a34a]'
-                      : 'bg-black/10 text-black/55'
-                }`}
-              >
-                {completed ? '✓' : index + 1}
-              </span>
-              {stage.label}
-            </li>
-          );
-        })}
-      </ol>
-      <div className="mt-4 hidden rounded-2xl border border-[#e9d5ff] bg-[#faf5ff] p-3 lg:block">
-        <p className="text-[9px] font-bold uppercase tracking-[0.08em] text-[#7c3aed]">AI 置信度</p>
-        <p className="mt-0.5 text-[28px] font-extrabold leading-none text-[#6d28d9]">{confidence || 0}%</p>
-        <div className="mt-[5px] h-[3px] rounded-full bg-[#e9d5ff]">
-          <div className="h-[3px] rounded-full bg-[linear-gradient(90deg,#8b5cf6,#6d28d9)]" style={{ width: `${confidence || 8}%` }} />
-        </div>
-        <p className="mt-[3px] text-[9px] leading-[1.45] text-[#7c3aed]">已收集预算、车型偏好，继续聊可提升</p>
-      </div>
-      <Link
-        href="/journey/publish"
-        className="mt-4 hidden w-full rounded-[10px] border border-black/15 bg-white px-4 py-[9px] text-center text-[11px] font-bold text-black/75 xl:block"
-      >
-        发布我的旅程 →
-      </Link>
-    </aside>
+    <>
+      <CompactStageProgress currentIndex={currentIndex} />
+      <DesktopStageProgress currentIndex={currentIndex} confidence={confidence} />
+    </>
   );
 }

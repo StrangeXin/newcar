@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { patch } from '@/lib/api';
 import { useNotifications } from '@/hooks/useNotifications';
 import { JOURNEY_SIDE_EFFECT_EVENT } from '@/lib/journey-workspace-events';
+import { mockNotifications } from './workspace-mock-data';
 
 const TYPE_ICON: Record<string, string> = {
   PRICE_DROP: '📉',
@@ -17,6 +18,7 @@ export function TodayUpdates() {
   const { notifications, isLoading, refresh } = useNotifications();
   const [processingId, setProcessingId] = useState<string | null>(null);
   const unread = notifications.filter((item) => !item.isRead);
+  const displayItems = unread.length > 0 ? unread : mockNotifications;
 
   useEffect(() => {
     const handleSideEffect = () => {
@@ -37,25 +39,24 @@ export function TodayUpdates() {
   }
 
   return (
-    <section className="rounded-[16px] border border-black/10 bg-white/90 p-[14px] shadow-[0_2px_12px_rgba(0,0,0,0.06)] xl:px-4 xl:py-[14px]">
+    <section className="rounded-ws-lg border border-workspace-border bg-workspace-surface p-ws14 shadow-workspace">
       <div className="flex items-center justify-between">
         <h3 className="text-[13px] font-extrabold text-[#111]">今日新动态</h3>
-        <span className="rounded-full bg-[#f3f4f6] px-2 py-[2px] text-[10px] font-semibold text-black/50">{unread.length} 条未读</span>
+        <span className="inline-flex items-center justify-center rounded-full border border-workspace-chipBorder bg-workspace-chipBg px-[10px] py-1 text-[10px] font-semibold leading-[1.2] text-black/50">
+          {displayItems.length} 条未读
+        </span>
       </div>
-      {isLoading ? <p className="mt-4 text-sm text-black/60">加载中...</p> : null}
-      {!isLoading && unread.length === 0 ? (
-        <p className="mt-4 rounded-xl bg-black/5 p-3 text-sm text-black/55">今日暂无新动态</p>
-      ) : null}
-      <ul className="mt-3 space-y-[7px]">
-        {unread.map((item) => (
-          <li key={item.id} className="rounded-[10px] border border-[#e5e7eb] bg-[#f9fafb] px-[11px] py-[9px] transition hover:border-black/15">
+      {isLoading ? <p className="mt-4 text-[11px] text-black/60">加载中...</p> : null}
+      <ul className="mt-[10px] space-y-[10px]">
+        {displayItems.map((item) => (
+          <li key={item.id} className="rounded-[10px] border border-[#e5e7eb] bg-[#f9fafb] px-[10px] py-[10px] transition hover:border-black/15">
             <button
               type="button"
               onClick={() => markRead(item.id)}
-              disabled={processingId === item.id}
+              disabled={processingId === item.id || item.id.startsWith('mock-')}
               className="w-full text-left"
             >
-              <div className="flex items-start justify-between gap-2">
+              <div className="flex items-start justify-between gap-[10px]">
                 <p className="text-[11px] font-bold text-ink">
                   <span className="mr-2">{TYPE_ICON[item.type] || '📢'}</span>
                   {item.title}
