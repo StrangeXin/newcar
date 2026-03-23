@@ -65,7 +65,7 @@ Express HTTP Server
 
 | 类别 | 文件 | 动作 |
 |------|------|------|
-| 后端 | `apps/api/src/app.ts` | 在 HTTP server 上挂载 ws.Server |
+| 后端 | `apps/api/src/index.ts` | 改为 `http.createServer(app)` 显式创建 server，挂载 ws.Server |
 | 后端 | `apps/api/src/controllers/chat-ws.controller.ts` | 新增 WS 连接处理 |
 | 后端 | `apps/api/src/services/ai-chat.service.ts` | 完全重写（tool use + streaming） |
 | 后端 | `apps/api/src/tools/` | 新增 4 个工具定义文件 |
@@ -97,7 +97,7 @@ ws://api/ws/journeys/:journeyId/chat?token=<jwt>
 {
   type: "message",
   content: string,
-  sessionId: string  // 前端生成的会话 ID
+  sessionId: string  // 从 localStorage 持久化读取（key: `chat_session_${journeyId}`），确保刷新后复用同一会话历史
 }
 ```
 
@@ -136,11 +136,12 @@ ws://api/ws/journeys/:journeyId/chat?token=<jwt>
 ```ts
 {
   name: "car_search",
-  description: "根据用户需求搜索匹配的车型列表。当用户表达购车意向、询问推荐或提供预算/用途信息时调用。",
+  description: "根据用户需求搜索匹配的车型列表。当用户表达购车意向、询问推荐或提供预算/用途信息时调用。所有参数均可选，无参数时返回全量车型。",
   input_schema: {
     type: "object",
+    required: [],
     properties: {
-      query: { type: "string", description: "自然语言搜索词，如'家用SUV'" },
+      query: { type: "string", description: "自然语言搜索词，如'家用SUV'，留空则宽泛搜索" },
       budgetMax: { type: "number", description: "最高预算（万元）" },
       budgetMin: { type: "number", description: "最低预算（万元）" },
       fuelType: { type: "string", enum: ["BEV", "PHEV", "ICE", "HEV"] },
@@ -192,8 +193,8 @@ ws://api/ws/journeys/:journeyId/chat?token=<jwt>
       },
       stage: {
         type: "string",
-        enum: ["INITIAL", "EXPLORING", "SHORTLISTING", "COMPARING", "DECIDED"],
-        description: "仅在用户明显进入新决策阶段时才更新"
+        enum: ["AWARENESS", "CONSIDERATION", "COMPARISON", "DECISION", "PURCHASE"],
+        description: "与数据库 JourneyStage 枚举对齐。仅在用户明显进入新决策阶段时才更新，且阶段只能前进不能后退（journeyService.advanceStage 会校验）"
       }
     }
   }
@@ -221,7 +222,7 @@ ws://api/ws/journeys/:journeyId/chat?token=<jwt>
 }
 ```
 
-**副作用**：写入 DB 后推送 `side_effect: candidate_added`。若候选车已存在则跳过（不重复添加）。
+**副作用**：写入 DB 后推送 `side_effect: candidate_added`。若候选车已存在（`carCandidateService` 抛出 "Car already in candidate list" 错误），工具执行器捕获该错误并静默跳过（不推送 side_effect，不向 AI 报告失败）。
 
 ---
 
@@ -241,8 +242,8 @@ ws://api/ws/journeys/:journeyId/chat?token=<jwt>
     → ws.send({ type: "token", delta })
 
   message_stop (stop_reason = "tool_use")
-    → 提取所有 tool_use blocks
-    → for each tool:
+    → 提取所有 tool_use blocks（可能多个，顺序执行）
+    → for each tool（顺序执行，不并发）:
         ws.send({ type: "tool_start", name, input })
         result = await executeTool(name, input)     // 含写 DB + 副作用推送
         ws.send({ type: "tool_done", name, result })
@@ -319,4 +320,5 @@ ws://api/ws/journeys/:journeyId/chat?token=<jwt>
 - 微信小程序端适配（WebSocket 需单独处理小程序 WS API）
 - 多设备同一 journey 并发 WS 连接同步
 - WS 连接断线重连策略（前端简单重连即可，暂不做指数退避）
+- WS 消息频率限制（现有 Express rateLimitMiddleware 不覆盖 WS 连接，暂不实现；首次上线流量小，已知风险可接受）
 - 工具：`trigger_snapshot`、`get_owner_feedback`（未来迭代）
