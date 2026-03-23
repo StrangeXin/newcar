@@ -2,7 +2,8 @@ import WebSocket from 'ws';
 
 const API_BASE = process.env.API_BASE_URL || 'http://localhost:3000';
 const PHONE = process.env.TEST_PHONE || '13800138000';
-const TURN_TIMEOUT_MS = Number(process.env.TURN_TIMEOUT_MS || 20000);
+const TURN_TIMEOUT_MS = Number(process.env.TURN_TIMEOUT_MS || 45000);
+const IDLE_TIMEOUT_MS = Number(process.env.TURN_IDLE_TIMEOUT_MS || 15000);
 
 type WsEvent = {
   type: string;
@@ -78,21 +79,32 @@ function summarizeEvents(events: WsEvent[]) {
 async function sendTurn(socket: WebSocket, label: string, content: string) {
   return new Promise<{ events: WsEvent[]; fullContent: string }>((resolve, reject) => {
     const events: WsEvent[] = [];
-    let timeoutId: NodeJS.Timeout | null = setTimeout(() => {
+    let startedAt = Date.now();
+    let lastActivityAt = Date.now();
+    let timeoutId: NodeJS.Timeout | null = setInterval(() => {
+      const now = Date.now();
+      const totalElapsed = now - startedAt;
+      const idleElapsed = now - lastActivityAt;
+
+      if (totalElapsed < TURN_TIMEOUT_MS && idleElapsed < IDLE_TIMEOUT_MS) {
+        return;
+      }
+
       cleanup();
       reject(
         new Error(
-          `${label} timed out after ${TURN_TIMEOUT_MS}ms. events=[${summarizeEvents(events)}] fullContent="${events
+          `${label} timed out after total=${totalElapsed}ms idle=${idleElapsed}ms. events=[${summarizeEvents(events)}] fullContent="${events
             .map((event) => event.fullContent || '')
             .join('')
             .slice(0, 240)}"`
         )
       );
-    }, TURN_TIMEOUT_MS);
+    }, 500);
 
     const onMessage = (raw: WebSocket.RawData) => {
       const event = JSON.parse(String(raw)) as WsEvent;
       events.push(event);
+      lastActivityAt = Date.now();
 
       if (event.type === 'error') {
         cleanup();
@@ -116,7 +128,7 @@ async function sendTurn(socket: WebSocket, label: string, content: string) {
 
     const cleanup = () => {
       if (timeoutId) {
-        clearTimeout(timeoutId);
+        clearInterval(timeoutId);
         timeoutId = null;
       }
       socket.off('message', onMessage);

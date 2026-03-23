@@ -1,12 +1,12 @@
-import Anthropic from '@anthropic-ai/sdk';
-import { MessageParam, ToolUseBlock } from '@anthropic-ai/sdk/resources/messages/messages';
 import { AddedReason, JourneyStage, MessageRole } from '@newcar/shared';
 import { config } from '../config';
 import { carCandidateService } from './car-candidate.service';
 import { carService } from './car.service';
 import { conversationService } from './conversation.service';
 import { journeyService } from './journey.service';
-import { chatTools, executeChatTool, type ChatSideEffect, type ChatToolName } from '../tools/chat-tools';
+import { journeyDeepAgentService } from './journey-deep-agent.service';
+import { executeChatTool } from '../tools/chat-tools';
+import type { ChatSideEffect, ChatToolName } from '../tools/chat-tools';
 
 type StreamEvent =
   | { type: 'token'; delta: string }
@@ -40,13 +40,6 @@ export class AiChatService {
         ...(details || {}),
       })
     );
-  }
-
-  private getClient(): Anthropic {
-    return new Anthropic({
-      apiKey: config.ai.apiKey,
-      baseURL: config.ai.baseURL,
-    });
   }
 
   async chat(data: {
@@ -120,13 +113,9 @@ export class AiChatService {
       limit: 20,
     });
 
-    const messages: MessageParam[] = history.map((message: any) => ({
-      role: message.role === MessageRole.USER ? 'user' : 'assistant',
-      content: message.content,
-    }));
     this.logChat(data.traceId, 'history_loaded', {
       conversationId: conversation.id,
-      messageCount: messages.length,
+      messageCount: history.length,
     });
 
     const existingRequirements = (journey.requirements as Record<string, unknown>) || {};
@@ -196,184 +185,90 @@ export class AiChatService {
       };
     }
 
-    const client = this.getClient();
-    const systemPrompt = this.buildSystemPrompt(journey.title, existingRequirements);
-    let fullContent = '';
-    let toolRounds = 0;
-    const executedTools: ChatToolName[] = [];
-
-    while (toolRounds < 6) {
-      const round = toolRounds + 1;
-      this.logChat(data.traceId, 'llm_round_start', {
+    const executedTools: string[] = [];
+    const toolInputs = new Map<string, Record<string, unknown>>();
+    const toolCallsToPersist: Array<{
+      name: ChatToolName;
+      args: Record<string, unknown>;
+      result: unknown;
+    }> = [];
+    const fullContentResult = await journeyDeepAgentService.streamJourneyChat(
+      {
+        journey: {
+          id: journey.id,
+          title: journey.title,
+          stage: journey.stage as JourneyStage,
+          status: journey.status,
+          requirements: existingRequirements,
+          candidates: journey.candidates as any,
+        },
         conversationId: conversation.id,
-        round,
-        messageCount: messages.length,
-      });
-
-      const stream = client.messages.stream({
-        model: config.ai.model,
-        max_tokens: config.ai.maxTokens,
-        system: systemPrompt,
-        messages,
-        tools: chatTools as any,
-      });
-
-      let streamedText = '';
-      stream.on('text', (delta) => {
-        streamedText += delta;
-        data.onEvent?.({ type: 'token', delta });
-      });
-
-      let finalMessage;
-      try {
-        finalMessage = await Promise.race([
-          stream.finalMessage(),
-          new Promise<never>((_, reject) =>
-            setTimeout(() => reject(new Error(`AI round timeout after ${config.ai.roundTimeoutMs}ms`)), config.ai.roundTimeoutMs)
-          ),
-        ]);
-      } catch (error) {
-        this.logChat(data.traceId, 'llm_round_error', {
-          conversationId: conversation.id,
-          round,
-          error: error instanceof Error ? error.message : String(error),
-          streamedTextLength: streamedText.length,
-          executedTools,
-        });
-        if (toolRounds > 0 || executedTools.length > 0) {
-          if (streamedText) {
-            fullContent += streamedText;
-          }
-          fullContent = fullContent.trim() || this.buildToolCompletionFallback(executedTools);
-          this.logChat(data.traceId, 'llm_round_fallback_done', {
+        history,
+      },
+      data.message,
+      (event) => {
+        if (event.type === 'tool_start') {
+          const toolName = event.name as ChatToolName;
+          executedTools.push(toolName);
+          toolInputs.set(toolName, event.input);
+          this.logChat(data.traceId, 'tool_start', {
             conversationId: conversation.id,
-            round,
-            fallbackReason: error instanceof Error ? error.message : String(error),
-            fullContentLength: fullContent.length,
+            toolName,
+            input: event.input,
           });
-          break;
+          data.onEvent?.({ ...event, name: toolName });
+          return;
         }
-        throw error;
-      }
 
-      this.logChat(data.traceId, 'llm_round_final_message', {
-        conversationId: conversation.id,
-        round,
-        streamedTextLength: streamedText.length,
-        contentBlockTypes: Array.isArray(finalMessage.content)
-          ? finalMessage.content.map((block: any) => block.type)
-          : [],
-      });
+        if (event.type === 'tool_done') {
+          const toolName = event.name as ChatToolName;
+          this.logChat(data.traceId, 'tool_done', {
+            conversationId: conversation.id,
+            toolName,
+            resultKeys:
+              event.result && typeof event.result === 'object'
+                ? Object.keys(event.result as Record<string, unknown>)
+                : [],
+          });
+          if (this.isChatToolName(toolName)) {
+            toolCallsToPersist.push({
+              name: toolName,
+              args: toolInputs.get(toolName) || {},
+              result: event.result,
+            });
+          }
+          data.onEvent?.({ ...event, name: toolName });
+          return;
+        }
 
-      messages.push({
-        role: 'assistant',
-        content: finalMessage.content as MessageParam['content'],
-      });
-
-      if (streamedText) {
-        fullContent += streamedText;
-      }
-
-      const toolUses = finalMessage.content.filter(
-        (block): block is ToolUseBlock => block.type === 'tool_use'
-      );
-
-      this.logChat(data.traceId, 'llm_round_tool_summary', {
-        conversationId: conversation.id,
-        round,
-        toolUses: toolUses.map((toolUse) => ({
-          id: toolUse.id,
-          name: toolUse.name,
-          inputKeys: Object.keys((toolUse.input ?? {}) as Record<string, unknown>),
-        })),
-      });
-
-      if (toolUses.length === 0) {
-        this.logChat(data.traceId, 'llm_round_completed_without_tools', {
-          conversationId: conversation.id,
-          round,
-          fullContentLength: fullContent.length,
-        });
-        break;
-      }
-
-      toolRounds += 1;
-      const toolResults: Array<{
-        type: 'tool_result';
-        tool_use_id: string;
-        content: string;
-      }> = [];
-
-      for (const toolUse of toolUses) {
-        const toolName = toolUse.name as ChatToolName;
-        const toolInput = (toolUse.input ?? {}) as Record<string, unknown>;
-        executedTools.push(toolName);
-        this.logChat(data.traceId, 'tool_start', {
-          conversationId: conversation.id,
-          round,
-          toolName,
-          input: toolInput,
-        });
-        data.onEvent?.({ type: 'tool_start', name: toolName, input: toolInput });
-
-        const toolResult = await executeChatTool(toolName, toolInput, {
-          journeyId: data.journeyId,
-          userId: data.userId,
-        });
-
-        await conversationService.addToolCall({
-          conversationId: conversation.id,
-          toolCall: {
-            name: toolName,
-            args: toolInput,
-            result: toolResult.output,
-          },
-        });
-
-        data.onEvent?.({ type: 'tool_done', name: toolName, result: toolResult.output });
-        this.logChat(data.traceId, 'tool_done', {
-          conversationId: conversation.id,
-          round,
-          toolName,
-          sideEffectCount: toolResult.sideEffects.length,
-          resultKeys:
-            toolResult.output && typeof toolResult.output === 'object'
-              ? Object.keys(toolResult.output as Record<string, unknown>)
-              : [],
-        });
-
-        for (const sideEffect of toolResult.sideEffects) {
+        if (event.type === 'side_effect') {
           this.logChat(data.traceId, 'tool_side_effect', {
             conversationId: conversation.id,
-            round,
-            toolName,
-            sideEffect: sideEffect.event,
+            sideEffect: event.event,
           });
-          data.onEvent?.({
-            type: 'side_effect',
-            event: sideEffect.event,
-            data: sideEffect.data,
-          });
+          data.onEvent?.(event);
+          return;
         }
 
-        toolResults.push({
-          type: 'tool_result',
-          tool_use_id: toolUse.id,
-          content: JSON.stringify(toolResult.output, null, 2),
-        });
-      }
+        if (event.type === 'token') {
+          data.onEvent?.(event);
+          return;
+        }
 
-      messages.push({
-        role: 'user',
-        content: toolResults,
+        return;
+      }
+    );
+
+    for (const toolCall of toolCallsToPersist) {
+      await conversationService.addToolCall({
+        conversationId: conversation.id,
+        toolCall,
       });
     }
 
-    if (!fullContent.trim()) {
-      fullContent = executedTools.length > 0
-        ? this.buildToolCompletionFallback(executedTools)
-        : '我已经更新了旅程信息。接下来我们可以继续缩小车型范围，或者开始做深度对比。';
-    }
+    const fullContent =
+      fullContentResult.fullContent.trim() ||
+      '我已经更新了旅程信息。接下来我们可以继续缩小车型范围，或者开始做深度对比。';
 
     await conversationService.addMessage({
       journeyId: data.journeyId,
@@ -522,42 +417,8 @@ export class AiChatService {
     }
   }
 
-  private buildSystemPrompt(title: string, requirements: Record<string, unknown>) {
-    return [
-      '你是新车购买旅程工作台中的 AI 购车助手。',
-      '目标不是闲聊，而是帮助用户更快完成购车决策，并在必要时调用工具更新旅程状态。',
-      '请使用简洁、专业、友好的中文回答。',
-      '当用户提到预算、用途、能源偏好、风格偏好、阶段变化时，优先调用 journey_update。',
-      '当用户想找车、要推荐、想补充候选时，优先使用 car_search；明确点名车型时使用 car_detail。',
-      '只有在用户明确表达“加入候选”“把这款加进去”等意图时调用 add_candidate。',
-      '如果工具已经完成结构化动作，请在回答里自然确认结果，并给出下一步建议。',
-      `当前旅程标题：${title}`,
-      `当前已知需求：${JSON.stringify(requirements, null, 2)}`,
-    ].join('\n');
-  }
-
-  private buildToolCompletionFallback(toolNames: ChatToolName[]) {
-    const uniqueTools = [...new Set(toolNames)];
-    const actions: string[] = [];
-
-    if (uniqueTools.includes('journey_update')) {
-      actions.push('更新了旅程画像');
-    }
-    if (uniqueTools.includes('car_search')) {
-      actions.push('整理了相关车型');
-    }
-    if (uniqueTools.includes('car_detail')) {
-      actions.push('补充了车型详情');
-    }
-    if (uniqueTools.includes('add_candidate')) {
-      actions.push('同步了候选列表');
-    }
-
-    if (actions.length === 0) {
-      return '我已经更新了旅程信息。接下来我们可以继续缩小车型范围，或者开始做深度对比。';
-    }
-
-    return `我已经${actions.join('，')}。接下来我可以继续帮你比较差异、补充参数，或者把下一步决策拆得更清楚。`;
+  private isChatToolName(name: string): name is ChatToolName {
+    return ['car_search', 'car_detail', 'journey_update', 'add_candidate'].includes(name);
   }
 
   private buildSignals(message: string, requirements: Record<string, unknown>) {

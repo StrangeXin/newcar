@@ -11,6 +11,7 @@ dist/
 .turbo/
 apps/web/.next/
 apps/web/.next-dev/
+apps/api/.deepagents/
 test-results/
 playwright-report/
 .DS_Store
