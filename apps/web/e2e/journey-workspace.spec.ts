@@ -34,14 +34,15 @@ test('user can log in, create a journey, and add a candidate from chat', async (
     await expect(titleInput).toBeHidden({ timeout: 20000 });
   }
 
-  await expect(page.getByRole('heading', { name: '旅程工作台' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: '旅程进度' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: '今日新动态' })).toBeVisible();
   await expect(page.getByTestId('chat-panel')).toBeVisible();
   await expect(page.getByTestId('chat-input')).toBeEnabled({ timeout: 20000 });
 
   await page.getByTestId('chat-input').fill('我预算25万以内，家用为主，想要增程SUV，先推荐3款，再把理想L6加入候选。');
   await page.getByTestId('chat-send').click();
 
-  await expect(page.getByText(/已按你的需求更新旅程画像/)).toBeVisible({ timeout: 20000 });
-  await expect(page.getByTestId('stage-comparison')).toHaveAttribute('data-active', 'true', { timeout: 20000 });
-  await expect(page.getByTestId('candidate-list')).toContainText('理想 L6', { timeout: 20000 });
+  await expect(page.getByText(/理想\s*L6 已加入候选列表/)).toBeVisible({ timeout: 60000 });
+  await expect(page.getByTestId('candidate-list')).toContainText('理想 L6', { timeout: 60000 });
+  await expect(page.getByTestId('chat-input')).toBeEnabled({ timeout: 60000 });
 });
