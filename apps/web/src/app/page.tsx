@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { CarFront, MessageSquareText, Route, Sparkles } from 'lucide-react';
+import { CarFront, MessageSquareText, Route } from 'lucide-react';
 import { ThemeToggle } from '@/components/ui/ThemeToggle';
 import { Button } from '@/components/ui/Button';
 
@@ -21,8 +21,8 @@ export default function HomePage() {
         </div>
       </nav>
 
-      <main className="mx-auto w-full max-w-6xl px-6 pb-16 pt-[80px]">
-        <section className="grid min-h-[calc(100vh-80px)] items-center gap-8 pt-20 md:grid-cols-2">
+      <main className="mx-auto w-full max-w-6xl px-6 pb-12 pt-20">
+        <section className="grid items-center gap-8 md:grid-cols-2">
           <div>
             <p className="text-[var(--text-xs)] font-semibold uppercase tracking-[0.16em] text-[var(--accent-text-soft)]">
               NewCar Workspace
@@ -44,21 +44,68 @@ export default function HomePage() {
           <div className="rounded-[var(--radius-xl)] border border-[var(--border)] bg-[var(--surface-subtle)] p-5">
             <div className="rounded-[var(--radius-lg)] border border-[var(--border)] bg-[var(--surface)] p-4">
               <p className="text-[var(--text-xs)] font-semibold uppercase tracking-[0.1em] text-[var(--accent-text-soft)]">
-                AI Assistant Preview
+                AI Journey Preview
               </p>
-              <div className="mt-3 space-y-3">
-                <div className="flex items-center gap-2 rounded-lg bg-[var(--accent-muted)] px-3 py-2 text-xs text-[var(--accent-text)]">
-                  <Sparkles className="h-4 w-4" aria-hidden="true" />
-                  已识别预算 25 万内，偏好家用
+
+              {/* Simulated journey stages */}
+              <div className="mt-3 space-y-2">
+                <div className="flex items-center gap-2">
+                  <span className="flex h-5 w-5 items-center justify-center rounded-full bg-[var(--success)] text-[8px] text-white">✓</span>
+                  <span className="text-[11px] font-medium text-[var(--success-text)]">需求确认</span>
                 </div>
-                <div className="flex items-center gap-2 rounded-lg bg-[var(--surface-subtle)] px-3 py-2 text-xs text-[var(--text-soft)]">
-                  <CarFront className="h-4 w-4" aria-hidden="true" />
-                  推荐：理想 L6 / 小鹏 G6 / 问界 M7
+                <div className="flex items-center gap-2">
+                  <span className="flex h-5 w-5 items-center justify-center rounded-full bg-[var(--accent)] text-[8px] text-white">2</span>
+                  <span className="text-[11px] font-semibold text-[var(--accent)]">候选筛选中</span>
                 </div>
-                <div className="flex items-center gap-2 rounded-lg bg-[var(--accent-muted)] px-3 py-2 text-xs text-[var(--accent-text)]">
-                  <Route className="h-4 w-4" aria-hidden="true" />
-                  下一步：对比续航、空间与用车成本
+              </div>
+
+              {/* Simulated AI chat */}
+              <div className="mt-3 space-y-2">
+                <div className="rounded-[3px_12px_12px_12px] border border-[var(--border)] bg-[var(--surface-subtle)] p-2.5 text-[11px] text-[var(--text)]">
+                  <p className="font-medium text-[var(--accent)]">AI 助手</p>
+                  <p className="mt-1 leading-relaxed">根据您「家用、预算25万、增程优先」的需求，为您筛选了3款候选车型：</p>
                 </div>
+
+                {/* Mini car cards */}
+                <div className="space-y-1.5">
+                  <div className="flex items-center justify-between rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--surface)] px-3 py-2">
+                    <div>
+                      <p className="text-[11px] font-semibold text-[var(--text)]">理想 L6</p>
+                      <p className="text-[10px] text-[var(--text-muted)]">增程 · 五座 · 24.98万起</p>
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      <div className="h-1.5 w-12 rounded-full bg-[var(--accent-border)]"><div className="h-1.5 w-[92%] rounded-full bg-[var(--accent)]"></div></div>
+                      <span className="text-[10px] font-semibold text-[var(--accent)]">92%</span>
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-between rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--surface)] px-3 py-2">
+                    <div>
+                      <p className="text-[11px] font-semibold text-[var(--text)]">问界 M7</p>
+                      <p className="text-[10px] text-[var(--text-muted)]">增程 · 五座 · 24.98万起</p>
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      <div className="h-1.5 w-12 rounded-full bg-[var(--accent-border)]"><div className="h-1.5 w-[85%] rounded-full bg-[var(--accent)]"></div></div>
+                      <span className="text-[10px] font-semibold text-[var(--accent)]">85%</span>
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-between rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--surface)] px-3 py-2">
+                    <div>
+                      <p className="text-[11px] font-semibold text-[var(--text)]">小鹏 G6</p>
+                      <p className="text-[10px] text-[var(--text-muted)]">纯电 · 五座 · 20.99万起</p>
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      <div className="h-1.5 w-12 rounded-full bg-[var(--accent-border)]"><div className="h-1.5 w-[78%] rounded-full bg-[var(--accent)]"></div></div>
+                      <span className="text-[10px] font-semibold text-[var(--accent)]">78%</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Simulated action chips */}
+              <div className="mt-3 flex flex-wrap gap-1.5">
+                <span className="rounded-full bg-[var(--accent-muted)] px-2.5 py-1 text-[10px] font-medium text-[var(--accent-text)]">帮我对比续航</span>
+                <span className="rounded-full bg-[var(--accent-muted)] px-2.5 py-1 text-[10px] font-medium text-[var(--accent-text)]">算用车成本</span>
+                <span className="rounded-full bg-[var(--accent-muted)] px-2.5 py-1 text-[10px] font-medium text-[var(--accent-text)]">附近试驾</span>
               </div>
             </div>
           </div>
