@@ -28,14 +28,14 @@ export function ChatInput({ disabled, onSend }: ChatInputProps) {
   }
 
   return (
-    <div className="border-t border-slate-200 bg-white/90 px-[14px] py-[10px]">
+    <div className="border-t border-[var(--border-soft)] bg-[var(--surface)] px-[14px] py-[10px]">
       <div className="mb-[10px] flex flex-wrap gap-[6px]">
         {quickActions.map((action) => (
           <button
             key={action}
             type="button"
             onClick={() => setValue(action)}
-            className="inline-flex cursor-pointer items-center justify-center rounded-full border border-slate-200 bg-slate-50 px-[10px] py-1 text-[10px] font-medium leading-[1.2] text-slate-600 transition hover:border-slate-300"
+            className="inline-flex cursor-pointer items-center justify-center rounded-full border border-[var(--border)] bg-[var(--accent-muted)] px-[10px] py-1 text-[10px] font-medium leading-[1.2] text-[var(--accent-text)] transition hover:border-[var(--accent-border)]"
           >
             {action}
           </button>
@@ -50,14 +50,14 @@ export function ChatInput({ disabled, onSend }: ChatInputProps) {
           disabled={disabled}
           rows={1}
           placeholder="问我任何购车问题…"
-          className="h-[38px] min-h-[38px] flex-1 resize-none rounded-[10px] border-[1.5px] border-slate-300 bg-white px-[10px] py-[8px] text-[11px] leading-[1.2] text-slate-800 outline-none ring-sky-300 transition focus:ring-2 disabled:cursor-not-allowed disabled:opacity-60"
+          className="h-[38px] min-h-[38px] flex-1 resize-none rounded-[10px] border-[1.5px] border-[var(--border)] bg-white px-[10px] py-[8px] text-[11px] leading-[1.2] text-[var(--text)] outline-none transition focus:border-[var(--accent)] focus:shadow-[0_0_0_3px_var(--focus-glow)] disabled:cursor-not-allowed disabled:opacity-60"
         />
         <button
           data-testid="chat-send"
           type="button"
           onClick={() => void submit()}
           disabled={disabled || !value.trim()}
-          className="flex h-[38px] w-[38px] cursor-pointer items-center justify-center rounded-[10px] bg-orange-500 text-[13px] font-semibold text-white hover:bg-orange-600 disabled:cursor-not-allowed disabled:opacity-60"
+          className="flex h-[38px] w-[38px] cursor-pointer items-center justify-center rounded-[10px] bg-[var(--accent)] text-[13px] font-semibold text-white hover:bg-[var(--accent-hover)] disabled:cursor-not-allowed disabled:opacity-60"
         >
           ↑
         </button>

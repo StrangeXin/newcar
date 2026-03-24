@@ -34,23 +34,23 @@ export function ChatPanel({ onClose }: { onClose?: () => void }) {
   return (
     <aside
       data-testid="chat-panel"
-      className="chat-panel flex h-full min-h-0 flex-col overflow-hidden rounded-ws-lg border border-slate-200 bg-white/90 p-0 shadow-workspace"
+      className="chat-panel flex h-full min-h-0 flex-col overflow-hidden rounded-ws-lg border border-[var(--border)] bg-[var(--surface)] p-0 shadow-workspace"
     >
-      <div className="flex items-center gap-[6px] border-b border-slate-200 px-[14px] py-[14px]">
-        <span className={`h-[7px] w-[7px] rounded-full ${isConnected ? 'bg-emerald-500' : 'bg-slate-300'}`} />
+      <div className="flex items-center gap-[6px] border-b border-[var(--border-soft)] px-[14px] py-[14px]">
+        <span className={`h-[7px] w-[7px] rounded-full ${isConnected ? 'bg-[var(--success)]' : 'bg-[var(--text-muted)]'}`} />
         <div>
-          <h2 className="flex items-center gap-2 text-[14px] font-extrabold text-slate-900 2xl:text-[15px]">
+          <h2 className="flex items-center gap-2 text-[14px] font-extrabold text-[var(--text)] 2xl:text-[15px]">
             <IconBadge icon={Bot} tone="accent" size="sm" />
             AI 购车助手
           </h2>
         </div>
-        <p className="ml-auto rounded-full border border-slate-200 bg-slate-50 px-2 py-1 text-[9px] text-slate-500">旅程模式</p>
+        <p className="ml-auto rounded-full border border-[var(--border)] bg-[var(--surface-subtle)] px-2 py-1 text-[9px] text-[var(--text-muted)]">旅程模式</p>
         <div className="flex items-center gap-2">
           {onClose ? (
             <button
               type="button"
               onClick={onClose}
-              className="cursor-pointer rounded-full border border-slate-300 px-2 py-1 text-xs font-semibold text-slate-600 hover:border-slate-400"
+              className="cursor-pointer rounded-full border border-[var(--border)] px-2 py-1 text-xs font-semibold text-[var(--text-soft)] hover:border-[var(--border-soft)]"
             >
               关闭
             </button>
