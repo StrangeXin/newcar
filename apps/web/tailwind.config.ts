@@ -20,6 +20,13 @@ const config: Config = {
           chipBorder: '#e5e7eb',
           chipText: '#374151',
         },
+        accent: {
+          DEFAULT: 'var(--accent)',
+          hover: 'var(--accent-hover)',
+          muted: 'var(--accent-muted)',
+          border: 'var(--accent-border)',
+          text: 'var(--accent-text)',
+        },
       },
       spacing: {
         ws6: '6px',
