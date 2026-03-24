@@ -1,0 +1,67 @@
+<h2>强调色方向</h2>
+<p class="subtitle">当前用的是亮橙 #f97316，三种升级方向各自的感受是什么？</p>
+
+<div class="cards" style="grid-template-columns:repeat(3,1fr)">
+
+  <div class="card" data-choice="a" onclick="toggleSelect(this)">
+    <div class="card-image" style="background:#fdfaf6;padding:18px;border-radius:8px;min-height:180px;display:flex;flex-direction:column;gap:10px;">
+      <!-- Color swatch -->
+      <div style="display:flex;gap:6px;align-items:flex-end;">
+        <div style="width:40px;height:40px;border-radius:8px;background:#f97316;box-shadow:0 4px 12px rgba(249,115,22,0.35);"></div>
+        <div style="width:24px;height:24px;border-radius:6px;background:#ea580c;"></div>
+        <div style="width:16px;height:16px;border-radius:4px;background:#fff7ed;border:1px solid #fed7aa;"></div>
+      </div>
+      <!-- Sample UI -->
+      <div style="margin-top:6px;background:#fff7ed;border-radius:8px;padding:10px 12px;border-left:3px solid #f97316;">
+        <div style="font-size:10px;color:#7c2d12;font-weight:600;margin-bottom:4px;">AI 建议</div>
+        <div style="font-size:11px;color:#9a3412;line-height:1.5;">续航对比显示理想 L6 更适合你的通勤场景</div>
+      </div>
+      <button style="margin-top:auto;background:#f97316;color:white;border:none;border-radius:7px;padding:8px 14px;font-size:11px;font-weight:600;cursor:default;">开始我的旅程</button>
+    </div>
+    <div class="card-body">
+      <h3>A · 保持亮橙</h3>
+      <p style="font-size:12px;color:#64748b;">#f97316 · 年轻有活力，当前已建立的品牌认知。能量感强，适合行动召唤。</p>
+    </div>
+  </div>
+
+  <div class="card" data-choice="b" onclick="toggleSelect(this)">
+    <div class="card-image" style="background:#fdfaf6;padding:18px;border-radius:8px;min-height:180px;display:flex;flex-direction:column;gap:10px;">
+      <div style="display:flex;gap:6px;align-items:flex-end;">
+        <div style="width:40px;height:40px;border-radius:8px;background:#d97706;box-shadow:0 4px 12px rgba(217,119,6,0.3);"></div>
+        <div style="width:24px;height:24px;border-radius:6px;background:#b45309;"></div>
+        <div style="width:16px;height:16px;border-radius:4px;background:#fffbeb;border:1px solid #fde68a;"></div>
+      </div>
+      <div style="margin-top:6px;background:#fffbeb;border-radius:8px;padding:10px 12px;border-left:3px solid #d97706;">
+        <div style="font-size:10px;color:#78350f;font-weight:600;margin-bottom:4px;">AI 建议</div>
+        <div style="font-size:11px;color:#92400e;line-height:1.5;">续航对比显示理想 L6 更适合你的通勤场景</div>
+      </div>
+      <button style="margin-top:auto;background:#d97706;color:white;border:none;border-radius:7px;padding:8px 14px;font-size:11px;font-weight:600;cursor:default;">开始我的旅程</button>
+    </div>
+    <div class="card-body">
+      <h3>B · 琥珀金</h3>
+      <p style="font-size:12px;color:#64748b;">#d97706 · 更沉稳、更高端，有一种"珍贵时刻"的质感。接近高档品牌的暖金色。</p>
+    </div>
+  </div>
+
+  <div class="card" data-choice="c" onclick="toggleSelect(this)">
+    <div class="card-image" style="background:#fdfaf6;padding:18px;border-radius:8px;min-height:180px;display:flex;flex-direction:column;gap:10px;">
+      <div style="display:flex;gap:6px;align-items:flex-end;">
+        <div style="width:40px;height:40px;border-radius:8px;background:#c2410c;box-shadow:0 4px 12px rgba(194,65,12,0.28);"></div>
+        <div style="width:24px;height:24px;border-radius:6px;background:#9a3412;"></div>
+        <div style="width:16px;height:16px;border-radius:4px;background:#fff7ed;border:1px solid #fcd9c0;"></div>
+      </div>
+      <div style="margin-top:6px;background:#fff7ed;border-radius:8px;padding:10px 12px;border-left:3px solid #c2410c;">
+        <div style="font-size:10px;color:#7c2d12;font-weight:600;margin-bottom:4px;">AI 建议</div>
+        <div style="font-size:11px;color:#9a3412;line-height:1.5;">续航对比显示理想 L6 更适合你的通勤场景</div>
+      </div>
+      <button style="margin-top:auto;background:#c2410c;color:white;border:none;border-radius:7px;padding:8px 14px;font-size:11px;font-weight:600;cursor:default;">开始我的旅程</button>
+    </div>
+    <div class="card-body">
+      <h3>C · 深砖红</h3>
+      <p style="font-size:12px;color:#64748b;">#c2410c · 成熟有力，更接近奢侈品或汽车品牌的深红系。辨识度高，有"买决策大事"的重量感。</p>
+    </div>
+  </div>
+
+</div>
+
+<p class="subtitle" style="margin-top:16px;">💡 只选一个。选完后在终端确认。</p>

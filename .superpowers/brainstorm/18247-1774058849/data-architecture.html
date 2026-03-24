@@ -1,0 +1,134 @@
+<h2>核心数据架构</h2>
+<p class="subtitle">五个核心实体 · 信号流转路径 · AI生成机制</p>
+
+<div class="section">
+  <div class="label">实体关系图</div>
+  <div style="background:#1a1a2e;border-radius:12px;padding:20px;margin-top:12px;overflow-x:auto;">
+    <div style="min-width:700px;">
+
+      <!-- 顶层：用户 -->
+      <div style="text-align:center;margin-bottom:20px;">
+        <div style="display:inline-block;background:#667eea;color:white;border-radius:12px;padding:12px 24px;font-size:13px;font-weight:bold;">
+          👤 User（用户）<br>
+          <span style="font-size:10px;font-weight:normal;opacity:0.8;">id / profile / preferences</span>
+        </div>
+      </div>
+
+      <!-- 连线 -->
+      <div style="text-align:center;color:#444;font-size:20px;margin-bottom:4px;">│</div>
+      <div style="text-align:center;color:#888;font-size:10px;margin-bottom:4px;">拥有一条活跃旅程（或多条历史旅程）</div>
+      <div style="text-align:center;color:#444;font-size:20px;margin-bottom:16px;">↓</div>
+
+      <!-- 第二层：旅程 -->
+      <div style="text-align:center;margin-bottom:20px;">
+        <div style="display:inline-block;background:#764ba2;color:white;border-radius:12px;padding:12px 32px;font-size:13px;font-weight:bold;">
+          🧭 Journey（旅程）<br>
+          <span style="font-size:10px;font-weight:normal;opacity:0.8;">stage / status / ai_summary / created_at</span>
+        </div>
+      </div>
+
+      <!-- 第三层：三个子实体 -->
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-bottom:20px;">
+        <div style="text-align:center;">
+          <div style="color:#444;font-size:14px;margin-bottom:4px;">↙</div>
+          <div style="background:#e91e63;color:white;border-radius:10px;padding:10px;font-size:12px;font-weight:bold;">
+            📍 BehaviorEvent（行为信号）<br>
+            <div style="font-size:10px;font-weight:normal;opacity:0.9;margin-top:4px;line-height:1.6;">
+              type: view/search/compare<br>
+              target_id (车型/文章)<br>
+              duration / timestamp
+            </div>
+          </div>
+        </div>
+        <div style="text-align:center;">
+          <div style="color:#444;font-size:14px;margin-bottom:4px;">↓</div>
+          <div style="background:#0f3460;color:white;border-radius:10px;padding:10px;font-size:12px;font-weight:bold;border:1px solid #4facfe;">
+            💬 Conversation（对话）<br>
+            <div style="font-size:10px;font-weight:normal;opacity:0.9;margin-top:4px;line-height:1.6;">
+              messages[]<br>
+              extracted_signals[]<br>
+              session_id / created_at
+            </div>
+          </div>
+        </div>
+        <div style="text-align:center;">
+          <div style="color:#444;font-size:14px;margin-bottom:4px;">↘</div>
+          <div style="background:#1b5e20;color:white;border-radius:10px;padding:10px;font-size:12px;font-weight:bold;">
+            🚗 CarCandidate（候选车型）<br>
+            <div style="font-size:10px;font-weight:normal;opacity:0.9;margin-top:4px;line-height:1.6;">
+              car_id / status<br>
+              user_score / ai_score<br>
+              added_at / dropped_reason
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 汇聚箭头 -->
+      <div style="text-align:center;color:#888;font-size:11px;margin-bottom:4px;">三类信号 → AI Pipeline 综合处理</div>
+      <div style="text-align:center;color:#444;font-size:20px;margin-bottom:16px;">↓</div>
+
+      <!-- AI生成层 -->
+      <div style="text-align:center;margin-bottom:20px;">
+        <div style="display:inline-block;background:#ff6f00;color:white;border-radius:12px;padding:12px 32px;font-size:13px;font-weight:bold;">
+          🤖 JourneySnapshot（AI快照）<br>
+          <span style="font-size:10px;font-weight:normal;opacity:0.8;">daily_summary / key_insights / recommendation / generated_at</span>
+        </div>
+      </div>
+
+      <!-- 发布层 -->
+      <div style="text-align:center;color:#888;font-size:11px;margin-bottom:4px;">用户发布后</div>
+      <div style="text-align:center;color:#444;font-size:20px;margin-bottom:16px;">↓</div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;">
+        <div style="background:#37474f;color:white;border-radius:10px;padding:10px;text-align:center;font-size:11px;">
+          📖 PublishedStory<br><span style="opacity:0.7;font-size:10px;">叙事故事</span>
+        </div>
+        <div style="background:#37474f;color:white;border-radius:10px;padding:10px;text-align:center;font-size:11px;">
+          📊 PublishedReport<br><span style="opacity:0.7;font-size:10px;">结构化报告</span>
+        </div>
+        <div style="background:#37474f;color:white;border-radius:10px;padding:10px;text-align:center;font-size:11px;">
+          🔁 PublishedTemplate<br><span style="opacity:0.7;font-size:10px;">可复用模板</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <div class="label">车型知识库（独立数据层）</div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px;">
+    <div style="background:#f8f9fa;border-radius:10px;padding:14px;">
+      <div style="font-size:12px;font-weight:bold;color:#333;margin-bottom:8px;">静态知识（批量更新）</div>
+      <div style="font-size:11px;color:#555;line-height:2;">
+        车型基础参数 / 配置表<br>
+        媒体评测文章<br>
+        车主口碑（小红书/论坛）<br>
+        历史价格走势
+      </div>
+    </div>
+    <div style="background:#f8f9fa;border-radius:10px;padding:14px;">
+      <div style="font-size:12px;font-weight:bold;color:#333;margin-bottom:8px;">动态数据（实时 API）</div>
+      <div style="font-size:11px;color:#555;line-height:2;">
+        当前终端价格 / 优惠<br>
+        经销商库存 / 等待周期<br>
+        地方政府补贴政策<br>
+        新车发布 / 召回公告
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <div class="label">AI 每日更新触发逻辑</div>
+  <div style="background:#f0f4ff;border-radius:10px;padding:14px;margin-top:12px;font-size:12px;color:#333;line-height:2;">
+    <strong>触发条件（满足任一）：</strong><br>
+    1. 用户产生新行为事件（浏览/对话）<br>
+    2. 用户关注车型有价格/政策变动<br>
+    3. 距上次快照超过24小时<br>
+    <br>
+    <strong>生成内容：</strong>今日动态推送 + AI历程摘要更新 + 候选车型推荐权重重排
+  </div>
+</div>
+
+<p style="margin-top:16px;color:#888;font-size:13px;text-align:center;">数据架构确认后，写入设计文档并保存</p>

@@ -1,0 +1,165 @@
+<h2>候选车卡片设计</h2>
+<p class="subtitle">主面板里的候选车卡片目前非常简陋，三种升级方向</p>
+
+<div class="cards">
+
+  <!-- Option A: 详情卡 -->
+  <div class="card" data-choice="a" onclick="toggleSelect(this)">
+    <div class="card-image" style="background:#f5f4f1;padding:14px;font-family:-apple-system,sans-serif;">
+
+      <!-- 卡片 A -->
+      <div style="background:#fff;border-radius:14px;padding:14px;box-shadow:0 1px 6px rgba(0,0,0,.07);border:1px solid #eee;">
+        <!-- 顶部 -->
+        <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;">
+          <div style="display:flex;align-items:center;gap:10px;">
+            <div style="width:52px;height:38px;background:linear-gradient(135deg,#dbeafe,#93c5fd);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:22px;">🚗</div>
+            <div>
+              <div style="font-size:13px;font-weight:700;color:#111;">理想 L6</div>
+              <div style="font-size:11px;color:#6b7280;margin-top:1px;">增程 · 五座 SUV</div>
+            </div>
+          </div>
+          <div style="text-align:right;">
+            <div style="font-size:14px;font-weight:700;color:#111;">27.98万</div>
+            <div style="font-size:10px;color:#6b7280;">起售价</div>
+          </div>
+        </div>
+
+        <!-- AI 匹配分 -->
+        <div style="margin-top:10px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+            <span style="font-size:10px;color:#6b7280;font-weight:600;text-transform:uppercase;letter-spacing:.05em;">AI 匹配度</span>
+            <span style="font-size:12px;font-weight:700;color:#6366f1;">92%</span>
+          </div>
+          <div style="height:4px;background:#e5e7eb;border-radius:99px;overflow:hidden;">
+            <div style="width:92%;height:100%;background:linear-gradient(90deg,#6366f1,#8b5cf6);border-radius:99px;"></div>
+          </div>
+        </div>
+
+        <!-- AI 备注 -->
+        <div style="margin-top:8px;background:#f5f3ff;border-radius:8px;padding:6px 10px;font-size:11px;color:#7c3aed;line-height:1.5;">
+          💡 符合家用+通勤场景，增程不限号，空间充裕
+        </div>
+
+        <!-- 操作 -->
+        <div style="margin-top:10px;display:flex;gap:6px;">
+          <button style="flex:1;background:#111;color:#fff;border:none;border-radius:8px;padding:6px 0;font-size:11px;font-weight:600;cursor:pointer;">选定</button>
+          <button style="flex:1;background:#fff;color:#666;border:1px solid #ddd;border-radius:8px;padding:6px 0;font-size:11px;cursor:pointer;">淘汰</button>
+          <button style="background:#f5f5f5;border:none;border-radius:8px;padding:6px 10px;font-size:11px;cursor:pointer;">✏️</button>
+        </div>
+      </div>
+
+    </div>
+    <div class="card-body">
+      <h3>A · 详情卡</h3>
+      <p>车型图标 + 价格突出 + 渐变匹配条 + AI 备注气泡。信息完整，视觉层次清晰。</p>
+    </div>
+  </div>
+
+  <!-- Option B: 横向紧凑 -->
+  <div class="card" data-choice="b" onclick="toggleSelect(this)">
+    <div class="card-image" style="background:#f5f4f1;padding:14px;font-family:-apple-system,sans-serif;display:flex;flex-direction:column;gap:8px;">
+
+      <!-- 卡片 1 -->
+      <div style="background:#fff;border-radius:12px;padding:10px 12px;box-shadow:0 1px 4px rgba(0,0,0,.06);border-left:3px solid #6366f1;display:flex;align-items:center;gap:10px;">
+        <div style="width:40px;height:30px;background:linear-gradient(135deg,#ede9fe,#c4b5fd);border-radius:6px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:16px;">🚗</div>
+        <div style="flex:1;min-width:0;">
+          <div style="display:flex;align-items:baseline;gap:6px;">
+            <span style="font-size:12px;font-weight:700;color:#111;">理想 L6</span>
+            <span style="font-size:10px;color:#6b7280;">增程 SUV</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:6px;margin-top:3px;">
+            <span style="font-size:12px;font-weight:600;color:#111;">27.98万</span>
+            <span style="background:#ede9fe;color:#7c3aed;font-size:9px;padding:1px 5px;border-radius:4px;font-weight:600;">92分</span>
+            <span style="font-size:10px;color:#6b7280;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">适合家用通勤</span>
+          </div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:4px;flex-shrink:0;">
+          <button style="background:#111;color:#fff;border:none;border-radius:6px;padding:3px 8px;font-size:10px;cursor:pointer;">选定</button>
+          <button style="background:#fff;color:#999;border:1px solid #eee;border-radius:6px;padding:3px 8px;font-size:10px;cursor:pointer;">淘汰</button>
+        </div>
+      </div>
+
+      <!-- 卡片 2 -->
+      <div style="background:#fff;border-radius:12px;padding:10px 12px;box-shadow:0 1px 4px rgba(0,0,0,.06);border-left:3px solid #10b981;display:flex;align-items:center;gap:10px;">
+        <div style="width:40px;height:30px;background:linear-gradient(135deg,#d1fae5,#6ee7b7);border-radius:6px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:16px;">🚗</div>
+        <div style="flex:1;min-width:0;">
+          <div style="display:flex;align-items:baseline;gap:6px;">
+            <span style="font-size:12px;font-weight:700;color:#111;">小鹏 G6</span>
+            <span style="font-size:10px;color:#6b7280;">纯电 SUV</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:6px;margin-top:3px;">
+            <span style="font-size:12px;font-weight:600;color:#111;">20.99万</span>
+            <span style="background:#d1fae5;color:#059669;font-size:9px;padding:1px 5px;border-radius:4px;font-weight:600;">85分</span>
+            <span style="font-size:10px;color:#6b7280;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">充电便利城市通勤</span>
+          </div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:4px;flex-shrink:0;">
+          <button style="background:#111;color:#fff;border:none;border-radius:6px;padding:3px 8px;font-size:10px;cursor:pointer;">选定</button>
+          <button style="background:#fff;color:#999;border:1px solid #eee;border-radius:6px;padding:3px 8px;font-size:10px;cursor:pointer;">淘汰</button>
+        </div>
+      </div>
+
+      <!-- 卡片 3：已淘汰 -->
+      <div style="background:#fafafa;border-radius:12px;padding:10px 12px;border:1px solid #eee;border-left:3px solid #e5e7eb;display:flex;align-items:center;gap:10px;opacity:.55;">
+        <div style="width:40px;height:30px;background:#f3f4f6;border-radius:6px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:16px;">🚗</div>
+        <div style="flex:1;">
+          <div style="font-size:12px;font-weight:700;color:#9ca3af;text-decoration:line-through;">问界 M7</div>
+          <div style="font-size:10px;color:#d1d5db;">已淘汰 · 价格超预算</div>
+        </div>
+        <button style="background:#fff;color:#9ca3af;border:1px solid #eee;border-radius:6px;padding:3px 8px;font-size:10px;cursor:pointer;">恢复</button>
+      </div>
+
+    </div>
+    <div class="card-body">
+      <h3>B · 紧凑列表</h3>
+      <p>横向紧凑行，左侧彩色边框区分状态，评分徽章 + 单行备注。可同时展示更多候选车，对比感更强。</p>
+    </div>
+  </div>
+
+  <!-- Option C: 大图封面卡 -->
+  <div class="card" data-choice="c" onclick="toggleSelect(this)">
+    <div class="card-image" style="background:#f5f4f1;padding:14px;font-family:-apple-system,sans-serif;display:flex;gap:8px;">
+
+      <!-- 卡片 1 -->
+      <div style="flex:1;background:#fff;border-radius:14px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.08);">
+        <div style="height:70px;background:linear-gradient(135deg,#c7d2fe,#a5b4fc,#818cf8);display:flex;align-items:center;justify-content:center;font-size:32px;position:relative;">
+          🚗
+          <div style="position:absolute;top:6px;right:6px;background:rgba(255,255,255,.9);border-radius:6px;padding:2px 6px;font-size:10px;font-weight:700;color:#4f46e5;">92%</div>
+        </div>
+        <div style="padding:10px;">
+          <div style="font-size:12px;font-weight:700;">理想 L6</div>
+          <div style="font-size:10px;color:#6b7280;margin-top:1px;">增程 · 27.98万</div>
+          <div style="font-size:10px;color:#7c3aed;margin-top:4px;line-height:1.4;">适合家用通勤，空间充裕</div>
+          <div style="margin-top:8px;display:flex;gap:4px;">
+            <button style="flex:1;background:#111;color:#fff;border:none;border-radius:6px;padding:5px 0;font-size:10px;font-weight:600;cursor:pointer;">选定</button>
+            <button style="background:#f5f5f5;border:none;border-radius:6px;padding:5px 8px;font-size:10px;cursor:pointer;">×</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 卡片 2 -->
+      <div style="flex:1;background:#fff;border-radius:14px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.08);">
+        <div style="height:70px;background:linear-gradient(135deg,#bbf7d0,#86efac,#4ade80);display:flex;align-items:center;justify-content:center;font-size:32px;position:relative;">
+          🚗
+          <div style="position:absolute;top:6px;right:6px;background:rgba(255,255,255,.9);border-radius:6px;padding:2px 6px;font-size:10px;font-weight:700;color:#16a34a;">85%</div>
+        </div>
+        <div style="padding:10px;">
+          <div style="font-size:12px;font-weight:700;">小鹏 G6</div>
+          <div style="font-size:10px;color:#6b7280;margin-top:1px;">纯电 · 20.99万</div>
+          <div style="font-size:10px;color:#059669;margin-top:4px;line-height:1.4;">城市通勤首选纯电</div>
+          <div style="margin-top:8px;display:flex;gap:4px;">
+            <button style="flex:1;background:#111;color:#fff;border:none;border-radius:6px;padding:5px 0;font-size:10px;font-weight:600;cursor:pointer;">选定</button>
+            <button style="background:#f5f5f5;border:none;border-radius:6px;padding:5px 8px;font-size:10px;cursor:pointer;">×</button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+    <div class="card-body">
+      <h3>C · 封面卡片</h3>
+      <p>横向多列，顶部彩色渐变图区 + 角标显示匹配分。视觉冲击强，但每列宽度有限，信息展示受制约。</p>
+    </div>
+  </div>
+
+</div>
+<p class="subtitle" style="margin-top:12px;">点击浏览器选择，或在终端反馈</p>

@@ -1,0 +1,135 @@
+<h2>设计方案 · 第一节：设计系统基础</h2>
+<p class="subtitle">Token 体系、字体方案、主题切换架构</p>
+
+<!-- SECTION 1: Token System -->
+<div class="section">
+  <h3>1 · 颜色 Token 体系</h3>
+  <p class="subtitle">两套主题共用语义命名，通过 <code>data-theme</code> 切换，组件代码零改动</p>
+
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:12px;">
+
+    <!-- Theme 1: Orange Warm -->
+    <div style="border:1px solid #e8ddd0;border-radius:10px;padding:16px;background:#fdfaf6;">
+      <div style="font-size:11px;font-weight:700;color:#9a3412;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:12px;">主题 1 · 橙暖（默认）</div>
+      <div style="display:flex;flex-direction:column;gap:7px;">
+        <div style="display:flex;align-items:center;gap:10px;">
+          <div style="width:32px;height:20px;border-radius:4px;background:#fff9f4;border:1px solid #e8ddd0;"></div>
+          <code style="font-size:10px;color:#64748b;">--bg: #fff9f4</code>
+          <span style="font-size:10px;color:#94a3b8;">页面底色</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px;">
+          <div style="width:32px;height:20px;border-radius:4px;background:#ffffff;border:1px solid #e8ddd0;"></div>
+          <code style="font-size:10px;color:#64748b;">--surface: #ffffff</code>
+          <span style="font-size:10px;color:#94a3b8;">卡片/面板</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px;">
+          <div style="width:32px;height:20px;border-radius:4px;background:#f97316;"></div>
+          <code style="font-size:10px;color:#64748b;">--accent: #f97316</code>
+          <span style="font-size:10px;color:#94a3b8;">主强调色</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px;">
+          <div style="width:32px;height:20px;border-radius:4px;background:#fff7ed;border:1px solid #fed7aa;"></div>
+          <code style="font-size:10px;color:#64748b;">--accent-muted: #fff7ed</code>
+          <span style="font-size:10px;color:#94a3b8;">强调浅底</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px;">
+          <div style="width:32px;height:20px;border-radius:4px;background:#0f172a;"></div>
+          <code style="font-size:10px;color:#64748b;">--text: #0f172a</code>
+          <span style="font-size:10px;color:#94a3b8;">正文</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px;">
+          <div style="width:32px;height:20px;border-radius:4px;background:#64748b;"></div>
+          <code style="font-size:10px;color:#64748b;">--text-soft: #64748b</code>
+          <span style="font-size:10px;color:#94a3b8;">辅助文字</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Theme 2: Indigo Minimal -->
+    <div style="border:1px solid #e2e8f0;border-radius:10px;padding:16px;background:#ffffff;">
+      <div style="font-size:11px;font-weight:700;color:#4338ca;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:12px;">主题 2 · 靛蓝极简</div>
+      <div style="display:flex;flex-direction:column;gap:7px;">
+        <div style="display:flex;align-items:center;gap:10px;">
+          <div style="width:32px;height:20px;border-radius:4px;background:#f8fafc;border:1px solid #e2e8f0;"></div>
+          <code style="font-size:10px;color:#64748b;">--bg: #f8fafc</code>
+          <span style="font-size:10px;color:#94a3b8;">页面底色</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px;">
+          <div style="width:32px;height:20px;border-radius:4px;background:#ffffff;border:1px solid #e2e8f0;"></div>
+          <code style="font-size:10px;color:#64748b;">--surface: #ffffff</code>
+          <span style="font-size:10px;color:#94a3b8;">卡片/面板</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px;">
+          <div style="width:32px;height:20px;border-radius:4px;background:#6366f1;"></div>
+          <code style="font-size:10px;color:#64748b;">--accent: #6366f1</code>
+          <span style="font-size:10px;color:#94a3b8;">主强调色</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px;">
+          <div style="width:32px;height:20px;border-radius:4px;background:#eef2ff;border:1px solid #c7d2fe;"></div>
+          <code style="font-size:10px;color:#64748b;">--accent-muted: #eef2ff</code>
+          <span style="font-size:10px;color:#94a3b8;">强调浅底</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px;">
+          <div style="width:32px;height:20px;border-radius:4px;background:#0f172a;"></div>
+          <code style="font-size:10px;color:#64748b;">--text: #0f172a</code>
+          <span style="font-size:10px;color:#94a3b8;">正文</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px;">
+          <div style="width:32px;height:20px;border-radius:4px;background:#64748b;"></div>
+          <code style="font-size:10px;color:#64748b;">--text-soft: #64748b</code>
+          <span style="font-size:10px;color:#94a3b8;">辅助文字</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SECTION 2: Typography -->
+<div class="section">
+  <h3>2 · 字体方案（双语）</h3>
+  <div style="background:#f8fafc;border-radius:10px;padding:16px;border:1px solid #e2e8f0;margin-top:8px;">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+      <div>
+        <div style="font-size:10px;color:#64748b;text-transform:uppercase;letter-spacing:0.1em;margin-bottom:8px;">英文</div>
+        <div style="font-size:22px;font-weight:700;color:#0f172a;font-family:Georgia,serif;line-height:1.2;margin-bottom:4px;">Playfair Display</div>
+        <div style="font-size:11px;color:#475569;font-family:system-ui;">Inter — body text for all languages</div>
+        <div style="font-size:9px;color:#94a3b8;margin-top:4px;">Google Fonts · 免费 · 全球 CDN</div>
+      </div>
+      <div>
+        <div style="font-size:10px;color:#64748b;text-transform:uppercase;letter-spacing:0.1em;margin-bottom:8px;">中文</div>
+        <div style="font-size:20px;font-weight:700;color:#0f172a;line-height:1.3;margin-bottom:4px;">Noto Serif SC 标题</div>
+        <div style="font-size:11px;color:#475569;">Noto Sans SC — 正文备用</div>
+        <div style="font-size:9px;color:#94a3b8;margin-top:4px;">Google Fonts · 支持简繁体 · 覆盖所有平台</div>
+      </div>
+    </div>
+    <div style="margin-top:12px;padding-top:12px;border-top:1px solid #e2e8f0;">
+      <div style="font-size:10px;color:#64748b;margin-bottom:6px;">字号阶梯（rem）</div>
+      <div style="display:flex;gap:8px;align-items:flex-end;flex-wrap:wrap;">
+        <span style="font-size:28px;font-weight:700;color:#0f172a;font-family:Georgia,serif;line-height:1;">Aa</span>
+        <span style="font-size:22px;font-weight:700;color:#0f172a;font-family:Georgia,serif;line-height:1;">Aa</span>
+        <span style="font-size:18px;font-weight:600;color:#0f172a;line-height:1;">Aa</span>
+        <span style="font-size:14px;font-weight:400;color:#475569;line-height:1;">Aa</span>
+        <span style="font-size:12px;font-weight:400;color:#64748b;line-height:1;">Aa</span>
+        <span style="font-size:10px;font-weight:500;color:#94a3b8;line-height:1;text-transform:uppercase;letter-spacing:0.1em;">LABEL</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SECTION 3: Theme Switching -->
+<div class="section">
+  <h3>3 · 主题切换架构</h3>
+  <div style="background:#f8fafc;border-radius:10px;padding:16px;border:1px solid #e2e8f0;margin-top:8px;">
+    <div style="font-size:11px;color:#475569;line-height:1.7;">
+      <div style="margin-bottom:8px;"><span style="background:#e2e8f0;border-radius:4px;padding:2px 6px;font-family:monospace;font-size:10px;">html[data-theme="orange"]</span> — 默认橙暖主题 CSS 变量</div>
+      <div style="margin-bottom:8px;"><span style="background:#e2e8f0;border-radius:4px;padding:2px 6px;font-family:monospace;font-size:10px;">html[data-theme="indigo"]</span> — 靛蓝极简覆盖层</div>
+      <div style="margin-bottom:8px;"><span style="background:#e2e8f0;border-radius:4px;padding:2px 6px;font-family:monospace;font-size:10px;">localStorage("theme")</span> — 用户偏好持久化，页面刷新不闪烁</div>
+      <div><span style="background:#e2e8f0;border-radius:4px;padding:2px 6px;font-family:monospace;font-size:10px;">useTheme() hook</span> — 全局状态，所有组件通过 CSS 变量响应，无需 React re-render</div>
+    </div>
+    <div style="margin-top:12px;padding:10px 12px;background:#fff7ed;border-radius:7px;border-left:3px solid #f97316;">
+      <span style="font-size:10px;color:#9a3412;">💡 新增主题只需添加一个 CSS 规则块，不改任何组件代码</span>
+    </div>
+  </div>
+</div>
+
+<p class="subtitle" style="margin-top:16px;">这是第一节。看起来对吗？在终端告诉我，然后继续看第二节（核心组件升级）。</p>

@@ -1,0 +1,9 @@
+{"type":"server-started","port":64790,"host":"127.0.0.1","url_host":"localhost","url":"http://localhost:64790","screen_dir":"/Users/hexin/code/test/newcar/.superpowers/brainstorm/18247-1774058849"}
+{"type":"screen-added","file":"/Users/hexin/code/test/newcar/.superpowers/brainstorm/18247-1774058849/approach.html"}
+{"type":"screen-added","file":"/Users/hexin/code/test/newcar/.superpowers/brainstorm/18247-1774058849/product-overview.html"}
+{"type":"screen-added","file":"/Users/hexin/code/test/newcar/.superpowers/brainstorm/18247-1774058849/journey-canvas.html"}
+{"type":"screen-added","file":"/Users/hexin/code/test/newcar/.superpowers/brainstorm/18247-1774058849/mobile-community.html"}
+{"type":"screen-added","file":"/Users/hexin/code/test/newcar/.superpowers/brainstorm/18247-1774058849/journey-publish.html"}
+{"type":"screen-added","file":"/Users/hexin/code/test/newcar/.superpowers/brainstorm/18247-1774058849/data-architecture.html"}
+{"type":"screen-added","file":"/Users/hexin/code/test/newcar/.superpowers/brainstorm/18247-1774058849/data-architecture-v2.html"}
+{"type":"server-stopped","reason":"idle timeout"}

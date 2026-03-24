@@ -1,0 +1,137 @@
+<h2>旅程看板 — 主界面设计</h2>
+<p class="subtitle">行为 + 对话 双轨驱动 · AI 自动生成历程 · 常看常新</p>
+
+<div class="section">
+  <div class="label">信号采集机制（用户不需要主动输入）</div>
+  <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-top:12px;">
+    <div style="background:#fff8e1;border-radius:10px;padding:14px;border-left:3px solid #ffa000;">
+      <div style="font-weight:bold;font-size:13px;color:#e65100;margin-bottom:8px;">📍 浏览行为</div>
+      <div style="font-size:11px;color:#555;line-height:1.8;">
+        查看了哪些车型页<br>
+        在哪个配置上停留最久<br>
+        对比过哪些车<br>
+        反复回看的内容
+      </div>
+    </div>
+    <div style="background:#e8f5e9;border-radius:10px;padding:14px;border-left:3px solid #43a047;">
+      <div style="font-weight:bold;font-size:13px;color:#1b5e20;margin-bottom:8px;">💬 对话记录</div>
+      <div style="font-size:11px;color:#555;line-height:1.8;">
+        AI对话中提到的需求<br>
+        表达的顾虑和偏好<br>
+        问过的问题<br>
+        做出的判断
+      </div>
+    </div>
+    <div style="background:#fce4ec;border-radius:10px;padding:14px;border-left:3px solid #e91e63;">
+      <div style="font-weight:bold;font-size:13px;color:#880e4f;margin-bottom:8px;">📰 外部信息</div>
+      <div style="font-size:11px;color:#555;line-height:1.8;">
+        新车型发布<br>
+        价格/优惠变动<br>
+        相关车型新闻<br>
+        政策补贴更新
+      </div>
+    </div>
+  </div>
+  <div style="text-align:center;margin-top:10px;font-size:12px;color:#667eea;font-weight:bold;">↓ AI 综合三类信号，自动更新旅程看板</div>
+</div>
+
+<div class="section">
+  <div class="label">主界面线框图（PC端）</div>
+  <div class="mockup" style="margin-top:12px;">
+    <div class="mockup-header">我的购车旅程 · 第23天 · 上次访问昨天</div>
+    <div class="mockup-body" style="padding:0;overflow:hidden;">
+      <div style="display:grid;grid-template-columns:200px 1fr 280px;min-height:480px;">
+
+        <!-- 左侧：旅程阶段进度 -->
+        <div style="background:#1a1a2e;padding:16px;color:white;">
+          <div style="font-size:11px;color:#888;margin-bottom:12px;text-transform:uppercase;letter-spacing:1px;">旅程阶段</div>
+          <div style="display:flex;flex-direction:column;gap:6px;">
+            <div style="background:#43e97b;border-radius:6px;padding:10px 12px;font-size:12px;color:#1a1a2e;font-weight:bold;">✓ 需求确认</div>
+            <div style="background:#4facfe;border-radius:6px;padding:10px 12px;font-size:12px;color:white;font-weight:bold;">→ 候选筛选</div>
+            <div style="background:#2d2d4e;border-radius:6px;padding:10px 12px;font-size:12px;color:#888;">○ 深度对比</div>
+            <div style="background:#2d2d4e;border-radius:6px;padding:10px 12px;font-size:12px;color:#888;">○ 决策强化</div>
+            <div style="background:#2d2d4e;border-radius:6px;padding:10px 12px;font-size:12px;color:#888;">○ 购买执行</div>
+          </div>
+          <div style="margin-top:20px;background:#0f3460;border-radius:8px;padding:12px;">
+            <div style="font-size:10px;color:#888;margin-bottom:4px;">AI 生成进度</div>
+            <div style="font-size:11px;color:#4ecca3;">已记录 47 个决策节点</div>
+            <div style="font-size:11px;color:#4ecca3;margin-top:2px;">浏览 23 款车型</div>
+          </div>
+          <div style="margin-top:12px;">
+            <button style="width:100%;background:#667eea;color:white;border:none;border-radius:8px;padding:10px;font-size:12px;cursor:pointer;">发布历程</button>
+          </div>
+        </div>
+
+        <!-- 中间：看板主体 -->
+        <div style="background:#f8f9fa;padding:16px;overflow-y:auto;">
+
+          <!-- 今日新动态 -->
+          <div style="background:#fff3cd;border-radius:10px;padding:12px;margin-bottom:14px;border-left:4px solid #ffc107;">
+            <div style="font-size:11px;font-weight:bold;color:#856404;margin-bottom:6px;">🔔 今日与你相关的新动态</div>
+            <div style="font-size:12px;color:#555;line-height:1.8;">
+              · 比亚迪宋Pro <span style="color:#e74c3c;font-weight:bold;">降价 5000 元</span>（你关注的车型）<br>
+              · 理想L6 新增 <span style="color:#2980b9;font-weight:bold;">暮云灰</span> 配色（你之前在意颜色）<br>
+              · 深蓝S7 车主实测续航报告刚出，<span style="color:#27ae60;">符合你的通勤场景</span>
+            </div>
+          </div>
+
+          <!-- AI 历程摘要卡 -->
+          <div style="background:white;border-radius:10px;padding:14px;margin-bottom:14px;box-shadow:0 2px 8px rgba(0,0,0,0.06);">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+              <div style="font-size:13px;font-weight:bold;color:#333;">AI 历程摘要</div>
+              <div style="font-size:10px;color:#888;background:#f0f0f0;padding:3px 8px;border-radius:10px;">刚刚更新</div>
+            </div>
+            <div style="font-size:12px;color:#555;line-height:1.9;border-left:3px solid #667eea;padding-left:10px;">
+              你最初考虑的是<strong>纯电SUV</strong>，主要顾虑是长途续航。三周前你开始关注混动车型，<strong>深蓝S7</strong>是你看得最久的车（共7次，累计42分钟）。昨天你问了理想L6三排座的实用性，AI判断你的家庭出行需求权重正在上升。目前你的核心纠结在于：<strong>理想L6的价格</strong> vs <strong>深蓝S7的颜值</strong>。
+            </div>
+          </div>
+
+          <!-- 候选车型卡片 -->
+          <div style="font-size:12px;font-weight:bold;color:#333;margin-bottom:8px;">候选车型对比</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;">
+            <div style="background:white;border-radius:10px;padding:12px;box-shadow:0 2px 8px rgba(0,0,0,0.06);border-top:3px solid #43e97b;">
+              <div style="font-size:11px;color:#27ae60;font-weight:bold;margin-bottom:4px;">⭐ AI 当前推荐</div>
+              <div style="font-size:13px;font-weight:bold;">深蓝 S7</div>
+              <div style="font-size:11px;color:#666;margin-top:4px;">19.99万 起</div>
+              <div style="font-size:10px;color:#27ae60;margin-top:6px;">↑ 续航报告刚出</div>
+            </div>
+            <div style="background:white;border-radius:10px;padding:12px;box-shadow:0 2px 8px rgba(0,0,0,0.06);border-top:3px solid #4facfe;">
+              <div style="font-size:11px;color:#2980b9;font-weight:bold;margin-bottom:4px;">你看得最多</div>
+              <div style="font-size:13px;font-weight:bold;">理想 L6</div>
+              <div style="font-size:11px;color:#666;margin-top:4px;">24.98万 起</div>
+              <div style="font-size:10px;color:#888;margin-top:6px;">新增暮云灰</div>
+            </div>
+            <div style="background:white;border-radius:10px;padding:12px;box-shadow:0 2px 8px rgba(0,0,0,0.06);border-top:3px solid #f093fb;">
+              <div style="font-size:11px;color:#8e44ad;font-weight:bold;margin-bottom:4px;">价格刚降</div>
+              <div style="font-size:13px;font-weight:bold;">宋Pro DM</div>
+              <div style="font-size:11px;color:#e74c3c;margin-top:4px;">16.98万 <span style="text-decoration:line-through;color:#999;font-size:10px;">21.98万</span></div>
+              <div style="font-size:10px;color:#e74c3c;margin-top:6px;">↓ 降了5000</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 右侧：AI 对话 -->
+        <div style="background:#1a1a2e;padding:16px;display:flex;flex-direction:column;">
+          <div style="font-size:11px;color:#888;margin-bottom:10px;text-transform:uppercase;letter-spacing:1px;">AI 助手</div>
+          <div style="flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:8px;">
+            <div style="background:#0f3460;border-radius:10px;padding:10px;font-size:12px;color:#e0e0e0;line-height:1.6;">
+              深蓝S7的续航报告刚出来，实测高速120km/h下续航560km。你上次问过长途高速场景，这个数据应该能打消你的顾虑。要我帮你对比一下三款车的真实高速续航吗？
+            </div>
+            <div style="background:#2d2d4e;border-radius:10px;padding:10px;font-size:12px;color:#e0e0e0;text-align:right;line-height:1.6;">
+              好的，对比一下
+            </div>
+            <div style="background:#0f3460;border-radius:10px;padding:10px;font-size:12px;color:#e0e0e0;line-height:1.6;">
+              正在获取实测数据... ⏳
+            </div>
+          </div>
+          <div style="margin-top:12px;">
+            <input class="mock-input" placeholder="问任何问题..." style="width:100%;box-sizing:border-box;background:#2d2d4e;border:1px solid #444;color:white;"/>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<p style="margin-top:16px;color:#888;font-size:13px;text-align:center;">这个主界面布局方向对不对？在终端告诉我，然后我们看移动端</p>

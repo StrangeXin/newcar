@@ -1,0 +1,262 @@
+<h2>核心数据架构（深度版）</h2>
+<p class="subtitle">完整实体设计 · 信号流转 · AI Pipeline · 社交层</p>
+
+<div class="section">
+  <div class="label">完整实体清单（11个核心实体）</div>
+
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px;">
+
+    <!-- User -->
+    <div style="background:white;border-radius:10px;padding:14px;box-shadow:0 2px 8px rgba(0,0,0,0.07);border-top:3px solid #667eea;">
+      <div style="font-size:12px;font-weight:bold;color:#667eea;margin-bottom:8px;">👤 User</div>
+      <div style="font-size:10px;color:#555;line-height:1.9;font-family:monospace;">
+        id, email, phone, avatar<br>
+        city, has_garage: bool<br>
+        charging_situation: HOME|PUBLIC|NONE<br>
+        family_size: int<br>
+        privacy: PRIVATE|FRIENDS|PUBLIC<br>
+        notification_settings: {}<br>
+        created_at, last_active_at
+      </div>
+    </div>
+
+    <!-- Journey -->
+    <div style="background:white;border-radius:10px;padding:14px;box-shadow:0 2px 8px rgba(0,0,0,0.07);border-top:3px solid #764ba2;">
+      <div style="font-size:12px;font-weight:bold;color:#764ba2;margin-bottom:8px;">🧭 Journey <span style="font-size:10px;font-weight:normal;color:#888;">（核心实体）</span></div>
+      <div style="font-size:10px;color:#555;line-height:1.9;font-family:monospace;">
+        id, user_id, title<br>
+        stage: AWARENESS|CONSIDERATION<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;|COMPARISON|DECISION|PURCHASE<br>
+        status: ACTIVE|PAUSED|COMPLETED<br>
+        requirements: {<br>
+        &nbsp;&nbsp;budget_min, budget_max,<br>
+        &nbsp;&nbsp;use_cases[], fuel_type[],<br>
+        &nbsp;&nbsp;daily_km, style_pref<br>
+        }<br>
+        ai_confidence_score: float<br>
+        template_source_id: JourneyID?<br>
+        started_at, completed_at
+      </div>
+    </div>
+
+    <!-- BehaviorEvent -->
+    <div style="background:white;border-radius:10px;padding:14px;box-shadow:0 2px 8px rgba(0,0,0,0.07);border-top:3px solid #e91e63;">
+      <div style="font-size:12px;font-weight:bold;color:#e91e63;margin-bottom:8px;">📍 BehaviorEvent</div>
+      <div style="font-size:10px;color:#555;line-height:1.9;font-family:monospace;">
+        id, journey_id, session_id<br>
+        type: PAGE_VIEW|CAR_VIEW<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;|SPEC_TAB|REVIEW_READ<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;|COMPARISON_OPEN<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;|PRICE_CHECK|VIDEO_WATCH<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;|COMMUNITY_POST_VIEW<br>
+        target_type: CAR|ARTICLE|POST<br>
+        target_id<br>
+        metadata: {<br>
+        &nbsp;&nbsp;duration_sec,<br>
+        &nbsp;&nbsp;scroll_depth,<br>
+        &nbsp;&nbsp;tab_name, ...<br>
+        }<br>
+        ai_weight: float <span style="color:#888;">← 计算字段</span><br>
+        timestamp
+      </div>
+    </div>
+
+    <!-- Conversation -->
+    <div style="background:white;border-radius:10px;padding:14px;box-shadow:0 2px 8px rgba(0,0,0,0.07);border-top:3px solid #4facfe;">
+      <div style="font-size:12px;font-weight:bold;color:#4facfe;margin-bottom:8px;">💬 Conversation</div>
+      <div style="font-size:10px;color:#555;line-height:1.9;font-family:monospace;">
+        id, journey_id, session_id<br>
+        messages: [{<br>
+        &nbsp;&nbsp;role: USER|ASSISTANT,<br>
+        &nbsp;&nbsp;content, timestamp<br>
+        }]<br>
+        extracted_signals: [{<br>
+        &nbsp;&nbsp;type: REQUIREMENT<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;|PREFERENCE|CONCERN<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;|TRADEOFF|REJECTION,<br>
+        &nbsp;&nbsp;value, confidence: float<br>
+        }]<br>
+        tool_calls: [{name, args, result}]<br>
+        created_at, updated_at
+      </div>
+    </div>
+
+    <!-- CarCandidate -->
+    <div style="background:white;border-radius:10px;padding:14px;box-shadow:0 2px 8px rgba(0,0,0,0.07);border-top:3px solid #43a047;">
+      <div style="font-size:12px;font-weight:bold;color:#43a047;margin-bottom:8px;">🚗 CarCandidate</div>
+      <div style="font-size:10px;color:#555;line-height:1.9;font-family:monospace;">
+        id, journey_id, car_id<br>
+        status: ACTIVE|ELIMINATED|WINNER<br>
+        added_reason:<br>
+        &nbsp;&nbsp;AI_RECOMMENDED<br>
+        &nbsp;&nbsp;|USER_SEARCHED<br>
+        &nbsp;&nbsp;|FROM_TEMPLATE<br>
+        &nbsp;&nbsp;|FROM_COMMUNITY<br>
+        user_interest_score: float<br>
+        &nbsp;&nbsp;<span style="color:#888;">← 由行为事件计算</span><br>
+        ai_match_score: float<br>
+        &nbsp;&nbsp;<span style="color:#888;">← 需求匹配度</span><br>
+        price_at_add: int<br>
+        elimination_reason: string?<br>
+        user_notes: text<br>
+        added_at
+      </div>
+    </div>
+
+    <!-- JourneySnapshot -->
+    <div style="background:white;border-radius:10px;padding:14px;box-shadow:0 2px 8px rgba(0,0,0,0.07);border-top:3px solid #ff6f00;">
+      <div style="font-size:12px;font-weight:bold;color:#ff6f00;margin-bottom:8px;">🤖 JourneySnapshot <span style="font-size:10px;font-weight:normal;color:#888;">AI生成</span></div>
+      <div style="font-size:10px;color:#555;line-height:1.9;font-family:monospace;">
+        id, journey_id<br>
+        trigger: DAILY|EVENT|MANUAL<br>
+        narrative_summary: text<br>
+        &nbsp;&nbsp;<span style="color:#888;">← 「AI今日解读」</span><br>
+        key_insights: [{<br>
+        &nbsp;&nbsp;insight, evidence,<br>
+        &nbsp;&nbsp;confidence: float<br>
+        }]<br>
+        top_recommendation: car_id<br>
+        recommendation_reasoning<br>
+        attention_signals: [{<br>
+        &nbsp;&nbsp;car_id, signal_type,<br>
+        &nbsp;&nbsp;description<br>
+        }] <span style="color:#888;">← 「今日动态」来源</span><br>
+        next_actions: string[]<br>
+        model_used, prompt_version<br>
+        tokens_used: int<br>
+        generated_at
+      </div>
+    </div>
+
+    <!-- Car Knowledge -->
+    <div style="background:white;border-radius:10px;padding:14px;box-shadow:0 2px 8px rgba(0,0,0,0.07);border-top:3px solid #00897b;">
+      <div style="font-size:12px;font-weight:bold;color:#00897b;margin-bottom:8px;">🗄️ Car + CarPriceSnapshot + CarReview</div>
+      <div style="font-size:10px;color:#555;line-height:1.9;font-family:monospace;">
+        Car:<br>
+        &nbsp;&nbsp;id, brand, model, variant, year<br>
+        &nbsp;&nbsp;type: SEDAN|SUV|MPV...<br>
+        &nbsp;&nbsp;fuel_type: BEV|PHEV|HEV|ICE<br>
+        &nbsp;&nbsp;base_specs: {} <span style="color:#888;">← 静态</span><br>
+        <br>
+        CarPriceSnapshot:<br>
+        &nbsp;&nbsp;car_id, region<br>
+        &nbsp;&nbsp;msrp, dealer_discount<br>
+        &nbsp;&nbsp;subsidy_national, subsidy_local<br>
+        &nbsp;&nbsp;effective_price <span style="color:#e74c3c;">← 实时API</span><br>
+        &nbsp;&nbsp;captured_at<br>
+        <br>
+        CarReview:<br>
+        &nbsp;&nbsp;car_id, source, platform<br>
+        &nbsp;&nbsp;sentiment_scores: {<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;space, tech, reliability, value<br>
+        &nbsp;&nbsp;}<br>
+        &nbsp;&nbsp;ai_summary <span style="color:#888;">← RAG知识库</span>
+      </div>
+    </div>
+
+    <!-- Social Layer -->
+    <div style="background:white;border-radius:10px;padding:14px;box-shadow:0 2px 8px rgba(0,0,0,0.07);border-top:3px solid #37474f;">
+      <div style="font-size:12px;font-weight:bold;color:#37474f;margin-bottom:8px;">🌐 PublishedJourney + JourneyFork + Comment</div>
+      <div style="font-size:10px;color:#555;line-height:1.9;font-family:monospace;">
+        PublishedJourney:<br>
+        &nbsp;&nbsp;journey_id, user_id, title<br>
+        &nbsp;&nbsp;tags: [car_ids, budget, use_case]<br>
+        &nbsp;&nbsp;story_content: text<br>
+        &nbsp;&nbsp;report_data: json<br>
+        &nbsp;&nbsp;template_data: json<br>
+        &nbsp;&nbsp;view_count, like_count<br>
+        &nbsp;&nbsp;fork_count, comment_count<br>
+        &nbsp;&nbsp;featured: bool<br>
+        <br>
+        JourneyFork: <span style="color:#667eea;">← 「从此出发」</span><br>
+        &nbsp;&nbsp;source_published_journey_id<br>
+        &nbsp;&nbsp;new_journey_id<br>
+        &nbsp;&nbsp;inherited_candidates: car_id[]<br>
+        &nbsp;&nbsp;inherited_framework: {<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;dimensions[], weights{}<br>
+        &nbsp;&nbsp;}<br>
+        &nbsp;&nbsp;forked_at<br>
+        <br>
+        Comment:<br>
+        &nbsp;&nbsp;published_journey_id<br>
+        &nbsp;&nbsp;user_id, content<br>
+        &nbsp;&nbsp;parent_id <span style="color:#888;">← 支持回复</span>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<div class="section">
+  <div class="label">AI Pipeline — 每日快照生成流程</div>
+  <div style="background:#1a1a2e;border-radius:12px;padding:16px;margin-top:12px;color:#e0e0e0;font-size:11px;">
+    <div style="display:grid;grid-template-columns:1fr 24px 1fr 24px 1fr 24px 1fr;gap:4px;align-items:center;">
+      <div style="background:#0f3460;border-radius:8px;padding:10px;text-align:center;">
+        <div style="color:#4facfe;font-weight:bold;margin-bottom:4px;">输入聚合</div>
+        近7天BehaviorEvent<br>全量extracted_signals<br>CarCandidate得分<br>今日价格/政策变动
+      </div>
+      <div style="text-align:center;color:#444;font-size:20px;">→</div>
+      <div style="background:#1b0533;border-radius:8px;padding:10px;text-align:center;">
+        <div style="color:#f093fb;font-weight:bold;margin-bottom:4px;">意图推断</div>
+        用户当前核心纠结是什么<br>需求权重有无变化<br>情感倾向（偏向/抗拒）
+      </div>
+      <div style="text-align:center;color:#444;font-size:20px;">→</div>
+      <div style="background:#1b3a1b;border-radius:8px;padding:10px;text-align:center;">
+        <div style="color:#43e97b;font-weight:bold;margin-bottom:4px;">内容生成</div>
+        narrative_summary<br>key_insights（最多3条）<br>top_recommendation<br>attention_signals
+      </div>
+      <div style="text-align:center;color:#444;font-size:20px;">→</div>
+      <div style="background:#3a1a00;border-radius:8px;padding:10px;text-align:center;">
+        <div style="color:#ff6f00;font-weight:bold;margin-bottom:4px;">写入 & 推送</div>
+        存 JourneySnapshot<br>更新CarCandidate排序<br>触发通知推送<br>刷新首页动态
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <div class="label">今日动态触发规则</div>
+  <div style="background:#fff8e1;border-radius:10px;padding:14px;margin-top:12px;">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;font-size:11px;color:#555;">
+      <div>
+        <div style="font-weight:bold;color:#e65100;margin-bottom:6px;">触发条件（满足任一）</div>
+        <div style="line-height:2;">
+          ① 候选车型价格变动 ±3%<br>
+          ② 候选车型有新配色/配置<br>
+          ③ 相关车型新评测/口碑出现<br>
+          ④ 用户所在地有新补贴政策<br>
+          ⑤ 对比车型发布OTA/召回<br>
+          ⑥ 距上次快照超过24h
+        </div>
+      </div>
+      <div>
+        <div style="font-weight:bold;color:#e65100;margin-bottom:6px;">相关性判断（AI过滤）</div>
+        <div style="line-height:2;">
+          · 只推与用户候选池相关的变动<br>
+          · 根据用户关注维度加权<br>
+          · 过滤用户已知的信息<br>
+          · 每天最多推3条动态<br>
+          · 避免重复推送同类信息
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <div class="label">社区排序机制</div>
+  <div style="background:#f0f4ff;border-radius:10px;padding:14px;margin-top:12px;font-size:11px;color:#333;">
+    <div style="font-family:monospace;background:#1a1a2e;color:#e0e0e0;border-radius:8px;padding:12px;line-height:2;">
+      score = (<br>
+      &nbsp;&nbsp;fork_count × 3.0 +&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#888;">// 「从此出发」权重最高</span><br>
+      &nbsp;&nbsp;like_count × 1.0 +<br>
+      &nbsp;&nbsp;comment_count × 1.5 +<br>
+      &nbsp;&nbsp;view_count × 0.1<br>
+      ) × time_decay(published_at)<br>
+      &nbsp;&nbsp;× relevance_boost(user_requirements)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#888;">// 按当前浏览用户需求相关度加权</span>
+    </div>
+  </div>
+</div>
+
+<p style="margin-top:16px;color:#888;font-size:13px;text-align:center;">这个深度版本是否满足要求？确认后写入设计文档</p>

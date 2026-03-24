@@ -1,0 +1,44 @@
+<h2>三种实施方案对比</h2>
+<p class="subtitle">全面升级（Token + 组件 + 布局），三种推进方式各有侧重</p>
+
+<div class="options">
+
+  <div class="option" data-choice="a" onclick="toggleSelect(this)">
+    <div class="letter">A</div>
+    <div class="content">
+      <h3>Token 优先 · 由内而外</h3>
+      <p>第一步建完整的设计 token 系统（颜色阶梯、字型比例、间距、阴影、圆角），同时集成字体加载和 <code>data-theme</code> 主题切换机制。Token 稳定后，再系统地升级全局组件（按钮、卡片、徽章、导航），最后重构各页面布局。</p>
+      <div class="pros-cons" style="margin-top:10px;">
+        <div class="pros"><h4>优点</h4><ul><li>主题切换最干净，零硬编码颜色</li><li>后续改动只改 token，不碰组件</li><li>两套主题天然一致</li></ul></div>
+        <div class="cons"><h4>代价</h4><ul><li>前期工作量大，视觉效果出来慢</li><li>需要先完整规划 token 命名体系</li></ul></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="option" data-choice="b" onclick="toggleSelect(this)">
+    <div class="letter">B</div>
+    <div class="content">
+      <h3>页面优先 · 逐页重做</h3>
+      <p>按页面重要性排序（首页 → 旅程工作台 → 社区广场 → 聊天），每个页面从视觉整体重新设计，设计模式自然沉淀为组件。主题切换在全部页面升级完成后再统一提炼。</p>
+      <div class="pros-cons" style="margin-top:10px;">
+        <div class="pros"><h4>优点</h4><ul><li>最快看到完整页面效果</li><li>可以分批上线，每个页面独立</li></ul></div>
+        <div class="cons"><h4>代价</h4><ul><li>页面间容易出现风格漂移</li><li>主题切换需要最后补做，成本高</li></ul></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="option" data-choice="c" onclick="toggleSelect(this)">
+    <div class="letter">C（推荐）</div>
+    <div class="content">
+      <h3>双轨并行 · Token + 核心组件同步</h3>
+      <p>分三轨推进：① 精简版 token 系统（只定义使用最频繁的变量，够用即可）+ 字体 + 主题切换基础架构；② 核心组件库升级（Button、Card、Badge、ChatBubble、FeedCard 等 ~10 个组件）；③ 三个主要页面布局重构（首页 Hero、工作台三栏、社区 Feed）。三轨有依赖关系但可快速推进。</p>
+      <div class="pros-cons" style="margin-top:10px;">
+        <div class="pros"><h4>优点</h4><ul><li>平衡系统性和交付速度</li><li>主题切换从第一天就是正确的</li><li>组件复用率高，改动集中</li></ul></div>
+        <div class="cons"><h4>代价</h4><ul><li>需要同时管理三个工作流</li><li>token 覆盖度不如方案 A 彻底</li></ul></div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<p class="subtitle" style="margin-top:16px;">我推荐 C — 在可用的时间内交付最大视觉提升，同时保证主题系统从第一天就是对的。在终端确认。</p>
