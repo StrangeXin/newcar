@@ -1,0 +1,180 @@
+<h2>旅程工作台 · 修订版</h2>
+<p class="subtitle">AI 面板加宽 + 主区域增加直接交互元素</p>
+
+<div class="mockup">
+  <div class="mockup-header">Journey Workspace · 修订</div>
+  <div class="mockup-body" style="background:#f5ede4;padding:8px;display:grid;grid-template-columns:160px 1fr 280px;gap:8px;min-height:360px;border-radius:0 0 8px 8px;">
+
+    <!-- Left: Stage progress (narrower) -->
+    <div style="background:white;border-radius:10px;border:1px solid #f0e6d8;padding:12px;display:flex;flex-direction:column;gap:7px;">
+      <div style="font-size:9px;color:#9a3412;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;">购车旅程</div>
+      <div style="font-size:12px;font-weight:700;color:#0f172a;font-family:Georgia,serif;line-height:1.3;">理想 L6 探索</div>
+      <div style="height:1px;background:#f0e6d8;"></div>
+      <div style="display:flex;flex-direction:column;gap:4px;">
+        <div style="display:flex;align-items:center;gap:6px;">
+          <div style="width:16px;height:16px;border-radius:50%;background:#f97316;display:flex;align-items:center;justify-content:center;color:white;font-size:8px;flex-shrink:0;">✓</div>
+          <span style="font-size:10px;color:#64748b;">需求澄清</span>
+        </div>
+        <div style="width:1.5px;height:8px;background:#fed7aa;margin-left:7px;"></div>
+        <div style="display:flex;align-items:center;gap:6px;">
+          <div style="width:16px;height:16px;border-radius:50%;background:#f97316;display:flex;align-items:center;justify-content:center;color:white;font-size:8px;flex-shrink:0;">✓</div>
+          <span style="font-size:10px;color:#64748b;">候选筛选</span>
+        </div>
+        <div style="width:1.5px;height:8px;background:#fed7aa;margin-left:7px;"></div>
+        <div style="display:flex;align-items:center;gap:6px;">
+          <div style="width:16px;height:16px;border-radius:50%;background:#fff7ed;border:2px solid #f97316;flex-shrink:0;"></div>
+          <span style="font-size:10px;font-weight:600;color:#f97316;">深度对比</span>
+        </div>
+        <div style="width:1.5px;height:8px;background:#e2e8f0;margin-left:7px;opacity:0.4;"></div>
+        <div style="display:flex;align-items:center;gap:6px;opacity:0.4;">
+          <div style="width:16px;height:16px;border-radius:50%;background:#f1f5f9;border:1.5px solid #e2e8f0;flex-shrink:0;"></div>
+          <span style="font-size:10px;color:#94a3b8;">试驾决策</span>
+        </div>
+      </div>
+      <div style="margin-top:auto;background:#fff7ed;border-radius:7px;padding:7px 9px;">
+        <div style="font-size:9px;color:#9a3412;font-weight:600;">📍 Day 12</div>
+        <div style="font-size:9px;color:#c2410c;margin-top:2px;">进行中</div>
+      </div>
+    </div>
+
+    <!-- Center: Interactive main area -->
+    <div style="display:flex;flex-direction:column;gap:8px;min-width:0;">
+
+      <!-- Today summary card -->
+      <div style="background:white;border-radius:10px;border:1px solid #f0e6d8;padding:12px;">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;">
+          <div>
+            <div style="font-size:9px;color:#9a3412;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;margin-bottom:5px;">今日动态</div>
+            <div style="font-size:12px;font-weight:700;color:#0f172a;font-family:Georgia,serif;line-height:1.4;">AI 发现了一个关键差异</div>
+            <div style="font-size:10px;color:#64748b;margin-top:3px;line-height:1.5;">L6 增程油耗比 G6 亏电低 18%，对你每月长途影响显著。</div>
+          </div>
+          <!-- Inline action buttons -->
+          <div style="display:flex;gap:5px;flex-shrink:0;margin-left:10px;">
+            <button style="background:#fff7ed;color:#c2410c;border:1px solid #fed7aa;border-radius:6px;padding:4px 8px;font-size:9px;font-weight:600;cursor:pointer;">标记重要</button>
+            <button style="background:#f8fafc;color:#64748b;border:1px solid #e2e8f0;border-radius:6px;padding:4px 8px;font-size:9px;cursor:pointer;">忽略</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Candidate cards with direct interaction -->
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:7px;">
+
+        <!-- Card 1: Selected/Top -->
+        <div style="background:white;border-radius:10px;border:2px solid #f97316;padding:11px;position:relative;">
+          <div style="position:absolute;top:-8px;left:10px;background:#f97316;color:white;font-size:8px;font-weight:700;border-radius:4px;padding:2px 7px;">评分最高</div>
+          <div style="font-size:12px;font-weight:700;color:#0f172a;margin-top:2px;">理想 L6</div>
+          <div style="font-size:10px;color:#64748b;margin-bottom:7px;">32.98 万起</div>
+          <div style="font-size:22px;font-weight:800;color:#f97316;line-height:1;">88</div>
+          <div style="font-size:8px;color:#94a3b8;margin-bottom:8px;">综合评分</div>
+          <!-- Direct action buttons on card -->
+          <div style="display:flex;flex-direction:column;gap:4px;">
+            <button style="background:#f97316;color:white;border:none;border-radius:6px;padding:5px;font-size:9px;font-weight:600;cursor:pointer;width:100%;">约试驾</button>
+            <button style="background:#fff7ed;color:#c2410c;border:1px solid #fed7aa;border-radius:6px;padding:5px;font-size:9px;cursor:pointer;width:100%;">添加笔记</button>
+          </div>
+        </div>
+
+        <!-- Card 2 -->
+        <div style="background:white;border-radius:10px;border:1px solid #f0e6d8;padding:11px;">
+          <div style="font-size:12px;font-weight:700;color:#0f172a;margin-bottom:2px;">小鹏 G6</div>
+          <div style="font-size:10px;color:#64748b;margin-bottom:7px;">20.99 万起</div>
+          <div style="font-size:22px;font-weight:800;color:#94a3b8;line-height:1;">74</div>
+          <div style="font-size:8px;color:#94a3b8;margin-bottom:8px;">综合评分</div>
+          <div style="display:flex;flex-direction:column;gap:4px;">
+            <button style="background:#f8fafc;color:#475569;border:1px solid #e2e8f0;border-radius:6px;padding:5px;font-size:9px;cursor:pointer;width:100%;">约试驾</button>
+            <!-- Inline rating: user can click to rate -->
+            <div style="display:flex;justify-content:center;gap:3px;padding:3px 0;">
+              <span style="font-size:12px;cursor:pointer;opacity:0.9;">★</span>
+              <span style="font-size:12px;cursor:pointer;opacity:0.9;">★</span>
+              <span style="font-size:12px;cursor:pointer;opacity:0.9;">★</span>
+              <span style="font-size:12px;cursor:pointer;opacity:0.3;">★</span>
+              <span style="font-size:12px;cursor:pointer;opacity:0.3;">★</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Card 3 -->
+        <div style="background:white;border-radius:10px;border:1px solid #f0e6d8;padding:11px;">
+          <div style="font-size:12px;font-weight:700;color:#0f172a;margin-bottom:2px;">问界 M7</div>
+          <div style="font-size:10px;color:#64748b;margin-bottom:7px;">24.98 万起</div>
+          <div style="font-size:22px;font-weight:800;color:#94a3b8;line-height:1;">71</div>
+          <div style="font-size:8px;color:#94a3b8;margin-bottom:8px;">综合评分</div>
+          <div style="display:flex;flex-direction:column;gap:4px;">
+            <button style="background:#f8fafc;color:#475569;border:1px solid #e2e8f0;border-radius:6px;padding:5px;font-size:9px;cursor:pointer;width:100%;">约试驾</button>
+            <div style="display:flex;justify-content:center;gap:3px;padding:3px 0;">
+              <span style="font-size:12px;cursor:pointer;opacity:0.9;">★</span>
+              <span style="font-size:12px;cursor:pointer;opacity:0.9;">★</span>
+              <span style="font-size:12px;cursor:pointer;opacity:0.3;">★</span>
+              <span style="font-size:12px;cursor:pointer;opacity:0.3;">★</span>
+              <span style="font-size:12px;cursor:pointer;opacity:0.3;">★</span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Inline quick-action bar: direct interaction without chat -->
+      <div style="background:white;border-radius:10px;border:1px solid #f0e6d8;padding:10px 12px;">
+        <div style="font-size:9px;color:#64748b;margin-bottom:7px;font-weight:600;">快捷操作（无需对话）</div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;">
+          <button style="background:#f8fafc;color:#475569;border:1px solid #e2e8f0;border-radius:7px;padding:5px 10px;font-size:10px;cursor:pointer;">＋ 添加候选车型</button>
+          <button style="background:#f8fafc;color:#475569;border:1px solid #e2e8f0;border-radius:7px;padding:5px 10px;font-size:10px;cursor:pointer;">📋 填写需求清单</button>
+          <button style="background:#f8fafc;color:#475569;border:1px solid #e2e8f0;border-radius:7px;padding:5px 10px;font-size:10px;cursor:pointer;">📌 记录到店时间</button>
+          <button style="background:#fff7ed;color:#c2410c;border:1px solid #fed7aa;border-radius:7px;padding:5px 10px;font-size:10px;cursor:pointer;font-weight:500;">✓ 标记阶段完成</button>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Right: AI Chat Panel (wider, 280px) -->
+    <div style="background:white;border-radius:10px;border:1px solid #f0e6d8;display:flex;flex-direction:column;overflow:hidden;">
+
+      <!-- Header -->
+      <div style="padding:10px 14px;border-bottom:1px solid #f0e6d8;display:flex;align-items:center;justify-content:space-between;">
+        <div style="display:flex;align-items:center;gap:6px;">
+          <div style="width:7px;height:7px;border-radius:50%;background:#22c55e;"></div>
+          <span style="font-size:11px;font-weight:700;color:#0f172a;">AI 购车助手</span>
+        </div>
+        <span style="font-size:9px;color:#94a3b8;">正在追踪旅程</span>
+      </div>
+
+      <!-- AI context chip -->
+      <div style="padding:8px 12px;background:#fff7ed;border-bottom:1px solid #f0e6d8;">
+        <div style="font-size:9px;color:#9a3412;font-weight:600;">📍 当前：深度对比阶段 · 3 款车</div>
+      </div>
+
+      <!-- Messages -->
+      <div style="flex:1;padding:10px 12px;display:flex;flex-direction:column;gap:8px;overflow:hidden;">
+        <div style="background:#f8fafc;border-radius:3px 10px 10px 10px;padding:9px 11px;font-size:10px;color:#1e293b;line-height:1.6;">
+          你好！我注意到你在对比续航表现。<strong>理想 L6 的增程模式</strong>在你每月 3-4 次长途的场景下，预计年油费比 G6 亏电少约 2,800 元。
+        </div>
+        <div style="align-self:flex-end;background:#f97316;border-radius:10px 10px 3px 10px;padding:9px 11px;font-size:10px;color:white;line-height:1.5;max-width:180px;">
+          那高速上实际油耗是多少？
+        </div>
+        <div style="background:#f8fafc;border-radius:3px 10px 10px 10px;padding:9px 11px;font-size:10px;color:#1e293b;line-height:1.6;">
+          L6 高速增程实测约 <strong>6.2L/100km</strong>，G6 在高速亏电时约 <strong>8.8L/100km</strong>。差异在你的场景里很显著。
+          <div style="margin-top:7px;display:flex;gap:5px;">
+            <button style="background:#fff7ed;color:#c2410c;border:1px solid #fed7aa;border-radius:5px;padding:3px 8px;font-size:9px;font-weight:600;cursor:pointer;">标记此洞察</button>
+            <button style="background:#f1f5f9;color:#475569;border:1px solid #e2e8f0;border-radius:5px;padding:3px 8px;font-size:9px;cursor:pointer;">继续追问</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Suggested quick replies -->
+      <div style="padding:8px 12px;border-top:1px solid #f0e6d8;display:flex;gap:5px;flex-wrap:wrap;">
+        <button style="background:#fff7ed;color:#9a3412;border:1px solid #fed7aa;border-radius:6px;padding:4px 9px;font-size:9px;cursor:pointer;">空间对比</button>
+        <button style="background:#fff7ed;color:#9a3412;border:1px solid #fed7aa;border-radius:6px;padding:4px 9px;font-size:9px;cursor:pointer;">智驾能力</button>
+        <button style="background:#fff7ed;color:#9a3412;border:1px solid #fed7aa;border-radius:6px;padding:4px 9px;font-size:9px;cursor:pointer;">保值率</button>
+      </div>
+
+      <!-- Input -->
+      <div style="padding:10px 12px;border-top:1px solid #f0e6d8;display:flex;gap:6px;align-items:center;">
+        <div style="flex:1;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:8px 10px;font-size:10px;color:#94a3b8;">问任何关于选车的问题…</div>
+        <button style="background:#f97316;color:white;border:none;border-radius:7px;width:28px;height:28px;font-size:12px;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;">↑</button>
+      </div>
+
+    </div>
+
+  </div>
+</div>
+
+<p class="subtitle" style="margin-top:16px;">主区域新增：卡片内直接操作（约试驾/添加笔记/星级评分）+ 底部快捷操作栏（无需对话即可完成关键动作）。AI 面板加宽至 280px 并增加智能快捷回复建议。这样看起来对吗？</p>
