@@ -1,8 +1,41 @@
 import { getToken } from './auth';
+import {
+  mockJourney,
+  mockCandidates,
+  mockSnapshot,
+  mockNotifications,
+  mockCommunityJourneys,
+} from './mock-data';
 
 export const BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
 
+export const MOCK_MODE = true; // Set to false to use real API
+
 type HttpMethod = 'GET' | 'POST' | 'PATCH' | 'DELETE';
+
+function getMockResponse<T>(path: string): T | null {
+  if (!MOCK_MODE) return null;
+
+  if (path === '/journeys/active') return mockJourney as T;
+  if (path.match(/\/journeys\/[^/]+\/candidates/)) return { candidates: mockCandidates } as T;
+  if (path.match(/\/snapshots\/[^/]+\/snapshot/)) return mockSnapshot as T;
+  if (path === '/notifications') return mockNotifications as T;
+  if (path.startsWith('/community') && !path.match(/\/community\/[^?]/)) {
+    return {
+      items: mockCommunityJourneys,
+      total: mockCommunityJourneys.length,
+      limit: 20,
+      offset: 0,
+    } as T;
+  }
+  if (path.match(/\/community\/[^?/]+$/)) {
+    const id = path.split('/').pop();
+    const item = mockCommunityJourneys.find((j) => j.id === id);
+    return (item || mockCommunityJourneys[0]) as T;
+  }
+
+  return null;
+}
 
 async function request<T>(path: string, method: HttpMethod, body?: unknown): Promise<T> {
   const token = typeof window !== 'undefined' ? getToken() : undefined;
@@ -41,19 +74,24 @@ async function request<T>(path: string, method: HttpMethod, body?: unknown): Pro
   return (await res.json()) as T;
 }
 
-export function get<T>(path: string): Promise<T> {
+export async function get<T>(path: string): Promise<T> {
+  const mock = getMockResponse<T>(path);
+  if (mock !== null) return mock;
   return request<T>(path, 'GET');
 }
 
-export function post<T>(path: string, body?: unknown): Promise<T> {
+export async function post<T>(path: string, body?: unknown): Promise<T> {
+  if (MOCK_MODE) return undefined as T;
   return request<T>(path, 'POST', body);
 }
 
-export function patch<T>(path: string, body?: unknown): Promise<T> {
+export async function patch<T>(path: string, body?: unknown): Promise<T> {
+  if (MOCK_MODE) return undefined as T;
   return request<T>(path, 'PATCH', body);
 }
 
-export function del<T>(path: string): Promise<T> {
+export async function del<T>(path: string): Promise<T> {
+  if (MOCK_MODE) return undefined as T;
   return request<T>(path, 'DELETE');
 }
 

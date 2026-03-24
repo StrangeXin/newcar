@@ -2,8 +2,9 @@
 
 import { create } from 'zustand';
 import { Candidate, CarInfo } from '@/types/api';
-import { buildJourneyChatWsUrl, get } from '@/lib/api';
+import { buildJourneyChatWsUrl, get, MOCK_MODE } from '@/lib/api';
 import { dispatchJourneySideEffect } from '@/lib/journey-workspace-events';
+import { mockChatMessages } from '@/lib/mock-data';
 
 export type ChatRole = 'USER' | 'ASSISTANT';
 export type ToolName = 'car_search' | 'car_detail' | 'journey_update' | 'add_candidate';
@@ -131,6 +132,10 @@ export const useChatStore = create<ChatState>((set, getState) => ({
   socket: undefined,
 
   loadHistory: async (journeyId) => {
+    if (MOCK_MODE) {
+      set({ messages: mockChatMessages });
+      return;
+    }
     try {
       const history = await get<HistoryResponse>(`/journeys/${journeyId}/conversation/messages?limit=50`);
       set({
@@ -148,6 +153,11 @@ export const useChatStore = create<ChatState>((set, getState) => ({
   },
 
   connect: (journeyId) => {
+    if (MOCK_MODE) {
+      set({ isConnected: true, activeJourneyId: journeyId });
+      return;
+    }
+
     const { socket, activeJourneyId } = getState();
     if (socket && activeJourneyId === journeyId && socket.readyState <= WebSocket.OPEN) {
       return;
@@ -350,6 +360,24 @@ export const useChatStore = create<ChatState>((set, getState) => ({
       ],
       isLoading: true,
     }));
+
+    if (MOCK_MODE) {
+      await new Promise<void>((resolve) => window.setTimeout(resolve, 800));
+      set((state) => ({
+        isLoading: false,
+        messages: [
+          ...state.messages,
+          {
+            id: makeId('assistant'),
+            kind: 'text',
+            role: 'ASSISTANT',
+            content: '（Mock 模式）这是模拟回复。请关闭 MOCK_MODE 以连接真实后端。',
+            timestamp: new Date().toISOString(),
+          },
+        ],
+      }));
+      return;
+    }
 
     if (!getState().socket || getState().activeJourneyId !== journeyId) {
       getState().connect(journeyId);
