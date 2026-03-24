@@ -2,20 +2,127 @@
 @tailwind components;
 @tailwind utilities;
 
-:root {
+:root,
+[data-theme="orange"] {
   color-scheme: light;
-  --font-heading: 'Avenir Next', 'SF Pro Display', 'PingFang SC', 'Hiragino Sans GB', sans-serif;
-  --font-body: 'IBM Plex Sans', 'SF Pro Text', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+
+  /* === Font Stacks === */
+  --font-display: 'Playfair Display', 'Noto Serif SC', Georgia, serif;
+  --font-body: 'Inter', 'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  --font-mono: 'IBM Plex Mono', 'Fira Code', monospace;
+
+  /* === Colors — Background & Surface === */
   --bg: #fff9f4;
-  --surface: #ffffffcc;
-  --surface-strong: #ffffff;
-  --text: #0f172a;
-  --text-soft: #334155;
-  --border-soft: #d7e0ee;
+  --bg-gradient:
+    radial-gradient(64rem 44rem at -6% -2%, #ffe4d6 0%, rgba(255,228,214,0) 70%),
+    radial-gradient(44rem 34rem at 102% 8%, #ffe9d0 0%, rgba(255,233,208,0) 68%),
+    radial-gradient(50rem 40rem at 80% 100%, #daf6ec 0%, rgba(218,246,236,0) 68%);
+  --surface: #ffffff;
+  --surface-subtle: #fdfaf6;
+  --border: #f0e6d8;
+  --border-soft: #e8ddd0;
+
+  /* === Colors — Accent === */
   --accent: #f97316;
-  --accent-strong: #ea580c;
+  --accent-hover: #ea580c;
+  --accent-muted: #fff7ed;
+  --accent-border: #fed7aa;
+  --accent-text: #c2410c;
+  --accent-text-soft: #9a3412;
+
+  /* === Colors — Text === */
+  --text: #0f172a;
+  --text-soft: #475569;
+  --text-muted: #94a3b8;
+
+  /* === Colors — Focus === */
   --focus-ring: #ea580c;
-  --focus-glow: rgba(249, 115, 22, 0.22);
+  --focus-glow: rgba(249,115,22,0.22);
+
+  /* === Shadows (themed) === */
+  --shadow-card: 0 1px 4px rgba(0,0,0,0.04), 0 4px 12px rgba(249,115,22,0.05);
+  --shadow-accent: 0 2px 8px rgba(249,115,22,0.30);
+
+  /* === Selection === */
+  --selection-bg: rgba(249,115,22,0.2);
+  --selection-color: #7c2d12;
+
+  /* === Typography Scale === */
+  --text-xs: 0.6875rem;
+  --text-sm: 0.75rem;
+  --text-base: 0.875rem;
+  --text-md: 1rem;
+  --text-lg: 1.125rem;
+  --text-xl: 1.25rem;
+  --text-2xl: 1.5rem;
+  --text-3xl: 1.875rem;
+  --text-4xl: 2.25rem;
+
+  --leading-tight: 1.2;
+  --leading-snug: 1.35;
+  --leading-normal: 1.5;
+  --leading-relaxed: 1.65;
+
+  --tracking-tight: -0.025em;
+  --tracking-normal: 0;
+  --tracking-wide: 0.08em;
+  --tracking-widest: 0.16em;
+
+  /* === Spacing (8pt grid) === */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.25rem;
+  --space-6: 1.5rem;
+  --space-8: 2rem;
+  --space-10: 2.5rem;
+  --space-12: 3rem;
+
+  /* === Border Radius === */
+  --radius-sm: 0.375rem;
+  --radius-md: 0.5625rem;
+  --radius-lg: 0.625rem;
+  --radius-xl: 0.75rem;
+  --radius-2xl: 1rem;
+  --radius-full: 9999px;
+
+  /* === Shadows (non-themed) === */
+  --shadow-xs: 0 1px 2px rgba(0,0,0,0.04);
+  --shadow-sm: 0 1px 4px rgba(0,0,0,0.05), 0 2px 6px rgba(0,0,0,0.03);
+  --shadow-md: 0 2px 8px rgba(0,0,0,0.06), 0 4px 12px rgba(0,0,0,0.04);
+
+  /* === Semantic Colors (shared) === */
+  --success: #22c55e;
+  --success-muted: #f0fdf4;
+  --success-border: #bbf7d0;
+  --success-text: #166534;
+  --warning: #f59e0b;
+  --warning-muted: #fffbeb;
+  --warning-border: #fde68a;
+  --warning-text: #92400e;
+  --error: #ef4444;
+  --info: #3b82f6;
+}
+
+[data-theme="indigo"] {
+  --bg: #f8fafc;
+  --bg-gradient: none;
+  --surface-subtle: #f8fafc;
+  --border: #e2e8f0;
+  --border-soft: #e8edf5;
+  --accent: #6366f1;
+  --accent-hover: #4f46e5;
+  --accent-muted: #eef2ff;
+  --accent-border: #c7d2fe;
+  --accent-text: #4338ca;
+  --accent-text-soft: #3730a3;
+  --focus-ring: #6366f1;
+  --focus-glow: rgba(99,102,241,0.2);
+  --shadow-card: 0 1px 4px rgba(0,0,0,0.04), 0 4px 12px rgba(99,102,241,0.05);
+  --shadow-accent: 0 2px 8px rgba(99,102,241,0.25);
+  --selection-bg: rgba(99,102,241,0.15);
+  --selection-color: #312e81;
 }
 
 html,
@@ -31,13 +138,9 @@ body {
   font-family: var(--font-body), 'PingFang SC', 'Segoe UI', sans-serif;
   margin: 0;
   min-height: 100vh;
-  background:
-    radial-gradient(64rem 44rem at -6% -2%, #ffe4d6 0%, rgba(255, 228, 214, 0) 70%),
-    radial-gradient(44rem 34rem at 102% 8%, #ffe9d0 0%, rgba(255, 233, 208, 0) 68%),
-    radial-gradient(50rem 40rem at 80% 100%, #daf6ec 0%, rgba(218, 246, 236, 0) 68%),
-    var(--bg);
+  background: var(--bg-gradient), var(--bg);
   color: var(--text);
-  line-height: 1.5;
+  line-height: var(--leading-normal);
 }
 
 a {
@@ -49,8 +152,8 @@ h1,
 h2,
 h3,
 h4 {
-  font-family: var(--font-heading), 'PingFang SC', sans-serif;
-  letter-spacing: -0.02em;
+  font-family: var(--font-display), 'PingFang SC', sans-serif;
+  letter-spacing: var(--tracking-tight);
 }
 
 button,
@@ -69,8 +172,8 @@ input {
 }
 
 ::selection {
-  background: rgba(249, 115, 22, 0.2);
-  color: #7c2d12;
+  background: var(--selection-bg);
+  color: var(--selection-color);
 }
 
 /* Icon language: keep size controlled by utility classes, unify stroke style globally. */
