@@ -24,16 +24,16 @@ type StageItemProps = {
 
 function StageItem({ index, label, active, completed, fullWidth = false }: StageItemProps) {
   const toneClass = active
-    ? 'border-orange-600 bg-orange-600 text-white'
+    ? 'border-[var(--accent)] bg-[var(--accent)] text-white'
     : completed
-      ? 'border-emerald-200 bg-emerald-50 text-emerald-700'
-      : 'border-slate-200 bg-slate-50 text-slate-500';
+      ? 'border-[var(--success-border)] bg-[var(--success-muted)] text-[var(--success-text)]'
+      : 'border-[var(--border)] bg-[var(--surface-subtle)] text-[var(--text-muted)]';
 
   const dotClass = active
     ? 'bg-white/20 text-white'
     : completed
-      ? 'bg-emerald-100 text-emerald-700'
-      : 'bg-slate-200 text-slate-500';
+      ? 'bg-[var(--success-muted)] text-[var(--success-text)]'
+      : 'bg-[var(--surface-subtle)] text-[var(--text-muted)]';
 
   return (
     <li
@@ -51,10 +51,10 @@ function StageItem({ index, label, active, completed, fullWidth = false }: Stage
 
 function DesktopStageProgress({ currentIndex, confidence }: { currentIndex: number; confidence: number }) {
   return (
-    <aside className="hidden h-full min-h-0 w-full flex-col overflow-hidden rounded-ws-lg border border-slate-200 bg-white/90 p-ws14 shadow-workspace xl:flex">
-      <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-orange-600">Journey Stage</p>
-      <h2 className="mt-1 flex items-center gap-2 text-[18px] font-extrabold text-slate-900">
-        <Route className="h-4 w-4 text-sky-700" aria-hidden="true" />
+    <aside className="hidden h-full min-h-0 w-full flex-col overflow-hidden rounded-ws-lg border border-[var(--border)] bg-[var(--surface)] p-ws14 shadow-workspace xl:flex">
+      <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-[var(--accent-text)]">Journey Stage</p>
+      <h2 className="mt-1 flex items-center gap-2 text-[18px] font-extrabold text-[var(--text)]">
+        <Route className="h-4 w-4 text-[var(--accent)]" aria-hidden="true" />
         旅程进度
       </h2>
 
@@ -71,21 +71,21 @@ function DesktopStageProgress({ currentIndex, confidence }: { currentIndex: numb
         ))}
       </ol>
 
-      <div className="mt-[10px] rounded-[10px] border border-orange-200 bg-orange-50 p-[10px]">
-        <p className="flex items-center gap-1 text-[9px] font-bold uppercase tracking-[0.08em] text-orange-700">
+      <div className="mt-[10px] rounded-[10px] border border-[var(--accent-border)] bg-[var(--accent-muted)] p-[10px]">
+        <p className="flex items-center gap-1 text-[9px] font-bold uppercase tracking-[0.08em] text-[var(--accent-text)]">
           <Brain className="h-3 w-3" aria-hidden="true" />
           AI 置信度
         </p>
-        <p className="mt-0.5 text-[22px] font-extrabold leading-none text-orange-800">{confidence || 0}%</p>
-        <div className="mt-[6px] h-[3px] rounded-full bg-orange-200">
-          <div className="h-[3px] rounded-full bg-[linear-gradient(90deg,#ea580c,#f97316)]" style={{ width: `${confidence || 8}%` }} />
+        <p className="mt-0.5 text-[22px] font-extrabold leading-none text-[var(--accent-text-soft)]">{confidence || 0}%</p>
+        <div className="mt-[6px] h-[3px] rounded-full bg-[var(--accent-border)]">
+          <div className="h-[3px] rounded-full bg-[var(--accent)]" style={{ width: `${confidence || 8}%` }} />
         </div>
-        <p className="mt-1 text-[9px] leading-[1.4] text-orange-800/80">已收集预算与车型偏好，继续对话可提升准确度。</p>
+        <p className="mt-1 text-[9px] leading-[1.4] text-[var(--accent-text-soft)]">已收集预算与车型偏好，继续对话可提升准确度。</p>
       </div>
 
       <Link
         href="/journey/publish"
-        className="mt-[10px] flex w-full cursor-pointer items-center justify-center gap-1 rounded-[10px] border-[1.5px] border-slate-300 bg-white px-[10px] py-[8px] text-center text-[11px] font-bold text-slate-700 hover:border-slate-400"
+        className="mt-[10px] flex w-full cursor-pointer items-center justify-center gap-1 rounded-[10px] border-[1.5px] border-[var(--border)] bg-[var(--surface)] px-[10px] py-[8px] text-center text-[11px] font-bold text-[var(--text-soft)] hover:border-slate-400"
       >
         <Upload className="h-3.5 w-3.5" aria-hidden="true" />
         发布我的旅程
@@ -96,7 +96,7 @@ function DesktopStageProgress({ currentIndex, confidence }: { currentIndex: numb
 
 function CompactStageProgress({ currentIndex }: { currentIndex: number }) {
   return (
-    <aside className="hidden w-full flex-wrap items-center gap-[10px] rounded-ws-lg border border-slate-200 bg-white/90 p-ws14 shadow-workspace md:flex xl:hidden">
+    <aside className="hidden w-full flex-wrap items-center gap-[10px] rounded-ws-lg border border-[var(--border)] bg-[var(--surface)] p-ws14 shadow-workspace md:flex xl:hidden">
       <ol className="flex w-full flex-wrap gap-[6px]">
         {STAGES.map((stage, index) => (
           <StageItem
