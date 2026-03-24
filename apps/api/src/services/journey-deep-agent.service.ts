@@ -70,6 +70,21 @@ export class JourneyDeepAgentService {
     );
   }
 
+  private async trace(event: string, details?: Record<string, unknown>) {
+    if (!config.ai.trace) {
+      return;
+    }
+
+    const payload = {
+      ts: new Date().toISOString(),
+      event,
+      ...details,
+    };
+
+    console.log(`[deep-agent-trace] ${JSON.stringify(payload)}`);
+    await fs.appendFile(config.ai.traceFile, `${JSON.stringify(payload)}\n`, 'utf-8');
+  }
+
   private getWorkspaceRoot(journeyId: string) {
     return path.join(process.cwd(), '.deepagents', 'journeys', journeyId);
   }
@@ -411,6 +426,42 @@ export class JourneyDeepAgentService {
       .filter(Boolean) as Array<{ id?: string; name?: string; args?: unknown }>;
   }
 
+  private summarizeUpdateData(data: unknown) {
+    if (!data || typeof data !== 'object') {
+      return data;
+    }
+
+    return Object.fromEntries(
+      Object.entries(data as Record<string, unknown>).map(([nodeName, nodeData]) => {
+        const messages = Array.isArray((nodeData as { messages?: unknown[] })?.messages)
+          ? ((nodeData as { messages?: unknown[] }).messages as unknown[])
+          : [];
+
+        return [
+          nodeName,
+          {
+            messageCount: messages.length,
+            textPreview: this.getLastAssistantText(nodeData).slice(0, 160),
+            toolCalls: messages.flatMap((message) =>
+              this.getToolCalls(message).map((toolCall) => ({
+                id: toolCall.id,
+                name: toolCall.name,
+                args: this.normalizeToolInput(toolCall.args),
+              }))
+            ),
+            toolMessages: messages
+              .filter((message) => this.isToolLikeMessage(message))
+              .map((message) => ({
+                toolCallId: this.getToolCallId(message),
+                name: this.getToolName(message),
+                contentPreview: this.extractText((message as { content?: unknown }).content).slice(0, 160),
+              })),
+          },
+        ];
+      })
+    );
+  }
+
   async streamJourneyChat(
     context: JourneyWorkspaceContext,
     message: string,
@@ -423,6 +474,12 @@ export class JourneyDeepAgentService {
     let finalAssistantText = '';
     const startedToolCalls = new Set<string>();
     const finishedToolCalls = new Set<string>();
+    await this.trace('stream_start', {
+      journeyId: context.journey.id,
+      conversationId: context.conversationId,
+      message,
+      threadId,
+    });
 
     const stream = await agent.stream(
       {
@@ -451,6 +508,21 @@ export class JourneyDeepAgentService {
 
         const [namespace, mode, data] = nextEvent.value as [string[], string, unknown];
         const isMainNamespace = Array.isArray(namespace) && namespace.length === 0;
+        await this.trace('stream_chunk', {
+          journeyId: context.journey.id,
+          conversationId: context.conversationId,
+          namespace,
+          mode,
+          summary:
+            mode === 'messages'
+              ? {
+                  metadata: Array.isArray(data) ? data[1] : null,
+                  textPreview: Array.isArray(data) ? this.extractText((data[0] as { text?: unknown })?.text).slice(0, 160) : '',
+                }
+              : mode === 'custom'
+                ? data
+                : this.summarizeUpdateData(data),
+        });
 
         if (mode === 'messages') {
           const [messageChunk, metadata] = Array.isArray(data) ? data : [null, null];
@@ -550,6 +622,13 @@ export class JourneyDeepAgentService {
         fullContentLength: fullContent.length,
         finalAssistantTextLength: finalAssistantText.length,
       });
+      await this.trace('stream_error', {
+        journeyId: context.journey.id,
+        conversationId: context.conversationId,
+        message,
+        fullContentLength: fullContent.length,
+        finalAssistantTextLength: finalAssistantText.length,
+      });
 
       const canGracefullyFinish =
         fullContent.trim().length > 0 || finalAssistantText.trim().length > 0;
@@ -560,6 +639,12 @@ export class JourneyDeepAgentService {
     }
 
     const resolvedContent = fullContent.trim() || finalAssistantText.trim();
+    await this.trace('stream_done', {
+      journeyId: context.journey.id,
+      conversationId: context.conversationId,
+      fullContentLength: resolvedContent.length,
+      fullContentPreview: resolvedContent.slice(0, 300),
+    });
     onEvent?.({ type: 'done', fullContent: resolvedContent });
 
     return {
