@@ -21,7 +21,7 @@ export function JourneyShell({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="min-h-screen pb-24 md:h-[100dvh] md:min-h-0 md:overflow-hidden md:pb-0">
-      <div className="mx-auto grid h-full max-w-[1920px] items-stretch gap-3 px-3 py-3 md:grid-cols-[minmax(0,1fr)_320px] md:grid-rows-[auto_minmax(0,1fr)] xl:grid-cols-[148px_1fr_1fr] xl:grid-rows-none">
+      <div className="mx-auto grid h-full max-w-[1920px] items-stretch gap-3 px-3 py-3 md:grid-cols-[minmax(0,1fr)_320px] md:grid-rows-[auto_minmax(0,1fr)] xl:grid-cols-[220px_minmax(0,1.2fr)_minmax(320px,1fr)] xl:grid-rows-none">
         <div className="hidden h-full min-h-0 md:col-span-full md:block xl:col-span-1">
           <StageProgress />
         </div>
