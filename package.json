@@ -20,5 +20,9 @@
   },
   "dependencies": {
     "@langchain/openai": "^0.6.17"
+  },
+  "overrides": {
+    "@types/react": "^19.1.0",
+    "@types/react-dom": "^19.1.0"
   }
 }
