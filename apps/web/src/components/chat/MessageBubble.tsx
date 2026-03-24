@@ -23,9 +23,9 @@ export function MessageBubble({ message }: MessageBubbleProps) {
     return (
       <div className="flex items-start gap-[6px]">
         <AiAvatar />
-        <div className="max-w-[88%] rounded-[8px] border border-sky-200 bg-sky-50 px-[10px] py-[6px] text-sm text-sky-700 transition-opacity">
+        <div className="max-w-[88%] rounded-[8px] border border-[var(--accent-border)] bg-[var(--accent-muted)] px-[10px] py-[6px] text-sm text-[var(--accent-text)] transition-opacity">
           <p className="text-[10px] font-medium">正在{message.name === 'car_search' ? '搜索车型' : message.name === 'car_detail' ? '读取车型详情' : message.name === 'journey_update' ? '更新旅程' : '加入候选'}...</p>
-          {summary ? <p className="mt-1 text-[10px] text-sky-700/85">{summary}</p> : null}
+          {summary ? <p className="mt-1 text-[10px] text-[var(--accent-text)]/85">{summary}</p> : null}
         </div>
       </div>
     );
@@ -42,9 +42,9 @@ export function MessageBubble({ message }: MessageBubbleProps) {
     return (
       <div className="flex items-start gap-[6px]">
         <AiAvatar />
-        <div className="flex max-w-[88%] items-center gap-[6px] rounded-[8px] border border-emerald-200 bg-emerald-50 px-[10px] py-[6px] text-[10px] font-medium text-emerald-700">
+        <div className="flex max-w-[88%] items-center gap-[6px] rounded-[8px] border border-[var(--success-border)] bg-[var(--success-muted)] px-[10px] py-[6px] text-[10px] font-medium text-[var(--success-text)]">
           <span>{label}</span>
-          {message.event === 'candidate_added' ? <span className="ml-auto text-[9px] text-sky-700 underline">查看</span> : null}
+          {message.event === 'candidate_added' ? <span className="ml-auto text-[9px] text-[var(--accent)] underline">查看</span> : null}
         </div>
       </div>
     );
@@ -56,15 +56,15 @@ export function MessageBubble({ message }: MessageBubbleProps) {
     <div className={`flex ${isUser ? 'justify-end' : 'items-start gap-[6px] justify-start'}`}>
       {!isUser ? <AiAvatar /> : null}
       <div
-        className={`max-w-[85%] px-[10px] py-[8px] text-[12px] ${
+        className={`px-[10px] py-[8px] text-[12px] ${
           isUser
-            ? 'rounded-[14px_14px_2px_14px] bg-slate-900 text-white'
-            : 'rounded-[2px_14px_14px_14px] border border-slate-200 bg-slate-50 text-slate-700'
+            ? 'max-w-[78%] rounded-[12px_12px_3px_12px] bg-[var(--accent)] text-white'
+            : 'max-w-[88%] rounded-[3px_12px_12px_12px] border border-[var(--border)] bg-[var(--surface-subtle)] text-[var(--text)]'
         }`}
       >
         <p className="whitespace-pre-wrap leading-[1.6]">
           {message.content}
-          {message.isStreaming ? <span className="ml-0.5 inline-block h-[11px] w-[2px] animate-pulse align-middle bg-sky-600" /> : null}
+          {message.isStreaming ? <span className="ml-0.5 inline-block h-[11px] w-[2px] animate-pulse align-middle bg-[var(--accent)]" /> : null}
         </p>
       </div>
     </div>
@@ -73,7 +73,7 @@ export function MessageBubble({ message }: MessageBubbleProps) {
 
 function AiAvatar() {
   return (
-    <div className="flex h-[26px] w-[26px] items-center justify-center rounded-full bg-sky-700 text-[8px] font-bold text-white">
+    <div className="flex h-[26px] w-[26px] items-center justify-center rounded-full bg-[var(--accent)] text-[8px] font-bold text-white">
       AI
     </div>
   );
