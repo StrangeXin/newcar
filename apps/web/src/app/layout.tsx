@@ -9,7 +9,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="zh-CN" className={`${playfair.variable} ${inter.variable}`}>
+    <html lang="zh-CN" className={`${playfair.variable} ${inter.variable}`} suppressHydrationWarning>
       <head>
         <script dangerouslySetInnerHTML={{
           __html: `(function(){try{var t=localStorage.getItem('theme')||'orange';document.documentElement.setAttribute('data-theme',t);}catch(e){}})();`
