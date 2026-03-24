@@ -1,11 +1,12 @@
 'use client';
 
 import { Suspense, useMemo } from 'react';
-import { Compass, Sparkles } from 'lucide-react';
+import { Sparkles } from 'lucide-react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { FeedFilterState, FeedFilters } from '@/components/community/FeedFilters';
 import { JourneyFeedList } from '@/components/community/JourneyFeedList';
 import { useCommunity } from '@/hooks/useCommunity';
+import { PageHeader } from '@/components/ui/PageHeader';
 
 function CommunityPageContent() {
   const router = useRouter();
@@ -46,16 +47,15 @@ function CommunityPageContent() {
 
   return (
     <main className="mx-auto min-h-screen w-full max-w-6xl space-y-4 px-4 py-6">
-      <header className="rounded-2xl border border-slate-200 bg-white/90 p-5 shadow-card">
-        <p className="inline-flex items-center gap-1 text-xs font-semibold uppercase tracking-[0.16em] text-sky-700">
-          <Compass className="h-3.5 w-3.5" aria-hidden="true" />
-          Community
-        </p>
-        <h1 className="mt-2 inline-flex items-center gap-2 text-2xl font-extrabold text-slate-900">
-          <Sparkles className="h-5 w-5 text-orange-600" aria-hidden="true" />
-          社区广场
-        </h1>
-        <p className="mt-1 text-sm text-slate-600">浏览真实购车历程，并从模板快速开始你的旅程。</p>
+      <header
+        className="rounded-[var(--radius-xl)] border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow-card)]"
+        style={{ background: 'var(--bg-gradient), var(--surface)' }}
+      >
+        <PageHeader
+          label="Community"
+          title={<><Sparkles className="inline h-5 w-5 text-[var(--accent)]" aria-hidden="true" /> 社区广场</>}
+          description="浏览真实购车历程，并从模板快速开始你的旅程。"
+        />
       </header>
 
       <FeedFilters value={value} onChange={onFilterChange} />
@@ -66,7 +66,7 @@ function CommunityPageContent() {
 
 export default function CommunityPage() {
   return (
-    <Suspense fallback={<main className="mx-auto max-w-6xl px-4 py-6 text-sm text-slate-500">加载中...</main>}>
+    <Suspense fallback={<main className="mx-auto max-w-6xl px-4 py-6 text-sm text-[var(--text-muted)]">加载中...</main>}>
       <CommunityPageContent />
     </Suspense>
   );

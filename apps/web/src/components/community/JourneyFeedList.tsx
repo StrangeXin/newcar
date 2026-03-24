@@ -11,7 +11,7 @@ interface JourneyFeedListProps {
 export function JourneyFeedList({ items, isLoading }: JourneyFeedListProps) {
   if (isLoading) {
     return (
-      <div className="rounded-2xl border border-slate-200 bg-white/90 p-4 text-sm text-slate-500 shadow-card">
+      <div className="rounded-[var(--radius-xl)] border border-[var(--border)] bg-[var(--surface)] p-4 text-sm text-[var(--text-muted)] shadow-[var(--shadow-card)]">
         社区内容加载中...
       </div>
     );
@@ -19,14 +19,14 @@ export function JourneyFeedList({ items, isLoading }: JourneyFeedListProps) {
 
   if (items.length === 0) {
     return (
-      <div className="rounded-2xl border border-slate-200 bg-white/90 p-4 text-sm text-slate-500 shadow-card">
+      <div className="rounded-[var(--radius-xl)] border border-[var(--border)] bg-[var(--surface)] p-4 text-sm text-[var(--text-muted)] shadow-[var(--shadow-card)]">
         暂无社区内容，稍后再来看看。
       </div>
     );
   }
 
   return (
-    <div className="space-y-3">
+    <div className="grid gap-4 md:grid-cols-2">
       {items.map((item) => (
         <JourneyFeedCard key={item.id} item={item} />
       ))}
