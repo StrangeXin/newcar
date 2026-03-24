@@ -18,7 +18,7 @@ const variantClass: Record<BadgeVariant, string> = {
   warning:
     'bg-[var(--warning-muted)] text-[var(--warning-text)] border-[var(--warning-border)]',
   neutral:
-    'bg-[#f8fafc] text-[var(--text-soft)] border-[var(--border)]',
+    'bg-[var(--surface-subtle)] text-[var(--text-soft)] border-[var(--border)]',
 };
 
 export function Badge({ variant = 'neutral', icon: Icon, className = '', children }: BadgeProps) {

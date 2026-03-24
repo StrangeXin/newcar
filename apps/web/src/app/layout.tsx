@@ -12,7 +12,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="zh-CN" className={`${playfair.variable} ${inter.variable}`}>
       <head>
         <script dangerouslySetInnerHTML={{
-          __html: `(function(){var t=localStorage.getItem('theme')||'orange';document.documentElement.setAttribute('data-theme',t);})();`
+          __html: `(function(){try{var t=localStorage.getItem('theme')||'orange';document.documentElement.setAttribute('data-theme',t);}catch(e){}})();`
         }} />
       </head>
       <body className="antialiased">

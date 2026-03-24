@@ -85,7 +85,7 @@ function DesktopStageProgress({ currentIndex, confidence }: { currentIndex: numb
 
       <Link
         href="/journey/publish"
-        className="mt-[10px] flex w-full cursor-pointer items-center justify-center gap-1 rounded-[10px] border-[1.5px] border-[var(--border)] bg-[var(--surface)] px-[10px] py-[8px] text-center text-[11px] font-bold text-[var(--text-soft)] hover:border-slate-400"
+        className="mt-[10px] flex w-full cursor-pointer items-center justify-center gap-1 rounded-[10px] border-[1.5px] border-[var(--border)] bg-[var(--surface)] px-[10px] py-[8px] text-center text-[11px] font-bold text-[var(--text-soft)] hover:border-[var(--border-soft)]"
       >
         <Upload className="h-3.5 w-3.5" aria-hidden="true" />
         发布我的旅程

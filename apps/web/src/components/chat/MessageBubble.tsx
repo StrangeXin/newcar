@@ -114,7 +114,7 @@ function CarResultCards({ message }: { message: Extract<ChatMessage, { kind: 'ca
             ? 'bg-[linear-gradient(135deg,#dbeafe,#93c5fd)]'
             : car.brand.includes('小鹏')
               ? 'bg-[linear-gradient(135deg,#d1fae5,#6ee7b7)]'
-              : 'bg-slate-100';
+              : 'bg-[var(--surface-subtle)]';
           const barClass = car.brand.includes('理想')
             ? 'bg-[linear-gradient(90deg,#ea580c,#f97316)]'
             : car.brand.includes('小鹏')
@@ -177,7 +177,7 @@ function ChatCarCard({
           type="button"
           onClick={() => void onAdd()}
           disabled={isAdded || isLoading}
-          className="ml-auto cursor-pointer whitespace-nowrap rounded-[8px] bg-slate-900 px-[10px] py-[6px] text-[10px] font-semibold text-white hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60"
+          className="ml-auto cursor-pointer whitespace-nowrap rounded-[8px] bg-[var(--text)] px-[10px] py-[6px] text-[10px] font-semibold text-white hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
         >
           {isAdded ? '已加入' : isLoading ? '加入中' : '加入'}
         </button>

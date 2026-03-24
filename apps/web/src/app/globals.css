@@ -197,7 +197,7 @@ input:not([type='checkbox']):not([type='radio']):focus,
 select:focus,
 textarea:focus {
   box-shadow: none !important;
-  background-color: #ffffff;
+  background-color: var(--surface);
 }
 
 /* Theme remap: convert old sky-* usage to warm/young accent language. */
