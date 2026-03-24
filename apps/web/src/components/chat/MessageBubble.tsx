@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { post } from '@/lib/api';
 import { dispatchJourneySideEffect } from '@/lib/journey-workspace-events';
 import { ChatMessage } from '@/store/chat.store';
+import { VehicleCardShell } from '@/components/cars/VehicleCardShell';
 
 interface MessageBubbleProps {
   message: ChatMessage;
@@ -22,9 +23,9 @@ export function MessageBubble({ message }: MessageBubbleProps) {
     return (
       <div className="flex items-start gap-[6px]">
         <AiAvatar />
-        <div className="max-w-[88%] rounded-[8px] border border-[#e9d5ff] bg-[#faf5ff] px-[10px] py-[6px] text-sm text-[#6d28d9] transition-opacity">
-          <p className="text-[10px] font-medium text-[#7c3aed]">正在{message.name === 'car_search' ? '搜索车型' : message.name === 'car_detail' ? '读取车型详情' : message.name === 'journey_update' ? '更新旅程' : '加入候选'}…</p>
-          {summary ? <p className="mt-1 text-[10px] text-[#7c3aed]/80">{summary}</p> : null}
+        <div className="max-w-[88%] rounded-[8px] border border-sky-200 bg-sky-50 px-[10px] py-[6px] text-sm text-sky-700 transition-opacity">
+          <p className="text-[10px] font-medium">正在{message.name === 'car_search' ? '搜索车型' : message.name === 'car_detail' ? '读取车型详情' : message.name === 'journey_update' ? '更新旅程' : '加入候选'}...</p>
+          {summary ? <p className="mt-1 text-[10px] text-sky-700/85">{summary}</p> : null}
         </div>
       </div>
     );
@@ -41,9 +42,9 @@ export function MessageBubble({ message }: MessageBubbleProps) {
     return (
       <div className="flex items-start gap-[6px]">
         <AiAvatar />
-        <div className="flex max-w-[88%] items-center gap-[6px] rounded-[8px] border border-[#bbf7d0] bg-[#f0fdf4] px-[10px] py-[6px] text-[10px] font-medium text-[#15803d]">
+        <div className="flex max-w-[88%] items-center gap-[6px] rounded-[8px] border border-emerald-200 bg-emerald-50 px-[10px] py-[6px] text-[10px] font-medium text-emerald-700">
           <span>{label}</span>
-          {message.event === 'candidate_added' ? <span className="ml-auto text-[9px] text-[#60a5fa] underline">查看</span> : null}
+          {message.event === 'candidate_added' ? <span className="ml-auto text-[9px] text-sky-700 underline">查看</span> : null}
         </div>
       </div>
     );
@@ -57,13 +58,13 @@ export function MessageBubble({ message }: MessageBubbleProps) {
       <div
         className={`max-w-[85%] px-[10px] py-[8px] text-[12px] ${
           isUser
-            ? 'rounded-[14px_14px_2px_14px] bg-[#1a1a1a] text-white'
-            : 'rounded-[2px_14px_14px_14px] border border-black/10 bg-[#f5f4f2] text-black/80'
+            ? 'rounded-[14px_14px_2px_14px] bg-slate-900 text-white'
+            : 'rounded-[2px_14px_14px_14px] border border-slate-200 bg-slate-50 text-slate-700'
         }`}
       >
         <p className="whitespace-pre-wrap leading-[1.6]">
           {message.content}
-          {message.isStreaming ? <span className="ml-0.5 inline-block h-[11px] w-[2px] animate-pulse align-middle bg-[#6366f1]" /> : null}
+          {message.isStreaming ? <span className="ml-0.5 inline-block h-[11px] w-[2px] animate-pulse align-middle bg-sky-600" /> : null}
         </p>
       </div>
     </div>
@@ -72,7 +73,7 @@ export function MessageBubble({ message }: MessageBubbleProps) {
 
 function AiAvatar() {
   return (
-    <div className="flex h-[26px] w-[26px] items-center justify-center rounded-full bg-[linear-gradient(135deg,#667eea,#764ba2)] text-[8px] font-bold text-white">
+    <div className="flex h-[26px] w-[26px] items-center justify-center rounded-full bg-sky-700 text-[8px] font-bold text-white">
       AI
     </div>
   );
@@ -113,16 +114,22 @@ function CarResultCards({ message }: { message: Extract<ChatMessage, { kind: 'ca
             ? 'bg-[linear-gradient(135deg,#dbeafe,#93c5fd)]'
             : car.brand.includes('小鹏')
               ? 'bg-[linear-gradient(135deg,#d1fae5,#6ee7b7)]'
-              : 'bg-[linear-gradient(135deg,#e5e7eb,#d1d5db)]';
-          const barColor = car.brand.includes('理想') ? '#6366f1' : car.brand.includes('小鹏') ? '#10b981' : '#9ca3af';
+              : 'bg-slate-100';
+          const barClass = car.brand.includes('理想')
+            ? 'bg-[linear-gradient(90deg,#ea580c,#f97316)]'
+            : car.brand.includes('小鹏')
+              ? 'bg-[linear-gradient(90deg,#10b981,#059669)]'
+              : 'bg-[linear-gradient(90deg,#94a3b8,#475569)]';
 
           return (
             <ChatCarCard
               key={car.id}
+              brand={car.brand}
+              model={car.model}
               name={`${car.brand} ${car.model}`}
               subtitle={car.subtitle || `${car.type}`}
               iconGradient={iconGradient}
-              barColor={barColor}
+              barClassName={barClass}
               isAdded={isAdded}
               isLoading={loadingId === car.id}
               onAdd={() => addToCandidates(car.id, car.msrp)}
@@ -135,42 +142,46 @@ function CarResultCards({ message }: { message: Extract<ChatMessage, { kind: 'ca
 }
 
 function ChatCarCard({
+  brand,
+  model,
   name,
   subtitle,
   iconGradient,
-  barColor,
+  barClassName,
   isAdded,
   isLoading,
   onAdd,
 }: {
+  brand: string;
+  model: string;
   name: string;
   subtitle: string;
   iconGradient: string;
-  barColor: string;
+  barClassName: string;
   isAdded: boolean;
   isLoading: boolean;
   onAdd: () => Promise<void>;
 }) {
   return (
-    <div className="flex items-center gap-[10px] rounded-[10px] border border-[#e5e7eb] bg-white px-[10px] py-[10px] shadow-[0_1px_4px_rgba(0,0,0,0.05)]">
-      <div className={`flex h-[30px] w-[40px] items-center justify-center rounded-[6px] text-[16px] text-white ${iconGradient}`}>
-        🚗
-      </div>
-      <div className="min-w-0 flex-1">
-        <div className="text-[11px] font-bold text-[#111]">{name}</div>
-        <div className="mt-px text-[9px] text-[#6b7280]">{subtitle}</div>
-        <div className="mt-1 h-[3px] overflow-hidden rounded-full bg-[#e5e7eb]">
-          <div className="h-full rounded-full" style={{ width: '88%', background: barColor }} />
-        </div>
-      </div>
-      <button
-        type="button"
-        onClick={() => void onAdd()}
-        disabled={isAdded || isLoading}
-        className="whitespace-nowrap rounded-[8px] bg-[#1a1a1a] px-[10px] py-[6px] text-[10px] font-semibold text-white disabled:cursor-not-allowed disabled:opacity-60"
-      >
-        {isAdded ? '已加入' : isLoading ? '加入中' : '+ 加入'}
-      </button>
-    </div>
+    <VehicleCardShell
+      iconLabel={brand || model.slice(0, 2)}
+      iconBgClassName={iconGradient}
+      title={name}
+      subtitle={subtitle}
+      progressPercent={88}
+      progressLabel="88%"
+      progressBarClassName={barClassName}
+      className="px-[10px] py-[10px] shadow-[0_1px_4px_rgba(15,23,42,0.05)]"
+      actions={(
+        <button
+          type="button"
+          onClick={() => void onAdd()}
+          disabled={isAdded || isLoading}
+          className="ml-auto cursor-pointer whitespace-nowrap rounded-[8px] bg-slate-900 px-[10px] py-[6px] text-[10px] font-semibold text-white hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60"
+        >
+          {isAdded ? '已加入' : isLoading ? '加入中' : '加入'}
+        </button>
+      )}
+    />
   );
 }

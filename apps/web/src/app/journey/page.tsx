@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect } from 'react';
+import { AlertTriangle, LoaderCircle } from 'lucide-react';
 import { Kanban } from '@/components/journey/Kanban';
 import { NewJourneyWizard } from '@/components/journey/NewJourneyWizard';
 import { useJourney } from '@/hooks/useJourney';
@@ -19,12 +20,14 @@ export default function JourneyPage() {
   return (
     <main className="flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
       {isLoading ? (
-        <div className="rounded-ws-lg border border-workspace-border bg-workspace-surface p-ws14 text-[11px] text-black/60 shadow-workspace">
+        <div className="inline-flex items-center gap-1.5 rounded-ws-lg border border-slate-200 bg-white/90 p-ws14 text-[11px] text-slate-500 shadow-workspace">
+          <LoaderCircle className="h-3.5 w-3.5 animate-spin text-orange-600" aria-hidden="true" />
           正在加载旅程数据...
         </div>
       ) : null}
       {error ? (
-        <div className="rounded-ws-lg border border-red-200 bg-workspace-surface p-ws14 text-[11px] text-red-600 shadow-workspace">
+        <div className="inline-flex items-center gap-1.5 rounded-ws-lg border border-red-200 bg-red-50 p-ws14 text-[11px] text-red-700 shadow-workspace">
+          <AlertTriangle className="h-3.5 w-3.5" aria-hidden="true" />
           {error.message}
         </div>
       ) : null}

@@ -9,7 +9,7 @@ interface ChatInputProps {
 
 export function ChatInput({ disabled, onSend }: ChatInputProps) {
   const [value, setValue] = useState('');
-  const quickActions = ['📊 帮我对比两款车', '💰 算一下用车成本', '🏪 附近哪里可试驾'];
+  const quickActions = ['帮我对比两款车', '算一下用车成本', '附近哪里可试驾'];
 
   async function submit() {
     const content = value.trim();
@@ -28,14 +28,14 @@ export function ChatInput({ disabled, onSend }: ChatInputProps) {
   }
 
   return (
-    <div className="border-t border-black/5 bg-white/90 px-[14px] py-[10px]">
+    <div className="border-t border-slate-200 bg-white/90 px-[14px] py-[10px]">
       <div className="mb-[10px] flex flex-wrap gap-[6px]">
         {quickActions.map((action) => (
           <button
             key={action}
             type="button"
             onClick={() => setValue(action)}
-            className="inline-flex items-center justify-center rounded-full border border-workspace-chipBorder bg-workspace-chipBg px-[10px] py-1 text-[10px] font-medium leading-[1.2] text-workspace-chipText transition hover:bg-black/5"
+            className="inline-flex cursor-pointer items-center justify-center rounded-full border border-slate-200 bg-slate-50 px-[10px] py-1 text-[10px] font-medium leading-[1.2] text-slate-600 transition hover:border-slate-300"
           >
             {action}
           </button>
@@ -50,14 +50,14 @@ export function ChatInput({ disabled, onSend }: ChatInputProps) {
           disabled={disabled}
           rows={1}
           placeholder="问我任何购车问题…"
-          className="h-[38px] min-h-[38px] flex-1 resize-none rounded-[10px] border-[1.5px] border-[#d1d5db] bg-white px-[10px] py-[8px] text-[11px] leading-[1.2] outline-none ring-[#8b5cf6]/25 transition focus:ring-2 disabled:cursor-not-allowed disabled:opacity-60"
+          className="h-[38px] min-h-[38px] flex-1 resize-none rounded-[10px] border-[1.5px] border-slate-300 bg-white px-[10px] py-[8px] text-[11px] leading-[1.2] text-slate-800 outline-none ring-sky-300 transition focus:ring-2 disabled:cursor-not-allowed disabled:opacity-60"
         />
         <button
           data-testid="chat-send"
           type="button"
           onClick={() => void submit()}
           disabled={disabled || !value.trim()}
-          className="flex h-[38px] w-[38px] items-center justify-center rounded-[10px] bg-[#111] text-[13px] font-semibold text-white disabled:cursor-not-allowed disabled:opacity-60"
+          className="flex h-[38px] w-[38px] cursor-pointer items-center justify-center rounded-[10px] bg-orange-500 text-[13px] font-semibold text-white hover:bg-orange-600 disabled:cursor-not-allowed disabled:opacity-60"
         >
           ↑
         </button>

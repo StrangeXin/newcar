@@ -4,8 +4,8 @@ interface StoryViewProps {
 
 export function StoryView({ content }: StoryViewProps) {
   if (!content) {
-    return <p className="text-sm text-black/60">暂无叙事故事内容。</p>;
+    return <p className="text-sm text-slate-500">暂无叙事故事内容。</p>;
   }
 
-  return <article className="whitespace-pre-wrap text-sm leading-7 text-black/80">{content}</article>;
+  return <article className="whitespace-pre-wrap text-sm leading-7 text-slate-700">{content}</article>;
 }

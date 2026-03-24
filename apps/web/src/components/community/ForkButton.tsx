@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { GitFork } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { post } from '@/lib/api';
 
@@ -32,11 +33,12 @@ export function ForkButton({ publishedJourneyId }: ForkButtonProps) {
         type="button"
         onClick={fork}
         disabled={loading}
-        className="rounded-xl bg-ink px-3 py-2 text-xs font-semibold text-white disabled:opacity-60"
+        className="inline-flex cursor-pointer items-center gap-1 rounded-xl bg-orange-500 px-3 py-2 text-xs font-semibold text-white hover:bg-orange-600 disabled:cursor-not-allowed disabled:opacity-60"
       >
+        <GitFork className="h-3.5 w-3.5" aria-hidden="true" />
         {loading ? '创建中...' : '从此出发'}
       </button>
-      {error ? <p className="mt-1 text-xs text-red-600">{error}</p> : null}
+      {error ? <p className="mt-1 text-xs text-red-700">{error}</p> : null}
     </div>
   );
 }

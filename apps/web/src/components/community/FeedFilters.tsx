@@ -1,6 +1,7 @@
 'use client';
 
 import { useMemo } from 'react';
+import { SlidersHorizontal } from 'lucide-react';
 
 export interface FeedFilterState {
   fuel_type?: string;
@@ -30,12 +31,16 @@ export function FeedFilters({ value, onChange }: FeedFiltersProps) {
   const summary = useMemo(() => Object.entries(value).map(([k, v]) => `${k}:${v}`).join(' | '), [value]);
 
   return (
-    <div className="rounded-2xl border border-black/10 bg-white/90 p-4 shadow-card">
+    <div className="rounded-2xl border border-slate-200 bg-white/90 p-4 shadow-card">
+      <p className="mb-3 inline-flex items-center gap-1 text-xs font-semibold uppercase tracking-[0.08em] text-sky-700">
+        <SlidersHorizontal className="h-3.5 w-3.5" aria-hidden="true" />
+        筛选条件
+      </p>
       <div className="grid gap-3 md:grid-cols-6">
         <select
           value={value.fuel_type || ''}
           onChange={(e) => update('fuel_type', e.target.value)}
-          className="rounded-xl border border-black/15 px-3 py-2 text-sm"
+          className="rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 outline-none ring-sky-300 focus:ring-2"
         >
           <option value="">全部燃油类型</option>
           <option value="BEV">BEV</option>
@@ -47,7 +52,7 @@ export function FeedFilters({ value, onChange }: FeedFiltersProps) {
         <select
           value={value.budget_range || ''}
           onChange={(e) => update('budget_range', e.target.value)}
-          className="rounded-xl border border-black/15 px-3 py-2 text-sm"
+          className="rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 outline-none ring-sky-300 focus:ring-2"
         >
           <option value="">全部预算</option>
           <option value="0-15">15万以下</option>
@@ -59,7 +64,7 @@ export function FeedFilters({ value, onChange }: FeedFiltersProps) {
         <select
           value={value.use_case || ''}
           onChange={(e) => update('use_case', e.target.value)}
-          className="rounded-xl border border-black/15 px-3 py-2 text-sm"
+          className="rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 outline-none ring-sky-300 focus:ring-2"
         >
           <option value="">全部场景</option>
           <option value="family">家用</option>
@@ -71,7 +76,7 @@ export function FeedFilters({ value, onChange }: FeedFiltersProps) {
         <select
           value={value.result || ''}
           onChange={(e) => update('result', e.target.value)}
-          className="rounded-xl border border-black/15 px-3 py-2 text-sm"
+          className="rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 outline-none ring-sky-300 focus:ring-2"
         >
           <option value="">全部结果</option>
           <option value="purchased">已购车</option>
@@ -81,7 +86,7 @@ export function FeedFilters({ value, onChange }: FeedFiltersProps) {
         <select
           value={value.has_template || ''}
           onChange={(e) => update('has_template', e.target.value)}
-          className="rounded-xl border border-black/15 px-3 py-2 text-sm"
+          className="rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 outline-none ring-sky-300 focus:ring-2"
         >
           <option value="">全部内容</option>
           <option value="true">仅可从此出发</option>
@@ -90,7 +95,7 @@ export function FeedFilters({ value, onChange }: FeedFiltersProps) {
         <select
           value={value.sort || 'relevance'}
           onChange={(e) => update('sort', e.target.value)}
-          className="rounded-xl border border-black/15 px-3 py-2 text-sm"
+          className="rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 outline-none ring-sky-300 focus:ring-2"
         >
           <option value="relevance">最相关</option>
           <option value="latest">最新</option>
@@ -98,7 +103,7 @@ export function FeedFilters({ value, onChange }: FeedFiltersProps) {
         </select>
       </div>
 
-      {summary ? <p className="mt-2 text-xs text-black/55">当前筛选：{summary}</p> : null}
+      {summary ? <p className="mt-2 text-xs text-slate-500">当前筛选：{summary}</p> : null}
     </div>
   );
 }

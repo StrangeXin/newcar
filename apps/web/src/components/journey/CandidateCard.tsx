@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { patch, post } from '@/lib/api';
 import { trackEvent } from '@/lib/behavior';
 import { Candidate } from '@/types/api';
+import { VehicleCardShell } from '@/components/cars/VehicleCardShell';
 
 interface CandidateCardProps {
   candidate: Candidate;
@@ -76,24 +77,23 @@ export function CandidateCard({ candidate, onUpdated }: CandidateCardProps) {
   const brandTheme =
     candidate.car.brand.includes('理想')
       ? {
-          icon: 'bg-[linear-gradient(135deg,#dbeafe,#93c5fd)]',
-          bar: 'bg-[linear-gradient(90deg,#6366f1,#8b5cf6)]',
-          score: 'text-[#6366f1]',
+          icon: 'bg-[linear-gradient(135deg,#ffedd5,#fdba74)]',
+          bar: 'bg-[linear-gradient(90deg,#ea580c,#f97316)]',
         }
       : candidate.car.brand.includes('小鹏')
         ? {
-            icon: 'bg-[linear-gradient(135deg,#d1fae5,#6ee7b7)]',
-            bar: 'bg-[linear-gradient(90deg,#10b981,#059669)]',
-            score: 'text-[#10b981]',
-          }
+          icon: 'bg-[linear-gradient(135deg,#d1fae5,#6ee7b7)]',
+          bar: 'bg-[linear-gradient(90deg,#10b981,#059669)]',
+        }
         : {
-            icon: 'bg-[#f3f4f6]',
-            bar: 'bg-[linear-gradient(90deg,#9ca3af,#6b7280)]',
-            score: 'text-[#9ca3af]',
+            icon: 'bg-slate-100',
+            bar: 'bg-[linear-gradient(90deg,#94a3b8,#475569)]',
           };
   const seatLabel = seats === 5 ? '五座' : seats === 6 ? '六座' : `${seats}座`;
   const priceLabel = isEliminated ? '超出预算' : '起售价';
-  const noteTone = isEliminated ? 'bg-[#f9fafb] text-[#6b7280] border border-dashed border-[#e5e7eb]' : 'bg-[#f5f3ff] text-[#7c3aed]';
+  const noteTone = isEliminated
+    ? 'border border-dashed border-slate-200 bg-slate-50 text-slate-500'
+    : 'bg-sky-50 text-sky-800';
 
   useEffect(() => {
     if (isMock) {
@@ -116,86 +116,72 @@ export function CandidateCard({ candidate, onUpdated }: CandidateCardProps) {
   }, [candidate.carId, candidate.journeyId, isMock]);
 
   return (
-    <article
-      data-testid="candidate-card"
-      data-candidate-name={`${candidate.car.brand} ${candidate.car.model}`}
-      className={`rounded-[10px] border-[1.5px] border-[#f0f0f0] bg-white px-[14px] py-[14px] shadow-[0_1px_6px_rgba(0,0,0,0.07)] transition ${isEliminated ? 'opacity-50' : ''}`}
-    >
-      <div className="flex items-start justify-between gap-[10px]">
-        <div className="flex items-start gap-[10px]">
-          <div className={`flex h-[34px] w-[46px] items-center justify-center rounded-[8px] text-[20px] text-white ${brandTheme.icon}`}>
-            🚗
-          </div>
-          <div>
-            <h4 className={`text-[12px] font-bold text-ink ${isEliminated ? 'line-through text-[#9ca3af]' : ''}`}>
-              {candidate.car.brand} {candidate.car.model}
-            </h4>
-            <p className="mt-0.5 text-[10px] text-[#6b7280]">
-              {candidate.car.fuelType === 'PHEV' ? '增程' : candidate.car.fuelType === 'BEV' ? '纯电' : candidate.car.fuelType} · {seatLabel} {candidate.car.type}
+    <div data-testid="candidate-card" data-candidate-name={`${candidate.car.brand} ${candidate.car.model}`}>
+      <VehicleCardShell
+        iconLabel={candidate.car.brand || candidate.car.model.slice(0, 2)}
+        iconBgClassName={brandTheme.icon}
+        title={`${candidate.car.brand} ${candidate.car.model}`}
+        subtitle={`${candidate.car.fuelType === 'PHEV' ? '增程' : candidate.car.fuelType === 'BEV' ? '纯电' : candidate.car.fuelType} · ${seatLabel} ${candidate.car.type}`}
+        rightMeta={(
+          <div className="text-right">
+            <p className={`text-[14px] font-extrabold ${isEliminated ? 'text-slate-400' : 'text-slate-900'}`}>
+              {candidate.car.msrp ? `${(candidate.car.msrp / 10000).toFixed(2)}万` : '暂无'}
             </p>
+            <p className="text-[9px] text-slate-400">{priceLabel}</p>
           </div>
-        </div>
-        <div className="text-right">
-          <p className={`text-[14px] font-extrabold ${isEliminated ? 'text-[#9ca3af]' : 'text-[#111]'}`}>{candidate.car.msrp ? `${(candidate.car.msrp / 10000).toFixed(2)}万` : '暂无'}</p>
-          <p className="text-[9px] text-[#9ca3af]">{priceLabel}</p>
-        </div>
-      </div>
-
-      <div className="mt-[10px]">
-        <div className="mb-1 flex items-center justify-between text-[9px] text-black/60">
-          <span className="font-bold uppercase tracking-[0.05em] text-[#6b7280]">AI 匹配度</span>
-          <span className={`text-[11px] font-extrabold ${brandTheme.score}`}>{score}%</span>
-        </div>
-        <div className="h-[3px] rounded-full bg-[#e5e7eb]">
-          <div className={`h-[3px] rounded-full transition-all ${brandTheme.bar}`} style={{ width: `${score}%` }} />
-        </div>
-      </div>
-
-      <div className={`mt-[10px] rounded-[8px] px-[10px] py-[6px] text-[10px] leading-[1.5] ${noteTone}`}>
-        {isEliminated
-          ? candidate.eliminationReason || '这款车当前被移出候选。'
-          : `💡 ${candidate.userNotes || '符合家用通勤需求，值得继续观察。'}`}
-      </div>
-
-      <div className="mt-[10px] flex gap-[6px]">
-        {isEliminated ? (
-          <button
-            type="button"
-            onClick={restore}
-            disabled={busy}
-            className="flex-1 rounded-[8px] border-[1.5px] border-[#e5e7eb] bg-white px-[10px] py-[6px] text-[10px] font-semibold text-[#6b7280]"
-          >
-            恢复候选
-          </button>
-        ) : (
+        )}
+        progressPercent={score}
+        progressLabel={`${score}%`}
+        progressBarClassName={brandTheme.bar}
+        note={
+          isEliminated
+            ? candidate.eliminationReason || '这款车当前被移出候选。'
+            : `备注：${candidate.userNotes || '符合家用通勤需求，值得继续观察。'}`
+        }
+        noteClassName={noteTone}
+        dimmed={isEliminated}
+        actions={(
           <>
+            {isEliminated ? (
+              <button
+                type="button"
+                onClick={restore}
+                disabled={busy}
+                className="flex-1 cursor-pointer rounded-[8px] border-[1.5px] border-slate-300 bg-white px-[10px] py-[6px] text-[10px] font-semibold text-slate-600 hover:border-slate-400 disabled:cursor-not-allowed"
+              >
+                恢复候选
+              </button>
+            ) : (
+              <>
+                <button
+                  type="button"
+                  onClick={markWinner}
+                  disabled={isMock || busy || candidate.status === 'WINNER'}
+                  className="flex-1 cursor-pointer rounded-[8px] bg-slate-900 px-[10px] py-[6px] text-[10px] font-bold text-white hover:bg-slate-800 disabled:cursor-not-allowed"
+                >
+                  选定
+                </button>
+                <button
+                  type="button"
+                  onClick={eliminate}
+                  disabled={isMock || busy || candidate.status === 'ELIMINATED'}
+                  className="flex-1 cursor-pointer rounded-[8px] border-[1.5px] border-slate-300 bg-white px-[10px] py-[6px] text-[10px] font-medium text-slate-600 hover:border-slate-400 disabled:cursor-not-allowed"
+                >
+                  淘汰
+                </button>
+              </>
+            )}
             <button
               type="button"
-              onClick={markWinner}
-              disabled={isMock || busy || candidate.status === 'WINNER'}
-              className="flex-1 rounded-[8px] bg-[#111] px-[10px] py-[6px] text-[10px] font-bold text-white"
+              onClick={() => setShowNotes((v) => !v)}
+              disabled={isMock}
+              className="cursor-pointer rounded-[8px] border-[1.5px] border-slate-300 bg-slate-50 px-[10px] py-[6px] text-[10px] font-medium text-slate-700 hover:border-slate-400 disabled:cursor-not-allowed"
             >
-              选定
-            </button>
-            <button
-              type="button"
-              onClick={eliminate}
-              disabled={isMock || busy || candidate.status === 'ELIMINATED'}
-              className="flex-1 rounded-[8px] border-[1.5px] border-[#e5e7eb] bg-white px-[10px] py-[6px] text-[10px] font-medium text-[#6b7280]"
-            >
-              淘汰
+              备注
             </button>
           </>
         )}
-        <button
-          type="button"
-          onClick={() => setShowNotes((v) => !v)}
-          disabled={isMock}
-          className="rounded-[8px] border-[1.5px] border-[#e5e7eb] bg-[#f9fafb] px-[10px] py-[6px] text-[10px] font-medium text-[#374151]"
-        >
-          ✏️
-        </button>
-      </div>
+      />
 
       {showNotes ? (
         <div className="mt-[10px] space-y-[10px]">
@@ -203,19 +189,19 @@ export function CandidateCard({ candidate, onUpdated }: CandidateCardProps) {
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
             rows={3}
-            className="w-full rounded-[8px] border border-black/15 bg-white px-[10px] py-[10px] text-[11px] outline-none ring-ember/30 focus:ring-2"
+            className="w-full rounded-[8px] border border-slate-300 bg-white px-[10px] py-[10px] text-[11px] outline-none ring-sky-300 focus:ring-2"
             placeholder="记录你的评价和顾虑..."
           />
           <button
             type="button"
             onClick={saveNotes}
             disabled={isMock || busy}
-            className="rounded-[8px] border border-black/20 px-[10px] py-[6px] text-[10px] font-semibold"
+            className="cursor-pointer rounded-[8px] border border-slate-300 px-[10px] py-[6px] text-[10px] font-semibold text-slate-700 hover:border-slate-400 disabled:cursor-not-allowed"
           >
             保存备注
           </button>
         </div>
       ) : null}
-    </article>
+    </div>
   );
 }
