@@ -10,6 +10,11 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="zh-CN" className={`${playfair.variable} ${inter.variable}`}>
+      <head>
+        <script dangerouslySetInnerHTML={{
+          __html: `(function(){var t=localStorage.getItem('theme')||'orange';document.documentElement.setAttribute('data-theme',t);})();`
+        }} />
+      </head>
       <body className="antialiased">
         {children}
       </body>
