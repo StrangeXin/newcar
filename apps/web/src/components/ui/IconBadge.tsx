@@ -2,18 +2,19 @@
 
 import { LucideIcon } from 'lucide-react';
 
-type BadgeTone = 'accent' | 'success' | 'neutral';
+type BadgeTone = 'accent' | 'success' | 'warning' | 'neutral';
 type BadgeSize = 'sm' | 'md';
 
 const toneClassMap: Record<BadgeTone, string> = {
-  accent: 'bg-orange-100 text-orange-700',
-  success: 'bg-emerald-100 text-emerald-700',
-  neutral: 'bg-slate-100 text-slate-700',
+  accent: 'bg-[var(--accent-muted)] text-[var(--accent-text)]',
+  success: 'bg-[var(--success-muted)] text-[var(--success-text)]',
+  warning: 'bg-[var(--warning-muted)] text-[var(--warning-text)]',
+  neutral: 'bg-[var(--surface-subtle)] text-[var(--text-soft)]',
 };
 
 const sizeClassMap: Record<BadgeSize, { shell: string; icon: string }> = {
-  sm: { shell: 'h-6 w-6 rounded-md', icon: 'h-3.5 w-3.5' },
-  md: { shell: 'h-7 w-7 rounded-md', icon: 'h-4 w-4' },
+  sm: { shell: 'h-7 w-7 rounded-[var(--radius-sm)]', icon: 'h-4 w-4' },
+  md: { shell: 'h-9 w-9 rounded-[var(--radius-sm)]', icon: 'h-5 w-5' },
 };
 
 interface IconBadgeProps {
