@@ -18,27 +18,27 @@ export function JourneyFeedCard({ item }: JourneyFeedCardProps) {
       : '预算未标注';
 
   return (
-    <article className="rounded-2xl border border-slate-200 bg-white/90 p-4 shadow-card">
+    <article className="rounded-[var(--radius-xl)] border border-[var(--border)] bg-[var(--surface)] p-4 shadow-[var(--shadow-card)]">
       <div className="flex items-center justify-between gap-3">
         <div>
-          <p className="text-sm font-semibold text-slate-900">{item.title}</p>
-          <p className="text-xs text-slate-500">{item.user?.nickname || '匿名用户'}</p>
+          <p className="font-[family-name:var(--font-display)] text-[var(--text-lg)] font-bold text-[var(--text)]">{item.title}</p>
+          <p className="text-xs text-[var(--text-muted)]">{item.user?.nickname || '匿名用户'}</p>
         </div>
-        <span className="inline-flex items-center gap-1 rounded-full border border-slate-200 bg-slate-50 px-2 py-1 text-xs text-slate-600">
+        <span className="inline-flex items-center gap-1 rounded-full border border-[var(--border)] bg-[var(--surface-subtle)] px-2 py-1 text-xs text-[var(--text-soft)]">
           {item.journey?.status === 'COMPLETED' ? <CircleDollarSign className="h-3 w-3" aria-hidden="true" /> : <Clock3 className="h-3 w-3" aria-hidden="true" />}
           {item.journey?.status === 'COMPLETED' ? '已购车' : '进行中'}
         </span>
       </div>
 
-      {item.description ? <p className="mt-3 text-sm text-slate-600">{item.description}</p> : null}
+      {item.description ? <p className="mt-3 text-sm text-[var(--text-soft)]">{item.description}</p> : null}
 
       <div className="mt-3 flex flex-wrap gap-2">
-        <span className="inline-flex items-center gap-1 rounded-full border border-slate-200 bg-white px-2 py-1 text-xs text-slate-700">
+        <span className="inline-flex items-center gap-1 rounded-full border border-[var(--border)] bg-[var(--surface)] px-2 py-1 text-xs text-[var(--text-soft)]">
           <CircleDollarSign className="h-3 w-3" aria-hidden="true" />
           {budgetText}
         </span>
         {useCases.slice(0, 3).map((useCase) => (
-          <span key={useCase} className="inline-flex items-center gap-1 rounded-full border border-slate-200 bg-white px-2 py-1 text-xs text-slate-700">
+          <span key={useCase} className="inline-flex items-center gap-1 rounded-full border border-[var(--border)] bg-[var(--surface)] px-2 py-1 text-xs text-[var(--text-soft)]">
             <Route className="h-3 w-3" aria-hidden="true" />
             {useCase}
           </span>
@@ -46,7 +46,7 @@ export function JourneyFeedCard({ item }: JourneyFeedCardProps) {
       </div>
 
       <div className="mt-4 flex items-center justify-between">
-        <div className="flex items-center gap-2 text-xs text-slate-500">
+        <div className="flex items-center gap-2 text-xs text-[var(--text-muted)]">
           <span className="inline-flex items-center gap-1"><Heart className="h-3 w-3" aria-hidden="true" />{item.likeCount}</span>
           <span className="inline-flex items-center gap-1"><MessageCircle className="h-3 w-3" aria-hidden="true" />{item.commentCount}</span>
           <span className="inline-flex items-center gap-1"><GitFork className="h-3 w-3" aria-hidden="true" />{item.forkCount}</span>
@@ -54,7 +54,7 @@ export function JourneyFeedCard({ item }: JourneyFeedCardProps) {
         <div className="flex items-center gap-2">
           <Link
             href={`/community/${item.id}`}
-            className="text-xs font-semibold text-sky-700 underline-offset-2 hover:text-sky-800 hover:underline"
+            className="text-xs font-semibold text-[var(--accent)] underline-offset-2 hover:text-[var(--accent-hover)] hover:underline"
           >
             查看详情
           </Link>
