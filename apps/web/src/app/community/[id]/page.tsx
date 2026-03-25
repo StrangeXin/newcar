@@ -6,6 +6,8 @@ import { BookText, ClipboardList, CopyCheck, GitFork, Heart, MessageCircle, Thum
 import { useParams } from 'next/navigation';
 import { del, post } from '@/lib/api';
 import { usePublishedJourney } from '@/hooks/usePublishedJourney';
+import { ThemeToggle } from '@/components/ui/ThemeToggle';
+import { LocaleToggle } from '@/components/ui/LocaleToggle';
 import { StoryView } from '@/components/community/JourneyDetail/StoryView';
 import { TemplateView } from '@/components/community/JourneyDetail/TemplateView';
 
@@ -65,7 +67,11 @@ export default function CommunityDetailPage() {
 
   return (
     <main className="mx-auto min-h-screen w-full max-w-5xl space-y-4 px-4 py-6">
-      <header className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-card">
+      <header className="relative rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-card">
+        <div className="absolute right-4 top-4 flex items-center gap-1">
+          <ThemeToggle />
+          <LocaleToggle />
+        </div>
         <h1 className="text-2xl font-extrabold text-[var(--text)]">{journey.title}</h1>
         {journey.description ? <p className="mt-2 text-sm text-[var(--text-soft)]">{journey.description}</p> : null}
         <div className="mt-3 flex flex-wrap items-center gap-2 text-xs text-[var(--text-soft)]">
