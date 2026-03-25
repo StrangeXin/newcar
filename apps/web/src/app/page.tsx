@@ -20,7 +20,8 @@ export default function HomePage() {
       </nav>
 
       <main className="mx-auto w-full max-w-6xl px-6 pb-12 pt-20">
-        <section className="grid items-center gap-8 md:grid-cols-2">
+        <div className="flex min-h-[calc(100vh-5rem)] items-center">
+        <section className="grid w-full items-center gap-8 md:grid-cols-2">
           <div>
             <p className="text-[var(--text-xs)] font-semibold uppercase tracking-[0.16em] text-[var(--accent-text-soft)]">
               NewCar Workspace
@@ -108,6 +109,7 @@ export default function HomePage() {
             </div>
           </div>
         </section>
+        </div>
 
         <section className="mt-8 grid gap-4 md:grid-cols-3">
           <article className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow-card)]">
