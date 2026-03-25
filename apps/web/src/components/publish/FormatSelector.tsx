@@ -49,15 +49,15 @@ export function FormatSelector({ value, onChange }: FormatSelectorProps) {
             onClick={() => toggle(item.key)}
             className={`cursor-pointer rounded-xl border p-4 text-left ${
               active
-                ? 'border-sky-700 bg-sky-700 text-white'
-                : 'border-slate-200 bg-white text-slate-800 hover:border-slate-300'
+                ? 'border-[var(--accent-text)] bg-[var(--accent-text)] text-white'
+                : 'border-[var(--border)] bg-[var(--surface)] text-[var(--text)] hover:border-[var(--border-soft)]'
             }`}
           >
             <p className="flex items-center gap-1.5 text-sm font-semibold">
               <Icon className="h-4 w-4" aria-hidden="true" />
               {item.title}
             </p>
-            <p className={`mt-1 text-xs ${active ? 'text-white/85' : 'text-slate-500'}`}>{item.description}</p>
+            <p className={`mt-1 text-xs ${active ? 'text-white/85' : 'text-[var(--text-muted)]'}`}>{item.description}</p>
           </button>
         );
       })}

@@ -28,25 +28,25 @@ export function VehicleCardShell({
   progressLabel,
   progressBarClassName = 'bg-[linear-gradient(90deg,#ea580c,#f97316)]',
   note,
-  noteClassName = 'bg-sky-50 text-sky-800',
+  noteClassName = 'bg-[var(--accent-muted)] text-[var(--accent-text)]',
   actions,
   className = '',
   dimmed = false,
 }: VehicleCardShellProps) {
   return (
     <article
-      className={`rounded-[10px] border-[1.5px] border-slate-200 bg-white px-[14px] py-[14px] shadow-[0_2px_10px_rgba(15,23,42,0.06)] ${dimmed ? 'opacity-55' : ''} ${className}`}
+      className={`rounded-[10px] border-[1.5px] border-[var(--border)] bg-[var(--surface)] px-[14px] py-[14px] shadow-[0_2px_10px_rgba(15,23,42,0.06)] ${dimmed ? 'opacity-55' : ''} ${className}`}
     >
       <div className="flex items-start justify-between gap-[10px]">
         <div className="flex items-start gap-[10px]">
           <div
-            className={`flex h-[34px] w-[46px] items-center justify-center rounded-[8px] text-[11px] font-bold text-slate-700 ${iconBgClassName}`}
+            className={`flex h-[34px] w-[46px] items-center justify-center rounded-[8px] text-[11px] font-bold text-[var(--text-soft)] ${iconBgClassName}`}
           >
             {iconLabel}
           </div>
           <div>
-            <h4 className="text-[12px] font-bold text-slate-900">{title}</h4>
-            <p className="mt-0.5 text-[10px] text-slate-500">{subtitle}</p>
+            <h4 className="text-[12px] font-bold text-[var(--text)]">{title}</h4>
+            <p className="mt-0.5 text-[10px] text-[var(--text-muted)]">{subtitle}</p>
           </div>
         </div>
         {rightMeta}
@@ -56,11 +56,11 @@ export function VehicleCardShell({
         <div className="mt-[10px]">
           {progressLabel ? (
             <div className="mb-1 flex items-center justify-between">
-              <span className="text-[9px] font-bold uppercase tracking-[0.05em] text-slate-500">匹配度</span>
-              <span className="text-[11px] font-extrabold text-slate-700">{progressLabel}</span>
+              <span className="text-[9px] font-bold uppercase tracking-[0.05em] text-[var(--text-muted)]">匹配度</span>
+              <span className="text-[11px] font-extrabold text-[var(--text-soft)]">{progressLabel}</span>
             </div>
           ) : null}
-          <div className="h-[3px] rounded-full bg-slate-200">
+          <div className="h-[3px] rounded-full bg-[var(--border)]">
             <div className={`h-[3px] rounded-full ${progressBarClassName}`} style={{ width: `${progressPercent}%` }} />
           </div>
         </div>

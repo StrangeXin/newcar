@@ -38,7 +38,7 @@ export function ForkButton({ publishedJourneyId }: ForkButtonProps) {
         <GitFork className="h-3.5 w-3.5" aria-hidden="true" />
         {loading ? '创建中...' : '从此出发'}
       </button>
-      {error ? <p className="mt-1 text-xs text-red-700">{error}</p> : null}
+      {error ? <p className="mt-1 text-xs text-[var(--error)]">{error}</p> : null}
     </div>
   );
 }

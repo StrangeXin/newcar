@@ -21,7 +21,7 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 
 function PrimitiveValue({ value }: { value: string | number | boolean | null }) {
   return (
-    <span className="rounded-md border border-slate-200 bg-slate-50 px-2 py-1 text-xs text-slate-700">
+    <span className="rounded-md border border-[var(--border)] bg-[var(--surface-subtle)] px-2 py-1 text-xs text-[var(--text-soft)]">
       {value === null ? 'null' : String(value)}
     </span>
   );
@@ -42,13 +42,13 @@ function ArrayBlock({ items }: { items: unknown[] }) {
         </div>
       ) : null}
       {objectItems.map((item, index) => (
-        <div key={index} className="rounded-lg border border-slate-200 bg-white p-3">
+        <div key={index} className="rounded-lg border border-[var(--border)] bg-[var(--surface)] p-3">
           <ObjectBlock data={item} />
         </div>
       ))}
       {arrayItems.map((item, index) => (
-        <div key={`nested-array-${index}`} className="rounded-lg border border-slate-200 bg-slate-50 p-3">
-          <p className="mb-2 text-xs font-semibold uppercase tracking-[0.06em] text-slate-500">Items</p>
+        <div key={`nested-array-${index}`} className="rounded-lg border border-[var(--border)] bg-[var(--surface-subtle)] p-3">
+          <p className="mb-2 text-xs font-semibold uppercase tracking-[0.06em] text-[var(--text-muted)]">Items</p>
           <ArrayBlock items={item} />
         </div>
       ))}
@@ -68,7 +68,7 @@ function ObjectBlock({ data }: { data: Record<string, unknown> }) {
           content = <ArrayBlock items={value} />;
         } else if (isRecord(value)) {
           content = (
-            <div className="rounded-lg border border-slate-200 bg-slate-50 p-3">
+            <div className="rounded-lg border border-[var(--border)] bg-[var(--surface-subtle)] p-3">
               <ObjectBlock data={value} />
             </div>
           );
@@ -77,8 +77,8 @@ function ObjectBlock({ data }: { data: Record<string, unknown> }) {
         }
 
         return (
-          <div key={key} className="rounded-lg border border-slate-200 bg-white p-3">
-            <p className="mb-2 text-xs font-semibold uppercase tracking-[0.06em] text-slate-500">{label}</p>
+          <div key={key} className="rounded-lg border border-[var(--border)] bg-[var(--surface)] p-3">
+            <p className="mb-2 text-xs font-semibold uppercase tracking-[0.06em] text-[var(--text-muted)]">{label}</p>
             {content}
           </div>
         );
@@ -89,7 +89,7 @@ function ObjectBlock({ data }: { data: Record<string, unknown> }) {
 
 export function StructuredDataView({ data, emptyText }: StructuredDataViewProps) {
   if (!data) {
-    return <p className="text-sm text-slate-500">{emptyText}</p>;
+    return <p className="text-sm text-[var(--text-muted)]">{emptyText}</p>;
   }
 
   const isArrayData = Array.isArray(data);
@@ -97,10 +97,10 @@ export function StructuredDataView({ data, emptyText }: StructuredDataViewProps)
 
   return (
     <div className="space-y-3">
-      <div className="flex items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-600">
+      <div className="flex items-center gap-2 rounded-lg border border-[var(--border)] bg-[var(--surface-subtle)] px-3 py-2 text-xs text-[var(--text-soft)]">
         {isObjectData ? <Braces className="h-4 w-4" /> : isArrayData ? <List className="h-4 w-4" /> : <Hash className="h-4 w-4" />}
         <span className="font-semibold">结构化视图</span>
-        <SquareDashedKanban className="ml-auto h-4 w-4 text-slate-400" />
+        <SquareDashedKanban className="ml-auto h-4 w-4 text-[var(--text-muted)]" />
       </div>
       {isObjectData ? (
         <ObjectBlock data={data} />

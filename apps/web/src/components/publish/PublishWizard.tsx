@@ -77,25 +77,25 @@ export function PublishWizard() {
   };
 
   if (isLoading) {
-    return <p className="text-sm text-slate-500">正在加载旅程...</p>;
+    return <p className="text-sm text-[var(--text-muted)]">正在加载旅程...</p>;
   }
 
   if (!journeyId) {
-    return <p className="text-sm text-slate-500">暂无活跃旅程，先去创建旅程。</p>;
+    return <p className="text-sm text-[var(--text-muted)]">暂无活跃旅程，先去创建旅程。</p>;
   }
 
   return (
-    <section className="rounded-2xl border border-slate-200 bg-white/90 p-5 shadow-card">
-      <p className="text-xs font-semibold uppercase tracking-[0.12em] text-sky-700">Publish Journey</p>
-      <h1 className="mt-2 flex items-center gap-2 text-2xl font-extrabold text-slate-900">
-        <Send className="h-5 w-5 text-sky-700" aria-hidden="true" />
+    <section className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-card">
+      <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[var(--accent-text)]">Publish Journey</p>
+      <h1 className="mt-2 flex items-center gap-2 text-2xl font-extrabold text-[var(--text)]">
+        <Send className="h-5 w-5 text-[var(--accent-text)]" aria-hidden="true" />
         发布历程
       </h1>
 
       {step === 1 ? (
         <div className="mt-4 space-y-4">
           <FormatSelector value={formats} onChange={setFormats} />
-          {!canNextStep1 ? <p className="text-sm text-red-700">至少选择一种发布形式</p> : null}
+          {!canNextStep1 ? <p className="text-sm text-[var(--error)]">至少选择一种发布形式</p> : null}
           <button
             type="button"
             onClick={fetchPreview}
@@ -110,44 +110,44 @@ export function PublishWizard() {
 
       {step === 2 ? (
         <div className="mt-4 space-y-4">
-          <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
-            <p className="flex items-center gap-1 text-sm font-semibold text-slate-800">
-              <Eye className="h-4 w-4 text-sky-700" aria-hidden="true" />
+          <div className="rounded-xl border border-[var(--border)] bg-[var(--surface-subtle)] p-4">
+            <p className="flex items-center gap-1 text-sm font-semibold text-[var(--text)]">
+              <Eye className="h-4 w-4 text-[var(--accent-text)]" aria-hidden="true" />
               预览内容
             </p>
             {formats.includes('story') ? (
-              <pre className="mt-2 whitespace-pre-wrap text-xs text-slate-600">{preview?.storyContent || '暂无'}</pre>
+              <pre className="mt-2 whitespace-pre-wrap text-xs text-[var(--text-soft)]">{preview?.storyContent || '暂无'}</pre>
             ) : null}
             {formats.includes('report') ? (
-              <pre className="mt-2 whitespace-pre-wrap text-xs text-slate-600">
+              <pre className="mt-2 whitespace-pre-wrap text-xs text-[var(--text-soft)]">
                 {JSON.stringify(preview?.reportData || {}, null, 2)}
               </pre>
             ) : null}
             {formats.includes('template') ? (
-              <pre className="mt-2 whitespace-pre-wrap text-xs text-slate-600">
+              <pre className="mt-2 whitespace-pre-wrap text-xs text-[var(--text-soft)]">
                 {JSON.stringify(preview?.templateData || {}, null, 2)}
               </pre>
             ) : null}
           </div>
 
           <div className="grid gap-3 md:grid-cols-2">
-            <label className="text-sm font-medium text-slate-700">
+            <label className="text-sm font-medium text-[var(--text-soft)]">
               标题
               <input
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
-                className="mt-1 w-full rounded-xl border border-slate-300 px-3 py-2 text-sm text-slate-800 outline-none ring-sky-300 focus:ring-2"
+                className="mt-1 w-full rounded-xl border border-[var(--border)] px-3 py-2 text-sm text-[var(--text)] outline-none ring-[var(--accent-border)] focus:ring-2"
               />
             </label>
-            <label className="text-sm font-medium text-slate-700">
+            <label className="text-sm font-medium text-[var(--text-soft)]">
               <span className="mb-1 inline-flex items-center gap-1">
-                <ShieldCheck className="h-4 w-4 text-emerald-700" aria-hidden="true" />
+                <ShieldCheck className="h-4 w-4 text-[var(--success-text)]" aria-hidden="true" />
                 可见性
               </span>
               <select
                 value={visibility}
                 onChange={(e) => setVisibility(e.target.value as 'PUBLIC' | 'UNLISTED')}
-                className="mt-1 w-full rounded-xl border border-slate-300 px-3 py-2 text-sm text-slate-800 outline-none ring-sky-300 focus:ring-2"
+                className="mt-1 w-full rounded-xl border border-[var(--border)] px-3 py-2 text-sm text-[var(--text)] outline-none ring-[var(--accent-border)] focus:ring-2"
               >
                 <option value="PUBLIC">PUBLIC</option>
                 <option value="UNLISTED">UNLISTED</option>
@@ -155,12 +155,12 @@ export function PublishWizard() {
             </label>
           </div>
 
-          <label className="block text-sm font-medium text-slate-700">
+          <label className="block text-sm font-medium text-[var(--text-soft)]">
             简介
             <textarea
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              className="mt-1 min-h-24 w-full rounded-xl border border-slate-300 px-3 py-2 text-sm text-slate-800 outline-none ring-sky-300 focus:ring-2"
+              className="mt-1 min-h-24 w-full rounded-xl border border-[var(--border)] px-3 py-2 text-sm text-[var(--text)] outline-none ring-[var(--accent-border)] focus:ring-2"
             />
           </label>
 
@@ -168,7 +168,7 @@ export function PublishWizard() {
             <button
               type="button"
               onClick={() => setStep(1)}
-              className="inline-flex cursor-pointer items-center gap-1 rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 hover:border-slate-400"
+              className="inline-flex cursor-pointer items-center gap-1 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-4 py-2 text-sm font-semibold text-[var(--text-soft)] hover:border-[var(--border-soft)]"
             >
               <ArrowLeft className="h-4 w-4" aria-hidden="true" />
               上一步
@@ -177,7 +177,7 @@ export function PublishWizard() {
               type="button"
               onClick={() => setStep(3)}
               disabled={!canPublish}
-              className="inline-flex cursor-pointer items-center gap-1 rounded-xl bg-slate-900 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60"
+              className="inline-flex cursor-pointer items-center gap-1 rounded-xl bg-[var(--text)] px-4 py-2 text-sm font-semibold text-white hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
             >
               <ArrowRight className="h-4 w-4" aria-hidden="true" />
               下一步：确认发布
@@ -188,13 +188,13 @@ export function PublishWizard() {
 
       {step === 3 ? (
         <div className="mt-4 space-y-3">
-          <p className="text-sm text-slate-600">将发布以下形式：{formats.join(', ')}</p>
-          <p className="text-sm text-slate-600">可见性：{visibility}</p>
+          <p className="text-sm text-[var(--text-soft)]">将发布以下形式：{formats.join(', ')}</p>
+          <p className="text-sm text-[var(--text-soft)]">可见性：{visibility}</p>
           <div className="flex gap-2">
             <button
               type="button"
               onClick={() => setStep(2)}
-              className="inline-flex cursor-pointer items-center gap-1 rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 hover:border-slate-400"
+              className="inline-flex cursor-pointer items-center gap-1 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-4 py-2 text-sm font-semibold text-[var(--text-soft)] hover:border-[var(--border-soft)]"
             >
               <ArrowLeft className="h-4 w-4" aria-hidden="true" />
               返回编辑
@@ -212,7 +212,7 @@ export function PublishWizard() {
         </div>
       ) : null}
 
-      {error ? <p className="mt-3 text-sm text-red-700">{error}</p> : null}
+      {error ? <p className="mt-3 text-sm text-[var(--error)]">{error}</p> : null}
     </section>
   );
 }
