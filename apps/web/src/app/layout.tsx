@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { playfair, inter } from './fonts';
 import './globals.css';
+import { FloatingToolbar } from '@/components/ui/FloatingToolbar';
 
 export const metadata: Metadata = {
   title: 'NewCar Journey',
@@ -16,6 +17,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         }} />
       </head>
       <body className="antialiased">
+        <FloatingToolbar />
         {children}
       </body>
     </html>

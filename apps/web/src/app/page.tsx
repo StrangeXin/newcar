@@ -1,6 +1,5 @@
 import Link from 'next/link';
 import { CarFront, MessageSquareText, Route } from 'lucide-react';
-import { ThemeToggle } from '@/components/ui/ThemeToggle';
 import { Button } from '@/components/ui/Button';
 
 export default function HomePage() {
@@ -14,7 +13,6 @@ export default function HomePage() {
           <Link href="/community" className="text-[var(--text-sm)] font-medium text-[var(--text-soft)] hover:text-[var(--text)]">
             社区
           </Link>
-          <ThemeToggle />
           <Link href="/login">
             <Button size="sm">登录</Button>
           </Link>
