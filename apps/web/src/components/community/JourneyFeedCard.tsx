@@ -12,6 +12,7 @@ interface JourneyFeedCardProps {
 export function JourneyFeedCard({ item }: JourneyFeedCardProps) {
   const tags = (item.tags || {}) as Record<string, unknown>;
   const useCases = Array.isArray(tags.useCases) ? tags.useCases.map(String) : [];
+  const candidateNames = Array.isArray(tags.candidateNames) ? tags.candidateNames.map(String).slice(0, 3) : [];
   const budgetText =
     typeof tags.budgetMin === 'number' && typeof tags.budgetMax === 'number'
       ? `${tags.budgetMin}-${tags.budgetMax}万`
@@ -30,7 +31,17 @@ export function JourneyFeedCard({ item }: JourneyFeedCardProps) {
         </span>
       </div>
 
-      {item.description ? <p className="mt-3 text-sm text-[var(--text-soft)]">{item.description}</p> : null}
+      {candidateNames.length > 0 ? (
+        <p className="mt-3 text-sm font-semibold text-[var(--text)]">{candidateNames.join('  vs  ')}</p>
+      ) : null}
+
+      {item.publishSummary ? (
+        <p className="mt-3 rounded-[14px] border border-[var(--accent-border)] bg-[var(--accent-muted)] px-3 py-3 text-sm leading-6 text-[var(--accent-text)]">
+          "{item.publishSummary}"
+        </p>
+      ) : item.description ? (
+        <p className="mt-3 text-sm text-[var(--text-soft)]">{item.description}</p>
+      ) : null}
 
       <div className="mt-3 flex flex-wrap gap-2">
         <span className="inline-flex items-center gap-1 rounded-full border border-[var(--border)] bg-[var(--surface)] px-2 py-1 text-xs text-[var(--text-soft)]">

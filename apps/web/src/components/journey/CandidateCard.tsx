@@ -1,10 +1,10 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { Check, Quote, Star } from 'lucide-react';
 import { patch, post } from '@/lib/api';
 import { trackEvent } from '@/lib/behavior';
 import { Candidate } from '@/types/api';
-import { VehicleCardShell } from '@/components/cars/VehicleCardShell';
 
 interface CandidateCardProps {
   candidate: Candidate;
@@ -65,8 +65,8 @@ export function CandidateCard({ candidate, onUpdated }: CandidateCardProps) {
     }
   }
 
-  const score = Math.round((candidate.aiMatchScore || 0) * 100);
   const isEliminated = candidate.status === 'ELIMINATED';
+  const isWinner = candidate.status === 'WINNER';
   const seats =
     candidate.car.baseSpecs &&
     typeof candidate.car.baseSpecs === 'object' &&
@@ -91,9 +91,38 @@ export function CandidateCard({ candidate, onUpdated }: CandidateCardProps) {
           };
   const seatLabel = seats === 5 ? '五座' : seats === 6 ? '六座' : `${seats}座`;
   const priceLabel = isEliminated ? '超出预算' : '起售价';
-  const noteTone = isEliminated
-    ? 'border border-dashed border-[var(--border)] bg-[var(--surface-subtle)] text-[var(--text-muted)]'
-    : 'bg-[var(--accent-muted)] text-[var(--accent-text)]';
+  const matchTags = candidate.matchTags || [];
+  const relevantDimensions = (candidate.relevantDimensions || []).slice(0, 3);
+  const specs =
+    candidate.car.baseSpecs && typeof candidate.car.baseSpecs === 'object' && !Array.isArray(candidate.car.baseSpecs)
+      ? (candidate.car.baseSpecs as Record<string, unknown>)
+      : {};
+  const dimensionValues = relevantDimensions
+    .map((dimension) => {
+      const value = specs[dimension];
+      if (typeof value === 'number') {
+        return { label: dimension, value: `${value}` };
+      }
+      const alias = dimension.toLowerCase();
+      const fallback =
+        alias.includes('续航')
+          ? typeof specs.range === 'number'
+            ? `${specs.range} km`
+            : null
+          : alias.includes('空间')
+            ? `${seatLabel} ${candidate.car.type}`
+            : alias.includes('价格')
+              ? candidate.car.msrp
+                ? `${(candidate.car.msrp / 10000).toFixed(2)}万`
+                : '暂无'
+              : alias.includes('能耗')
+                ? typeof specs.efficiency === 'number'
+                  ? `${specs.efficiency}`
+                  : '待补充'
+                : null;
+      return { label: dimension, value: fallback || '待补充' };
+    })
+    .filter((item) => item.value);
 
   useEffect(() => {
     if (isMock) {
@@ -117,71 +146,139 @@ export function CandidateCard({ candidate, onUpdated }: CandidateCardProps) {
 
   return (
     <div data-testid="candidate-card" data-candidate-name={`${candidate.car.brand} ${candidate.car.model}`}>
-      <VehicleCardShell
-        iconLabel={candidate.car.brand || candidate.car.model.slice(0, 2)}
-        iconBgClassName={brandTheme.icon}
-        title={`${candidate.car.brand} ${candidate.car.model}`}
-        subtitle={`${candidate.car.fuelType === 'PHEV' ? '增程' : candidate.car.fuelType === 'BEV' ? '纯电' : candidate.car.fuelType} · ${seatLabel} ${candidate.car.type}`}
-        rightMeta={(
+      <article
+        className={`rounded-[16px] border-[1.5px] px-[14px] py-[14px] shadow-[0_2px_10px_rgba(15,23,42,0.06)] ${
+          isWinner
+            ? 'border-[var(--success-border)] bg-[linear-gradient(180deg,var(--surface),var(--success-muted))]'
+            : isEliminated
+              ? 'border-[var(--border)] bg-[var(--surface-subtle)] opacity-70'
+              : 'border-[var(--border)] bg-[var(--surface)]'
+        }`}
+      >
+        <div className="flex items-start justify-between gap-[10px]">
+          <div className="flex items-start gap-[10px]">
+            <div
+              className={`flex h-[34px] w-[46px] items-center justify-center rounded-[8px] text-[11px] font-bold text-[var(--text-soft)] ${brandTheme.icon}`}
+            >
+              {candidate.car.brand || candidate.car.model.slice(0, 2)}
+            </div>
+            <div>
+              <div className="flex flex-wrap items-center gap-2">
+                <h4 className="text-[13px] font-bold text-[var(--text)]">{candidate.car.brand} {candidate.car.model}</h4>
+                {isWinner ? (
+                  <span className="rounded-full bg-[var(--success-text)] px-2 py-0.5 text-[9px] font-bold text-white">已选定</span>
+                ) : null}
+                {isEliminated ? (
+                  <span className="rounded-full border border-[var(--border)] px-2 py-0.5 text-[9px] font-medium text-[var(--text-muted)]">已淘汰</span>
+                ) : null}
+              </div>
+              <p className="mt-0.5 text-[10px] text-[var(--text-muted)]">
+                {candidate.car.fuelType === 'PHEV' ? '增程' : candidate.car.fuelType === 'BEV' ? '纯电' : candidate.car.fuelType} · {candidate.car.type} · {seatLabel}
+              </p>
+            </div>
+          </div>
           <div className="text-right">
-            <p className={`text-[14px] font-extrabold ${isEliminated ? 'text-[var(--text-muted)]' : 'text-[var(--text)]'}`}>
+            <p className={`text-[15px] font-extrabold ${isEliminated ? 'text-[var(--text-muted)]' : 'text-[var(--text)]'}`}>
               {candidate.car.msrp ? `${(candidate.car.msrp / 10000).toFixed(2)}万` : '暂无'}
             </p>
             <p className="text-[9px] text-[var(--text-muted)]">{priceLabel}</p>
           </div>
-        )}
-        progressPercent={score}
-        progressLabel={`${score}%`}
-        progressBarClassName={brandTheme.bar}
-        note={
-          isEliminated
-            ? candidate.eliminationReason || '这款车当前被移出候选。'
-            : `备注：${candidate.userNotes || '符合家用通勤需求，值得继续观察。'}`
-        }
-        noteClassName={noteTone}
-        dimmed={isEliminated}
-        actions={(
-          <>
-            {isEliminated ? (
-              <button
-                type="button"
-                onClick={restore}
-                disabled={busy}
-                className="flex-1 cursor-pointer rounded-[8px] border-[1.5px] border-[var(--border)] bg-[var(--surface)] px-[10px] py-[6px] text-[10px] font-semibold text-[var(--text-soft)] hover:border-[var(--border-soft)] disabled:cursor-not-allowed"
+        </div>
+
+        {matchTags.length > 0 ? (
+          <div className="mt-[10px] flex flex-wrap gap-[6px]">
+            {matchTags.slice(0, 4).map((tag) => (
+              <span
+                key={tag}
+                className={`rounded-full px-[10px] py-[4px] text-[10px] font-medium ${
+                  isEliminated
+                    ? 'border border-[var(--border)] bg-[var(--surface)] text-[var(--text-muted)]'
+                    : 'border border-[var(--accent-border)] bg-[var(--accent-muted)] text-[var(--accent-text)]'
+                }`}
               >
-                恢复候选
-              </button>
-            ) : (
-              <>
-                <button
-                  type="button"
-                  onClick={markWinner}
-                  disabled={isMock || busy || candidate.status === 'WINNER'}
-                  className="flex-1 cursor-pointer rounded-[8px] bg-[var(--text)] px-[10px] py-[6px] text-[10px] font-bold text-[var(--surface)] hover:opacity-90 disabled:cursor-not-allowed"
-                >
-                  选定
-                </button>
-                <button
-                  type="button"
-                  onClick={eliminate}
-                  disabled={isMock || busy || candidate.status === 'ELIMINATED'}
-                  className="flex-1 cursor-pointer rounded-[8px] border-[1.5px] border-[var(--border)] bg-[var(--surface)] px-[10px] py-[6px] text-[10px] font-medium text-[var(--text-soft)] hover:border-[var(--border-soft)] disabled:cursor-not-allowed"
-                >
-                  淘汰
-                </button>
-              </>
-            )}
+                {tag}
+              </span>
+            ))}
+          </div>
+        ) : null}
+
+        {dimensionValues.length > 0 ? (
+          <div className="mt-[12px] grid gap-[8px]">
+            {dimensionValues.map((item) => (
+              <div key={item.label} className="flex items-center justify-between rounded-[10px] bg-[var(--surface-subtle)] px-[10px] py-[8px] text-[11px]">
+                <span className="flex items-center gap-1.5 font-medium text-[var(--text-soft)]">
+                  <Star className="h-3.5 w-3.5 text-[var(--warning-text)]" aria-hidden="true" />
+                  {item.label}
+                </span>
+                <span className="font-semibold text-[var(--text)]">{item.value}</span>
+              </div>
+            ))}
+          </div>
+        ) : null}
+
+        {candidate.recommendReason ? (
+          <blockquote className="mt-[12px] rounded-[12px] border border-[var(--accent-border)] bg-[var(--accent-muted)] px-[10px] py-[9px] text-[11px] leading-[1.6] text-[var(--accent-text)]">
+            <span className="mb-1 flex items-center gap-1 text-[10px] font-bold uppercase tracking-[0.06em]">
+              <Quote className="h-3.5 w-3.5" aria-hidden="true" />
+              推荐理由
+            </span>
+            {candidate.recommendReason}
+          </blockquote>
+        ) : null}
+
+        {isEliminated && candidate.eliminationReason ? (
+          <p className="mt-[10px] text-[10px] text-[var(--text-muted)]">淘汰原因：{candidate.eliminationReason}</p>
+        ) : null}
+
+        {candidate.userNotes && !showNotes ? (
+          <div className="mt-[10px] rounded-[10px] border border-[var(--border)] bg-[var(--surface-subtle)] px-[10px] py-[8px] text-[10px] text-[var(--text-soft)]">
+            <span className="mr-1 inline-flex h-4 w-4 items-center justify-center rounded-full bg-[var(--text)] text-[9px] text-white">
+              <Check className="h-2.5 w-2.5" aria-hidden="true" />
+            </span>
+            备注：{candidate.userNotes}
+          </div>
+        ) : null}
+
+        <div className="mt-[12px] flex gap-[6px]">
+          {isEliminated ? (
             <button
               type="button"
-              onClick={() => setShowNotes((v) => !v)}
-              disabled={isMock}
-              className="cursor-pointer rounded-[8px] border-[1.5px] border-[var(--border)] bg-[var(--surface-subtle)] px-[10px] py-[6px] text-[10px] font-medium text-[var(--text-soft)] hover:border-[var(--border-soft)] disabled:cursor-not-allowed"
+              onClick={restore}
+              disabled={busy}
+              className="flex-1 cursor-pointer rounded-[8px] border-[1.5px] border-[var(--border)] bg-[var(--surface)] px-[10px] py-[6px] text-[10px] font-semibold text-[var(--text-soft)] hover:border-[var(--border-soft)] disabled:cursor-not-allowed"
             >
-              备注
+              恢复候选
             </button>
-          </>
-        )}
-      />
+          ) : (
+            <>
+              <button
+                type="button"
+                onClick={markWinner}
+                disabled={isMock || busy || candidate.status === 'WINNER'}
+                className="flex-1 cursor-pointer rounded-[8px] bg-[var(--text)] px-[10px] py-[6px] text-[10px] font-bold text-[var(--surface)] hover:opacity-90 disabled:cursor-not-allowed"
+              >
+                选定
+              </button>
+              <button
+                type="button"
+                onClick={eliminate}
+                disabled={isMock || busy || candidate.status === 'ELIMINATED'}
+                className="flex-1 cursor-pointer rounded-[8px] border-[1.5px] border-[var(--border)] bg-[var(--surface)] px-[10px] py-[6px] text-[10px] font-medium text-[var(--text-soft)] hover:border-[var(--border-soft)] disabled:cursor-not-allowed"
+              >
+                淘汰
+              </button>
+            </>
+          )}
+          <button
+            type="button"
+            onClick={() => setShowNotes((v) => !v)}
+            disabled={isMock}
+            className="cursor-pointer rounded-[8px] border-[1.5px] border-[var(--border)] bg-[var(--surface-subtle)] px-[10px] py-[6px] text-[10px] font-medium text-[var(--text-soft)] hover:border-[var(--border-soft)] disabled:cursor-not-allowed"
+          >
+            备注
+          </button>
+        </div>
+      </article>
 
       {showNotes ? (
         <div className="mt-[10px] space-y-[10px]">

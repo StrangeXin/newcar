@@ -135,16 +135,56 @@ export interface TimelineEvent {
   createdAt: string;
 }
 
+export interface StoryStage {
+  stage: JourneyStage | string;
+  headline: string;
+  narrative: string;
+  candidates?: string[];
+  keyDimension?: string;
+}
+
+export interface StoryTimeline {
+  stages: StoryStage[];
+}
+
+export interface ReportData {
+  userProfile: {
+    budget: string;
+    fuelPreference: string;
+    useCases: string[];
+    coreDimensions: string[];
+  };
+  comparison: Array<{
+    carName: string;
+    scores: Record<string, number>;
+    highlight: string;
+  }>;
+  recommendation: {
+    carName: string;
+    reasoning: string;
+  };
+}
+
+export interface TemplateData {
+  dimensions: string[];
+  weights: Record<string, number>;
+  keyQuestions: string[];
+  candidateCarIds?: string[];
+  candidateNames?: string[];
+  requirements?: Record<string, unknown>;
+}
+
 export interface CommunityJourney {
   id: string;
   journeyId: string;
   title: string;
   description?: string | null;
+  publishSummary?: string | null;
   publishedFormats: PublishFormat[];
   tags?: CommunityTags | null;
-  storyContent?: string | null;
-  reportData?: Record<string, unknown>;
-  templateData?: Record<string, unknown>;
+  storyContent?: string | StoryTimeline | null;
+  reportData?: ReportData | Record<string, unknown>;
+  templateData?: TemplateData | Record<string, unknown>;
   visibility: Visibility;
   viewCount: number;
   likeCount: number;

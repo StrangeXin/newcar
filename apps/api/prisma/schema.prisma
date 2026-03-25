@@ -245,6 +245,7 @@ model PublishedJourney {
   userId           String
   title            String
   description      String?
+  publishSummary   String?
   publishedFormats String[] @default([])
   tags             Json?
   storyContent     String?

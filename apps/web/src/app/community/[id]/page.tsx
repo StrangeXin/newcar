@@ -74,6 +74,11 @@ export default function CommunityDetailPage() {
         </div>
         <h1 className="text-2xl font-extrabold text-[var(--text)]">{journey.title}</h1>
         {journey.description ? <p className="mt-2 text-sm text-[var(--text-soft)]">{journey.description}</p> : null}
+        {journey.publishSummary ? (
+          <p className="mt-3 rounded-[14px] border border-[var(--accent-border)] bg-[var(--accent-muted)] px-3 py-3 text-sm leading-6 text-[var(--accent-text)]">
+            "{journey.publishSummary}"
+          </p>
+        ) : null}
         <div className="mt-3 flex flex-wrap items-center gap-2 text-xs text-[var(--text-soft)]">
           <span className="inline-flex items-center gap-1 rounded-full border border-[var(--border)] bg-[var(--surface-subtle)] px-2 py-1">
             <Heart className="h-3 w-3" aria-hidden="true" /> {journey.likeCount}

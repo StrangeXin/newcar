@@ -2,7 +2,7 @@
 
 import { useEffect } from 'react';
 import { AlertTriangle, LoaderCircle } from 'lucide-react';
-import { Kanban } from '@/components/journey/Kanban';
+import { JourneyWorkspace } from '@/components/journey/JourneyWorkspace';
 import { NewJourneyWizard } from '@/components/journey/NewJourneyWizard';
 import { useJourney } from '@/hooks/useJourney';
 import { trackEvent } from '@/lib/behavior';
@@ -32,7 +32,7 @@ export default function JourneyPage() {
         </div>
       ) : null}
       {!isLoading && !journey && !error ? <NewJourneyWizard onCreated={refresh} /> : null}
-      {journey && !error ? <Kanban journeyId={journey.id} /> : null}
+      {journey && !error ? <JourneyWorkspace journeyId={journey.id} /> : null}
     </main>
   );
 }

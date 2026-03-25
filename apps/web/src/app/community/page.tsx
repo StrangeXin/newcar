@@ -16,7 +16,7 @@ function CommunityPageContent() {
   const t = useT();
   const searchParams = useSearchParams();
   const queryString = searchParams.toString();
-  const { items, isLoading } = useCommunity(queryString);
+  const { items, isLoading, isLoadingMore, hasMore, loadMore } = useCommunity(queryString);
 
   const value = useMemo<FeedFilterState>(
     () => ({
@@ -67,7 +67,7 @@ function CommunityPageContent() {
       </header>
 
       <FeedFilters value={value} onChange={onFilterChange} />
-      <JourneyFeedList items={items} isLoading={isLoading} />
+      <JourneyFeedList items={items} isLoading={isLoading} isLoadingMore={isLoadingMore} hasMore={hasMore} onLoadMore={loadMore} />
     </main>
   );
 }
