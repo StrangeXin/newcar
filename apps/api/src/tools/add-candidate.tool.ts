@@ -13,9 +13,16 @@ export const addCandidateTool = {
       query: { type: 'string', description: '车型名称或品牌+车型，例如“深蓝S7”或“理想 L6”。当没有 carId 时可传这个。' },
       userNotes: { type: 'string', description: '加入候选时附带备注' },
       priceAtAdd: { type: 'number', description: '加入时价格（元）' },
+      matchTags: { type: 'array', items: { type: 'string' }, description: '匹配标签，如预算命中、家用、续航达标等' },
+      recommendReason: { type: 'string', description: '推荐这款车的简短理由' },
+      relevantDimensions: { type: 'array', items: { type: 'string' }, description: '这款车最相关的用户关注维度' },
     },
   },
 };
+
+function normalizeStringArray(value: unknown) {
+  return Array.isArray(value) ? value.map(String).map((item) => item.trim()).filter(Boolean) : undefined;
+}
 
 export async function runAddCandidate(journeyId: string, input: Record<string, unknown>) {
   const rawCarId = String(input.carId || '').trim();
@@ -54,8 +61,8 @@ export async function runAddCandidate(journeyId: string, input: Record<string, u
     }
 
     car =
-      candidates.find((candidate) => `${candidate.brand}${candidate.model}`.replace(/\s+/g, '') === normalizedQuery) ||
-      candidates.find((candidate) => `${candidate.brand} ${candidate.model}`.includes(fallbackQuery)) ||
+      candidates.find((candidate: any) => `${candidate.brand}${candidate.model}`.replace(/\s+/g, '') === normalizedQuery) ||
+      candidates.find((candidate: any) => `${candidate.brand} ${candidate.model}`.includes(fallbackQuery)) ||
       candidates[0] ||
       null;
   }
@@ -70,6 +77,9 @@ export async function runAddCandidate(journeyId: string, input: Record<string, u
     addedReason: AddedReason.AI_RECOMMENDED,
     userNotes: typeof input.userNotes === 'string' ? input.userNotes : undefined,
     priceAtAdd: typeof input.priceAtAdd === 'number' ? input.priceAtAdd : undefined,
+    matchTags: normalizeStringArray(input.matchTags),
+    recommendReason: typeof input.recommendReason === 'string' ? input.recommendReason : undefined,
+    relevantDimensions: normalizeStringArray(input.relevantDimensions),
   });
 
   return {

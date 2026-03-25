@@ -10,6 +10,7 @@ import journeyRoutes from './routes/journey';
 import moderationRoutes from './routes/moderation';
 import notificationRoutes from './routes/notifications';
 import { journeyPublishRoutes, publishedJourneyRoutes } from './routes/published-journeys';
+import timelineRoutes from './routes/timeline';
 import sessionRoutes from './routes/session';
 import snapshotRoutes from './routes/snapshot';
 
@@ -32,6 +33,7 @@ export function createApp(): Express {
   app.use('/', sessionRoutes);
   app.use('/journeys', journeyRoutes);
   app.use('/journeys', journeyPublishRoutes);
+  app.use('/journeys', timelineRoutes);
   app.use('/published-journeys', publishedJourneyRoutes);
   app.use('/snapshots', snapshotRoutes);
   app.use('/notifications', notificationRoutes);

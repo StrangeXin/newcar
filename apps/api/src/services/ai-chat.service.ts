@@ -5,6 +5,7 @@ import { carService } from './car.service';
 import { conversationService } from './conversation.service';
 import { journeyService } from './journey.service';
 import { journeyDeepAgentService } from './journey-deep-agent.service';
+import { buildTimelineEventContent, TIMELINE_EVENT_TYPES, timelineService } from './timeline.service';
 import { executeChatTool } from '../tools/chat-tools';
 import type { ChatSideEffect, ChatToolName } from '../tools/chat-tools';
 
@@ -12,7 +13,17 @@ type StreamEvent =
   | { type: 'token'; delta: string }
   | { type: 'tool_start'; name: ChatToolName; input: Record<string, unknown> }
   | { type: 'tool_done'; name: ChatToolName; result: unknown }
-  | { type: 'side_effect'; event: ChatSideEffect['event']; data: unknown }
+  | {
+      type: 'side_effect';
+      event: ChatSideEffect['event'];
+      data: unknown;
+      timelineEvent?: unknown;
+      patch?: {
+        candidates?: unknown[];
+        stage?: string;
+        requirements?: Record<string, unknown>;
+      };
+    }
   | { type: 'done'; conversationId: string; fullContent: string }
   | { type: 'error'; code: string; message: string };
 
@@ -64,6 +75,143 @@ export class AiChatService {
 
   async streamChat(data: ChatOptions): Promise<void> {
     await this.runChat(data);
+  }
+
+  private async createTimelineEventForSideEffect(journeyId: string, event: ChatSideEffect['event'], data: unknown) {
+    const payload = data && typeof data === 'object' && !Array.isArray(data) ? (data as Record<string, unknown>) : {};
+
+    if (event === 'candidate_added') {
+      const candidate = (payload.candidate as Record<string, unknown> | undefined) || payload;
+      const timelineEvent = await timelineService.createEvent({
+        journeyId,
+        type: TIMELINE_EVENT_TYPES.CANDIDATE_ADDED,
+        content: buildTimelineEventContent(TIMELINE_EVENT_TYPES.CANDIDATE_ADDED, candidate),
+        metadata: {
+          candidateId: String(candidate.id || payload.id || ''),
+          carId: String(candidate.carId || ''),
+          carName: candidate.car
+            ? `${String((candidate.car as Record<string, unknown>).brand || '')} ${String((candidate.car as Record<string, unknown>).model || '')}`.trim()
+            : undefined,
+          matchTags: candidate.matchTags,
+          recommendReason: candidate.recommendReason,
+          relevantDimensions: candidate.relevantDimensions,
+        },
+      });
+
+      return {
+        data: payload,
+        timelineEvent,
+      };
+    }
+
+    if (event === 'candidate_eliminated') {
+      const timelineEvent = await timelineService.createEvent({
+        journeyId,
+        type: TIMELINE_EVENT_TYPES.CANDIDATE_ELIMINATED,
+        content: buildTimelineEventContent(TIMELINE_EVENT_TYPES.CANDIDATE_ELIMINATED, payload),
+        metadata: {
+          candidateId: String(payload.candidateId || payload.id || ''),
+          eliminationReason: payload.eliminationReason,
+        },
+      });
+
+      return {
+        data: payload,
+        timelineEvent,
+      };
+    }
+
+    if (event === 'candidate_winner') {
+      const timelineEvent = await timelineService.createEvent({
+        journeyId,
+        type: TIMELINE_EVENT_TYPES.CANDIDATE_WINNER,
+        content: buildTimelineEventContent(TIMELINE_EVENT_TYPES.CANDIDATE_WINNER, payload),
+        metadata: {
+          candidateId: String(payload.candidateId || payload.id || ''),
+        },
+      });
+
+      return {
+        data: payload,
+        timelineEvent,
+      };
+    }
+
+    if (event === 'journey_updated') {
+      const timelineEvent = await timelineService.createEvent({
+        journeyId,
+        type: TIMELINE_EVENT_TYPES.REQUIREMENT_UPDATED,
+        content: buildTimelineEventContent(TIMELINE_EVENT_TYPES.REQUIREMENT_UPDATED, payload),
+        metadata: {
+          requirements: payload,
+        },
+      });
+
+      return {
+        data: payload,
+        timelineEvent,
+        patch: {
+          requirements: payload,
+        },
+      };
+    }
+
+    if (event === 'stage_changed') {
+      const stage = String(payload.stage || '');
+      const timelineEvent = await timelineService.createEvent({
+        journeyId,
+        type: TIMELINE_EVENT_TYPES.STAGE_CHANGED,
+        content: buildTimelineEventContent(TIMELINE_EVENT_TYPES.STAGE_CHANGED, { stage }),
+        metadata: {
+          stage,
+        },
+      });
+
+      return {
+        data: payload,
+        timelineEvent,
+        patch: {
+          stage,
+        },
+      };
+    }
+
+    if (event === 'publish_suggestion') {
+      const stage = String(payload.stage || '');
+      const timelineEvent = await timelineService.createEvent({
+        journeyId,
+        type: TIMELINE_EVENT_TYPES.PUBLISH_SUGGESTION,
+        content: buildTimelineEventContent(TIMELINE_EVENT_TYPES.PUBLISH_SUGGESTION, { stage }),
+        metadata: {
+          stage,
+        },
+      });
+
+      return {
+        data: payload,
+        timelineEvent,
+      };
+    }
+
+    if (event === 'journey_published') {
+      const timelineEvent = await timelineService.createEvent({
+        journeyId,
+        type: TIMELINE_EVENT_TYPES.JOURNEY_PUBLISHED,
+        content: buildTimelineEventContent(TIMELINE_EVENT_TYPES.JOURNEY_PUBLISHED, payload),
+        metadata: payload,
+      });
+
+      return {
+        data: payload,
+        timelineEvent,
+      };
+    }
+
+    return { data: payload };
+  }
+
+  private shouldSuggestPublish(stage?: string) {
+    return stage === JourneyStage.DECISION || stage === JourneyStage.PURCHASE;
   }
 
   private async runChat(data: ChatOptions): Promise<{
@@ -246,7 +394,40 @@ export class AiChatService {
             conversationId: conversation.id,
             sideEffect: event.event,
           });
-          data.onEvent?.(event);
+          void this
+            .createTimelineEventForSideEffect(data.journeyId, event.event, event.data)
+            .then((payload) => {
+              data.onEvent?.({
+                type: 'side_effect',
+                event: event.event,
+                data: payload.data,
+                timelineEvent: payload.timelineEvent,
+                patch: payload.patch,
+              });
+
+              if (event.event === 'stage_changed') {
+                const stage = String(payload.patch?.stage || (payload.data as Record<string, unknown> | undefined)?.stage || '');
+                if (this.shouldSuggestPublish(stage)) {
+                  void this.createTimelineEventForSideEffect(data.journeyId, 'publish_suggestion', { stage }).then((suggestionPayload) => {
+                    data.onEvent?.({
+                      type: 'side_effect',
+                      event: 'publish_suggestion',
+                      data: suggestionPayload.data,
+                      timelineEvent: suggestionPayload.timelineEvent,
+                      patch: suggestionPayload.patch,
+                    });
+                  });
+                }
+              }
+            })
+            .catch((error) => {
+              this.logChat(data.traceId, 'timeline_event_error', {
+                conversationId: conversation.id,
+                sideEffect: event.event,
+                error: error instanceof Error ? error.message : String(error),
+              });
+              data.onEvent?.(event);
+            });
           return;
         }
 
@@ -344,7 +525,7 @@ export class AiChatService {
     if (/理想\s*l6|理想l6|l6/.test(lowerMessage)) {
       const cars = await carService.searchCars({ q: 'L6', limit: 10 });
       const targetCar =
-        cars.find((car) => car.brand.includes('理想') && car.model.toLowerCase().includes('l6')) || cars[0];
+        cars.find((car: any) => car.brand.includes('理想') && car.model.toLowerCase().includes('l6')) || cars[0];
 
       if (targetCar) {
         targetCarName = `${targetCar.brand} ${targetCar.model}`;

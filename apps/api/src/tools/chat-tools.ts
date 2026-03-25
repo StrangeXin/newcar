@@ -6,7 +6,14 @@ import { journeyUpdateTool, runJourneyUpdate } from './journey-update.tool';
 export type ChatToolName = 'car_search' | 'car_detail' | 'journey_update' | 'add_candidate';
 
 export interface ChatSideEffect {
-  event: 'candidate_added' | 'journey_updated' | 'stage_changed';
+  event:
+    | 'candidate_added'
+    | 'candidate_eliminated'
+    | 'candidate_winner'
+    | 'journey_updated'
+    | 'stage_changed'
+    | 'publish_suggestion'
+    | 'journey_published';
   data: unknown;
 }
 

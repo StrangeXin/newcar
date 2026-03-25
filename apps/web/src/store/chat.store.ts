@@ -1,7 +1,7 @@
 'use client';
 
 import { create } from 'zustand';
-import { Candidate, CarInfo } from '@/types/api';
+import { Candidate, CarInfo, TimelineEvent, TimelineEventType } from '@/types/api';
 import { buildJourneyChatWsUrl, get, MOCK_MODE } from '@/lib/api';
 import { dispatchJourneySideEffect } from '@/lib/journey-workspace-events';
 import { mockChatMessages } from '@/lib/mock-data';
@@ -28,7 +28,16 @@ export type ToolChatMessage = BaseMessage & {
   status: 'running' | 'done';
 };
 
-export type SideEffectEvent = 'candidate_added' | 'journey_updated' | 'stage_changed';
+export type SideEffectEvent =
+  | 'candidate_added'
+  | 'candidate_eliminated'
+  | 'candidate_winner'
+  | 'journey_updated'
+  | 'stage_changed'
+  | 'ai_insight'
+  | 'publish_suggestion'
+  | 'journey_published'
+  | 'timeline_event';
 
 export type SideEffectChatMessage = BaseMessage & {
   kind: 'side_effect';
@@ -58,6 +67,26 @@ interface HistoryResponse {
   }>;
 }
 
+interface CandidateResponse {
+  candidates: Candidate[];
+}
+
+interface TimelineResponse {
+  events: TimelineEvent[];
+}
+
+interface SideEffectPayload {
+  type: 'side_effect';
+  event: SideEffectEvent;
+  data?: unknown;
+  timelineEvent?: TimelineEvent;
+  patch?: {
+    candidates?: Candidate[];
+    stage?: string;
+    requirements?: Record<string, unknown>;
+  };
+}
+
 interface ChatState {
   messages: ChatMessage[];
   conversationId?: string;
@@ -77,6 +106,48 @@ function makeId(prefix: string) {
 
 function parseToolInput(input: unknown) {
   return input && typeof input === 'object' ? (input as Record<string, unknown>) : {};
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
+}
+
+function isTimelineEvent(value: unknown): value is TimelineEvent {
+  return (
+    isRecord(value) &&
+    typeof value.id === 'string' &&
+    typeof value.journeyId === 'string' &&
+    typeof value.type === 'string' &&
+    typeof value.content === 'string' &&
+    typeof value.createdAt === 'string'
+  );
+}
+
+function mapTimelineEventTypeToSideEffect(type: TimelineEventType): SideEffectEvent {
+  switch (type) {
+    case 'CANDIDATE_ADDED':
+      return 'candidate_added';
+    case 'CANDIDATE_ELIMINATED':
+      return 'candidate_eliminated';
+    case 'CANDIDATE_WINNER':
+      return 'candidate_winner';
+    case 'STAGE_CHANGED':
+      return 'stage_changed';
+    case 'REQUIREMENT_UPDATED':
+      return 'journey_updated';
+    case 'AI_INSIGHT':
+      return 'ai_insight';
+    case 'PRICE_CHANGE':
+      return 'journey_updated';
+    case 'USER_ACTION':
+      return 'journey_updated';
+    case 'PUBLISH_SUGGESTION':
+      return 'publish_suggestion';
+    case 'JOURNEY_PUBLISHED':
+      return 'journey_published';
+    default:
+      return 'timeline_event';
+  }
 }
 
 interface RawCarResult {
@@ -134,6 +205,71 @@ function waitForOpen(socket: WebSocket) {
   });
 }
 
+let reconnectTimer: number | undefined;
+let manualDisconnectRequested = false;
+let reconnectSyncPending = false;
+let connectionToken = 0;
+
+async function refreshWorkspaceAfterReconnect(journeyId: string) {
+  try {
+    const [candidateResponse, timelineResponse] = await Promise.all([
+      get<CandidateResponse>(`/journeys/${journeyId}/candidates`),
+      get<TimelineResponse>(`/journeys/${journeyId}/timeline?limit=100`),
+    ]);
+
+    const replayEvents = Array.isArray(timelineResponse.events) ? [...timelineResponse.events].reverse() : [];
+    let hasCandidateAddedEvent = false;
+
+    for (const timelineEvent of replayEvents) {
+      if (timelineEvent.type === 'CANDIDATE_ADDED') {
+        hasCandidateAddedEvent = true;
+      }
+
+      dispatchJourneySideEffect({
+        event: 'timeline_event',
+        journeyId,
+        data: timelineEvent,
+      });
+
+      const mappedEvent = mapTimelineEventTypeToSideEffect(timelineEvent.type);
+      if (mappedEvent !== 'timeline_event') {
+        dispatchJourneySideEffect({
+          event: mappedEvent,
+          journeyId,
+          data: {
+            ...timelineEvent.metadata,
+            timelineEvent,
+          },
+        });
+      }
+    }
+
+    if ((candidateResponse.candidates || []).length > 0 && !hasCandidateAddedEvent) {
+      dispatchJourneySideEffect({
+        event: 'candidate_added',
+        journeyId,
+        data: {
+          reconnected: true,
+          candidates: candidateResponse.candidates,
+          candidatesCount: candidateResponse.candidates.length,
+        },
+      });
+    }
+
+    dispatchJourneySideEffect({
+      event: 'journey_updated',
+      journeyId,
+      data: {
+        reconnected: true,
+        candidatesCount: candidateResponse.candidates?.length ?? 0,
+        timelineCount: timelineResponse.events?.length ?? 0,
+      },
+    });
+  } catch {
+    // Best-effort compensation only.
+  }
+}
+
 export const useChatStore = create<ChatState>((set, getState) => ({
   messages: [],
   conversationId: undefined,
@@ -169,10 +305,20 @@ export const useChatStore = create<ChatState>((set, getState) => ({
       return;
     }
 
+    manualDisconnectRequested = false;
+
     const { socket, activeJourneyId } = getState();
     if (socket && activeJourneyId === journeyId && socket.readyState <= WebSocket.OPEN) {
       return;
     }
+
+    if (reconnectTimer !== undefined) {
+      window.clearTimeout(reconnectTimer);
+      reconnectTimer = undefined;
+    }
+
+    connectionToken += 1;
+    const socketToken = connectionToken;
 
     if (socket) {
       socket.close();
@@ -181,7 +327,16 @@ export const useChatStore = create<ChatState>((set, getState) => ({
     const nextSocket = new WebSocket(buildJourneyChatWsUrl(journeyId));
 
     nextSocket.addEventListener('open', () => {
+      if (reconnectTimer !== undefined) {
+        window.clearTimeout(reconnectTimer);
+        reconnectTimer = undefined;
+      }
       set({ isConnected: true, activeJourneyId: journeyId });
+
+      if (reconnectSyncPending && socketToken === connectionToken) {
+        reconnectSyncPending = false;
+        void refreshWorkspaceAfterReconnect(journeyId);
+      }
     });
 
     nextSocket.addEventListener('close', () => {
@@ -189,6 +344,29 @@ export const useChatStore = create<ChatState>((set, getState) => ({
         isConnected: false,
         socket: state.socket === nextSocket ? undefined : state.socket,
       }));
+
+      if (socketToken !== connectionToken) {
+        return;
+      }
+
+      if (manualDisconnectRequested) {
+        manualDisconnectRequested = false;
+        reconnectSyncPending = false;
+        return;
+      }
+
+      if (reconnectTimer !== undefined) {
+        window.clearTimeout(reconnectTimer);
+      }
+
+      reconnectSyncPending = true;
+      reconnectTimer = window.setTimeout(() => {
+        reconnectTimer = undefined;
+        const current = getState();
+        if (!current.isConnected && current.activeJourneyId === journeyId && socketToken === connectionToken) {
+          current.connect(journeyId);
+        }
+      }, 3000);
     });
 
     nextSocket.addEventListener('message', (event) => {
@@ -196,7 +374,7 @@ export const useChatStore = create<ChatState>((set, getState) => ({
         | { type: 'token'; delta: string }
         | { type: 'tool_start'; name: ToolName; input: Record<string, unknown> }
         | { type: 'tool_done'; name: ToolName; result: unknown }
-        | { type: 'side_effect'; event: SideEffectEvent; data: Record<string, unknown> }
+        | SideEffectPayload
         | { type: 'done'; conversationId: string; fullContent: string }
         | { type: 'error'; code: string; message: string };
 
@@ -284,11 +462,25 @@ export const useChatStore = create<ChatState>((set, getState) => ({
       }
 
       if (payload.type === 'side_effect') {
+        const sideEffectData = isRecord(payload.data) ? payload.data : {};
+        const timelineEvent =
+          isTimelineEvent(payload.timelineEvent) || isTimelineEvent(sideEffectData.timelineEvent)
+            ? (payload.timelineEvent as TimelineEvent | undefined) || (sideEffectData.timelineEvent as TimelineEvent)
+            : undefined;
+        const patch = isRecord(payload.patch) ? payload.patch : isRecord(sideEffectData.patch) ? sideEffectData.patch : undefined;
+        const mergedData: Record<string, unknown> = {
+          ...sideEffectData,
+          ...(patch ? { patch } : {}),
+          ...(timelineEvent ? { timelineEvent } : {}),
+        };
+        const workspaceEvent: Exclude<SideEffectEvent, 'timeline_event'> =
+          payload.event === 'timeline_event' ? 'journey_updated' : payload.event;
+
         const sideEffectMessage: SideEffectChatMessage = {
           id: makeId('effect'),
           kind: 'side_effect',
-          event: payload.event,
-          data: payload.data,
+          event: workspaceEvent,
+          data: mergedData,
           timestamp: new Date().toISOString(),
         };
 
@@ -298,10 +490,10 @@ export const useChatStore = create<ChatState>((set, getState) => ({
               ? {
                   ...message,
                   cars: message.cars.map((car) => {
-                    const d = payload.data as Record<string, unknown>;
-                    const carObj = d?.car as Record<string, unknown> | undefined;
-                    return car.id === d?.carId || car.id === carObj?.id
-                      ? { ...car, addedCandidate: d as unknown as Candidate }
+                    const carObj = isRecord(mergedData.car) ? mergedData.car : undefined;
+                    const candidateId = typeof mergedData.carId === 'string' ? mergedData.carId : undefined;
+                    return car.id === candidateId || car.id === carObj?.id
+                      ? { ...car, addedCandidate: mergedData as unknown as Candidate }
                       : car;
                   }
                   ),
@@ -309,11 +501,33 @@ export const useChatStore = create<ChatState>((set, getState) => ({
               : message
           ).concat(sideEffectMessage),
         }));
+
         dispatchJourneySideEffect({
-          event: payload.event,
+          event: workspaceEvent,
           journeyId,
-          data: payload.data,
+          data: mergedData,
         });
+
+        if (timelineEvent) {
+          dispatchJourneySideEffect({
+            event: 'timeline_event',
+            journeyId,
+            data: timelineEvent,
+          });
+        }
+
+        if (patch?.candidates && payload.event !== 'candidate_added') {
+          dispatchJourneySideEffect({
+            event: 'candidate_added',
+            journeyId,
+            data: {
+              reconnected: false,
+              patch,
+              sourceEvent: payload.event,
+            },
+          });
+        }
+
         return;
       }
 
@@ -354,6 +568,12 @@ export const useChatStore = create<ChatState>((set, getState) => ({
   },
 
   disconnect: () => {
+    manualDisconnectRequested = true;
+    reconnectSyncPending = false;
+    if (reconnectTimer !== undefined) {
+      window.clearTimeout(reconnectTimer);
+      reconnectTimer = undefined;
+    }
     const { socket } = getState();
     socket?.close();
     set({ socket: undefined, isConnected: false, activeJourneyId: undefined });

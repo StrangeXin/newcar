@@ -2,6 +2,7 @@ import { getToken } from './auth';
 import {
   mockJourney,
   mockCandidates,
+  mockTimelineEvents,
   mockSnapshot,
   mockNotifications,
   mockCommunityJourneys,
@@ -9,7 +10,7 @@ import {
 
 export const BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
 
-export const MOCK_MODE = true; // Set to false to use real API
+export const MOCK_MODE = process.env.NEXT_PUBLIC_MOCK_MODE === 'true';
 
 type HttpMethod = 'GET' | 'POST' | 'PATCH' | 'DELETE';
 
@@ -41,6 +42,7 @@ function getMockResponse<T>(path: string, method: HttpMethod = 'GET'): T | null 
 
   // GET routes
   if (path === '/journeys/active') return mockJourney as T;
+  if (path.match(/\/journeys\/[^/]+\/timeline/)) return { events: mockTimelineEvents } as T;
   if (path.match(/\/journeys\/[^/]+\/publish\/preview/)) {
     return {
       story: {

@@ -1,4 +1,12 @@
-import { Journey, JourneySnapshot, NotificationItem, Candidate, CommunityJourney, CarInfo } from '@/types/api';
+import {
+  Journey,
+  JourneySnapshot,
+  NotificationItem,
+  Candidate,
+  CommunityJourney,
+  CarInfo,
+  TimelineEvent,
+} from '@/types/api';
 import { ChatMessage } from '@/store/chat.store';
 
 // --- Active Journey ---
@@ -65,6 +73,10 @@ export const mockCandidates: Candidate[] = [
     priceAtAdd: 249800,
     userNotes: '空间大，增程无续航焦虑',
     eliminationReason: null,
+    matchTags: ['符合预算', '家用首选', '长续航'],
+    recommendReason: '增程方案兼顾长途和日常，和你说的周末自驾需求很配',
+    relevantDimensions: ['续航', '空间', '价格'],
+    candidateRankScore: 0.91,
     car: mockCars[0],
   },
   {
@@ -77,6 +89,10 @@ export const mockCandidates: Candidate[] = [
     priceAtAdd: 249800,
     userNotes: '华为智驾体验好',
     eliminationReason: null,
+    matchTags: ['智驾突出', '空间够用'],
+    recommendReason: '如果你更看重智能驾驶体验，这台车会更符合你的关注点',
+    relevantDimensions: ['智驾', '空间', '价格'],
+    candidateRankScore: 0.84,
     car: mockCars[1],
   },
   {
@@ -89,7 +105,62 @@ export const mockCandidates: Candidate[] = [
     priceAtAdd: 209900,
     userNotes: null,
     eliminationReason: null,
+    matchTags: ['价格更低', '纯电补能方便'],
+    recommendReason: '预算更紧时，这台车能把购车成本压得更低',
+    relevantDimensions: ['价格', '续航', '能耗'],
+    candidateRankScore: 0.76,
     car: mockCars[2],
+  },
+];
+
+export const mockTimelineEvents: TimelineEvent[] = [
+  {
+    id: 'te-1',
+    journeyId: 'mock-journey-1',
+    type: 'STAGE_CHANGED',
+    content: '旅程开始，进入认知期',
+    metadata: { stage: 'AWARENESS' },
+    createdAt: '2026-03-20T10:00:00Z',
+  },
+  {
+    id: 'te-2',
+    journeyId: 'mock-journey-1',
+    type: 'REQUIREMENT_UPDATED',
+    content: '需求已更新：预算25-35万，家用SUV',
+    metadata: { budgetMin: 25, budgetMax: 35, useCases: ['家用'] },
+    createdAt: '2026-03-20T10:30:00Z',
+  },
+  {
+    id: 'te-3',
+    journeyId: 'mock-journey-1',
+    type: 'CANDIDATE_ADDED',
+    content: 'AI 推荐了理想 L6',
+    metadata: { candidateId: 'cand-1', carName: '理想 L6', matchTags: ['符合预算', '家用首选'] },
+    createdAt: '2026-03-21T09:00:00Z',
+  },
+  {
+    id: 'te-4',
+    journeyId: 'mock-journey-1',
+    type: 'CANDIDATE_ADDED',
+    content: 'AI 推荐了问界 M7',
+    metadata: { candidateId: 'cand-2', carName: '问界 M7', matchTags: ['智驾突出'] },
+    createdAt: '2026-03-21T14:00:00Z',
+  },
+  {
+    id: 'te-5',
+    journeyId: 'mock-journey-1',
+    type: 'STAGE_CHANGED',
+    content: '旅程进入对比期',
+    metadata: { stage: 'COMPARISON' },
+    createdAt: '2026-03-22T10:00:00Z',
+  },
+  {
+    id: 'te-6',
+    journeyId: 'mock-journey-1',
+    type: 'AI_INSIGHT',
+    content: '你在续航话题上花了最多时间，看来这是你最关注的维度',
+    metadata: { dimension: '续航', confidence: 0.85 },
+    createdAt: '2026-03-23T15:00:00Z',
   },
 ];
 

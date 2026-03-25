@@ -107,7 +107,32 @@ export interface Candidate {
   priceAtAdd?: number | null;
   userNotes?: string | null;
   eliminationReason?: string | null;
+  matchTags?: string[];
+  recommendReason?: string | null;
+  relevantDimensions?: string[];
+  candidateRankScore?: number | null;
   car: CarInfo;
+}
+
+export type TimelineEventType =
+  | 'CANDIDATE_ADDED'
+  | 'CANDIDATE_ELIMINATED'
+  | 'CANDIDATE_WINNER'
+  | 'STAGE_CHANGED'
+  | 'REQUIREMENT_UPDATED'
+  | 'AI_INSIGHT'
+  | 'PRICE_CHANGE'
+  | 'USER_ACTION'
+  | 'PUBLISH_SUGGESTION'
+  | 'JOURNEY_PUBLISHED';
+
+export interface TimelineEvent {
+  id: string;
+  journeyId: string;
+  type: TimelineEventType;
+  content: string;
+  metadata: Record<string, unknown>;
+  createdAt: string;
 }
 
 export interface CommunityJourney {

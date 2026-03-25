@@ -23,7 +23,12 @@ export function useCandidates(journeyId?: string) {
 
     const handleSideEffect = (event: Event) => {
       const detail = (event as CustomEvent<JourneySideEffectEvent>).detail;
-      if (detail?.journeyId === journeyId && detail.event === 'candidate_added') {
+      if (
+        detail?.journeyId === journeyId &&
+        (detail.event === 'candidate_added' ||
+          detail.event === 'candidate_eliminated' ||
+          detail.event === 'candidate_winner')
+      ) {
         void swr.mutate();
       }
     };

@@ -15,16 +15,29 @@ interface CarLike {
   type: string;
 }
 
+interface CandidateLike {
+  id: string;
+  carId: string;
+  status: string;
+  aiMatchScore?: number | null;
+  userInterestScore?: number | null;
+  candidateRankScore?: number | null;
+  car: CarLike & { id?: string };
+}
+
 export class CandidateScoringService {
+  private rankScoreUpdatedAt = new Map<string, number>();
+  private readonly rankThrottleMs = 5 * 60 * 1000;
+
   async scoreCandidates(journeyId: string): Promise<void> {
-    const journey = await prisma.journey.findUnique({
+    const journey = (await prisma.journey.findUnique({
       where: { id: journeyId },
       include: {
         candidates: {
           include: { car: true },
         },
       },
-    });
+    })) as any;
 
     if (!journey) {
       throw new Error('Journey not found');
@@ -43,6 +56,7 @@ export class CandidateScoringService {
         data: { aiMatchScore: score },
       });
       scores.push(score);
+      await this.updateRankScore(journeyId, candidate.id, { force: true });
     }
 
     const topScore = scores.length > 0 ? Math.max(...scores, 0) : 0;
@@ -50,6 +64,43 @@ export class CandidateScoringService {
       where: { id: journeyId },
       data: { aiConfidenceScore: topScore },
     });
+  }
+
+  async updateRankScore(journeyId: string, candidateId?: string, options: { force?: boolean } = {}) {
+    const journey = (await prisma.journey.findUnique({
+      where: { id: journeyId },
+      include: {
+        candidates: {
+          include: { car: true },
+        },
+        behaviorEvents: {
+          orderBy: { timestamp: 'desc' },
+          take: 100,
+        },
+      },
+    })) as any;
+
+    if (!journey) {
+      throw new Error('Journey not found');
+    }
+
+    const candidates: CandidateLike[] = candidateId
+      ? (journey.candidates || []).filter((candidate: CandidateLike) => candidate.id === candidateId)
+      : (journey.candidates || []);
+
+    for (const candidate of candidates) {
+      const lastUpdatedAt = this.rankScoreUpdatedAt.get(candidate.id) || 0;
+      if (!options.force && Date.now() - lastUpdatedAt < this.rankThrottleMs) {
+        continue;
+      }
+
+      const score = this.calculateRankScore(candidate, journey.requirements as Requirements, journey.behaviorEvents || []);
+      await (prisma as any).carCandidate.update({
+        where: { id: candidate.id },
+        data: { candidateRankScore: score },
+      });
+      this.rankScoreUpdatedAt.set(candidate.id, Date.now());
+    }
   }
 
   private calculateMatchScore(car: CarLike, requirements: Requirements): number {
@@ -84,6 +135,46 @@ export class CandidateScoringService {
     }
 
     return Math.max(0, Math.min(1, score));
+  }
+
+  private calculateRankScore(
+    candidate: CandidateLike,
+    requirements: Requirements,
+    behaviorEvents: Array<{
+      targetId?: string | null;
+      metadata?: unknown;
+      aiWeight?: number | null;
+    }>
+  ): number {
+    if (candidate.status === 'WINNER') {
+      return 1;
+    }
+    if (candidate.status === 'ELIMINATED') {
+      return 0;
+    }
+
+    const aiScore = this.clamp01(Number(candidate.aiMatchScore ?? this.calculateMatchScore(candidate.car, requirements)));
+    const interestScore = this.clamp01(Number(candidate.userInterestScore ?? 0));
+
+    const behaviorScore = behaviorEvents
+      .filter((event) => {
+        if (event.targetId && event.targetId === candidate.id) return true;
+        if (event.metadata && typeof event.metadata === 'object' && !Array.isArray(event.metadata)) {
+          const metadata = event.metadata as Record<string, unknown>;
+          return metadata.candidateId === candidate.id || metadata.carId === candidate.carId;
+        }
+        return false;
+      })
+      .reduce((sum, event) => sum + Number(event.aiWeight ?? 0), 0);
+
+    const behaviorBoost = Math.min(0.25, behaviorScore / 20);
+    const raw = aiScore * 0.6 + interestScore * 0.2 + behaviorBoost + 0.1;
+    return this.clamp01(raw);
+  }
+
+  private clamp01(value: number) {
+    if (Number.isNaN(value)) return 0;
+    return Math.max(0, Math.min(1, value));
   }
 
   async recalculateAllScores(journeyId: string): Promise<void> {

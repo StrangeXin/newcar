@@ -69,6 +69,7 @@ model Journey {
   behaviorEvents   BehaviorEvent[]
   conversations    Conversation[]
   publishedJourney PublishedJourney?
+  timelineEvents   TimelineEvent[]
   notifications    NotificationFeed[]
 
   @@index([userId, status])
@@ -122,6 +123,10 @@ model CarCandidate {
   priceAtAdd        Int?
   eliminationReason String?
   userNotes         String?
+  matchTags         Json     @default("[]")
+  recommendReason   String?
+  relevantDimensions Json     @default("[]")
+  candidateRankScore Float?
   addedAt           DateTime @default(now())
 
   journey Journey @relation(fields: [journeyId], references: [id], onDelete: Cascade)
@@ -129,6 +134,20 @@ model CarCandidate {
 
   @@index([journeyId, status])
   @@map("car_candidates")
+}
+
+model TimelineEvent {
+  id        String   @id @default(cuid())
+  journeyId String
+  type      String
+  content   String
+  metadata  Json     @default("{}")
+  createdAt DateTime @default(now())
+
+  journey Journey @relation(fields: [journeyId], references: [id], onDelete: Cascade)
+
+  @@index([journeyId, createdAt])
+  @@map("timeline_events")
 }
 
 model JourneySnapshot {

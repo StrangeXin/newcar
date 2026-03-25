@@ -32,12 +32,25 @@ export function MessageBubble({ message }: MessageBubbleProps) {
   }
 
   if (message.kind === 'side_effect') {
+    const timelineEvent = message.data?.timelineEvent as { content?: unknown } | undefined;
+    const car = message.data?.car as Record<string, unknown> | undefined;
+    const carName = [car?.brand, car?.model].filter(Boolean).join(' ').trim() || (message.data?.carName as string) || '车型';
     const label =
-      message.event === 'candidate_added'
-        ? (() => { const car = message.data?.car as Record<string, unknown> | undefined; return `${car?.brand || ''} ${car?.model || ''} 已加入候选列表`; })()
-        : message.event === 'journey_updated'
-          ? '旅程需求已更新'
-          : `旅程已推进到 ${(message.data?.stage as string) || '下一阶段'}`;
+      typeof timelineEvent?.content === 'string'
+        ? timelineEvent.content
+        : message.event === 'candidate_added'
+          ? `${carName} 已加入候选列表`
+          : message.event === 'candidate_eliminated'
+            ? `${carName} 已被淘汰`
+            : message.event === 'candidate_winner'
+              ? `${carName} 已被选定`
+              : message.event === 'journey_updated'
+                ? '旅程需求已更新'
+                : message.event === 'publish_suggestion'
+                  ? '已经可以考虑发布旅程总结'
+                  : message.event === 'journey_published'
+                    ? '旅程已发布'
+                    : `旅程已推进到 ${(message.data?.stage as string) || '下一阶段'}`;
 
     return (
       <div className="flex items-start gap-[6px]">
