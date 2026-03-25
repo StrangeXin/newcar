@@ -280,3 +280,212 @@ interface JourneySideEffect {
 - WebSocket 监听补全
 - 关闭 Mock 模式
 - 移动端：底部抽屉适配
+
+---
+
+## Part 6：发布旅程体验
+
+### 6.1 发布时机——AI 推荐
+
+当旅程进入 `DECISION` 或 `PURCHASE` 阶段时，AI 在时间线中插入一条特殊事件：
+
+```
+┌─────────────────────────────────────────┐
+│ AI 建议                                  │
+│                                         │
+│ 你的购车旅程已经很完整了，对比了3款车，   │
+│ 做出了最终选择。要把你的经历分享给        │
+│ 正在纠结的人吗？                         │
+│                                         │
+│       [ 一键发布到社区 ]                  │
+└─────────────────────────────────────────┘
+```
+
+type 为 `PUBLISH_SUGGESTION`，由阶段推进时自动触发。
+
+### 6.2 一键发布流程
+
+点击"一键发布"后：
+
+1. **自动生成**：后端并行生成 story + report + template 三种格式
+2. **发布中状态**：按钮变为"生成中..."，时间线显示进度
+3. **发布完成**：时间线追加 `JOURNEY_PUBLISHED` 事件，附带"查看社区页面"链接
+4. **默认配置**：title = 旅程标题，visibility = PUBLIC，所有格式都生成
+
+不再需要三步向导。
+
+### 6.3 事后编辑
+
+在社区详情页（作者视角），每个内容区块右上角显示"编辑"按钮：
+- 标题/描述：直接 inline 编辑
+- 可见性：下拉切换 PUBLIC / UNLISTED
+- 内容不满意：点"重新生成"让 AI 重写某个格式
+- 可选择隐藏某个格式（比如不想展示模板）
+
+---
+
+## Part 7：社区浏览体验
+
+### 7.1 Feed 卡片改造
+
+改为信息更丰富的决策卡：
+
+```
+┌─────────────────────────────────────┐
+│ 从理想L6到深蓝S7，我的纯电SUV之路     │  ← 标题
+│ 匿名用户 · 已购车                    │
+│                                     │
+│ 理想L6  vs  深蓝S7  vs  小鹏G6       │  ← 候选车展示
+│                                     │
+│ "25万预算家用，纠结了续航和空间，      │  ← AI决策摘要
+│  最终因为增程无焦虑选了理想"           │     (publishSummary)
+│                                     │
+│ 25-35万 · 家用 · 纯电                │  ← 标签
+│ ❤ 12  Fork 3                        │  ← 互动数据
+└─────────────────────────────────────┘
+```
+
+**新增字段**：发布时 AI 额外生成 `publishSummary`（一句话决策摘要，50字以内），存入 `PublishedJourney`。
+
+### 7.2 社区详情页——故事（时间线叙事）
+
+复用旅程时间线视觉语言，面向读者简化为阶段叙事：
+
+```
+● 认知期
+  "想换一台纯电SUV，预算25-35万，主要家用通勤"
+
+● 考虑期
+  AI 推荐了 理想L6、深蓝S7、小鹏G6
+  "三款车都符合预算，但续航和空间差异明显"
+
+● 对比期
+  重点对比：续航 · 空间 · 能耗
+  "理想L6增程方案解决了续航焦虑，这是决定性因素"
+
+● 决策期
+  最终选择：理想L6
+  "试驾后确认空间满足全家出行，增程让长途无压力"
+```
+
+每个阶段是一个节点，内容由 AI 从旅程数据中提炼生成，不是原始事件堆砌。
+
+AI 生成时输出结构化 JSON：
+
+```typescript
+interface StoryTimeline {
+  stages: Array<{
+    stage: string        // AWARENESS | CONSIDERATION | COMPARISON | DECISION | PURCHASE
+    headline: string     // 阶段标题
+    narrative: string    // 叙述内容（50-150字）
+    candidates?: string[] // 该阶段涉及的车型
+    keyDimension?: string // 该阶段的关键关注点
+  }>
+}
+```
+
+### 7.3 社区详情页——报告（图文报告）
+
+分段呈现，每段有标题和视觉层次：
+
+**第一段：我的需求**
+- 预算范围、燃油偏好、使用场景、核心关注维度
+- 卡片式布局
+
+**第二段：候选车对比**
+- 对比维度来自旅程的 `relevantDimensions`，不是固定字段
+- 每个维度用横向进度条可视化
+- 每款车一行，维度值直观对比
+
+```
+         续航    空间    能耗   价格
+理想L6   ████▌  █████  ███▌  ████
+深蓝S7   ████   ███▌   ████  ████▌
+小鹏G6   ███▌   ███    ████▌ █████
+```
+
+**第三段：最终推荐**
+- 高亮卡片展示推荐车型
+- 推荐理由（一段话）
+
+AI 生成时输出结构化 JSON：
+
+```typescript
+interface ReportData {
+  userProfile: {
+    budget: string
+    fuelPreference: string
+    useCases: string[]
+    coreDimensions: string[]
+  }
+  comparison: Array<{
+    carName: string
+    scores: Record<string, number>  // dimension → 0-100
+    highlight: string               // 一句话亮点
+  }>
+  recommendation: {
+    carName: string
+    reasoning: string
+  }
+}
+```
+
+### 7.4 社区详情页——模板（从此出发）
+
+展示为可操作的决策框架，不再是 JSON 树：
+
+- **对比维度**：标签展示，附权重百分比
+- **买车前要想清楚的问题**：编号列表
+- **作者的候选车**：车名标签展示
+- **底部 CTA**：大按钮"从此出发，开始我的旅程"
+
+### 7.5 分页加载
+
+Feed 列表改为 infinite scroll：
+- 每次加载 20 条
+- 滚动到底部自动加载下一页
+- 筛选条件变化时重置列表
+
+---
+
+## 改动范围总结（更新）
+
+### 数据库变更
+
+- `CarCandidate` 新增 4 字段：matchTags, recommendReason, relevantDimensions, candidateRankScore
+- 新增 `TimelineEvent` 模型
+- `PublishedJourney` 新增 1 字段：publishSummary (String?, AI 生成的一句话决策摘要)
+- `TimelineEvent.type` 新增枚举值：PUBLISH_SUGGESTION, JOURNEY_PUBLISHED
+- `PublishedJourney.storyContent` 从纯文本改为结构化 JSON（StoryTimeline）
+- `PublishedJourney.reportData` 结构规范化为 ReportData 接口
+
+### 后端变更
+
+- `add_candidate` tool：输出标签/理由/维度
+- `journey_update` tool：生成时间线事件
+- 所有 tool：统一 side effect 推送格式
+- 行为事件消费：计算 candidateRankScore
+- 新增时间线 CRUD API
+- WebSocket 协议统一
+- 阶段推进至 DECISION/PURCHASE 时自动生成 PUBLISH_SUGGESTION 时间线事件
+- 发布服务改造：一键发布（并行生成三种格式 + publishSummary）
+- story 生成改为输出 StoryTimeline 结构化 JSON
+- report 生成改为输出 ReportData 结构化 JSON
+- 社区列表 API 返回候选车名称和 publishSummary
+
+### 前端变更
+
+- Kanban → 时间线 + 候选车面板布局
+- 候选车卡片：个性化维度 + 标签 + 理由
+- 阶段指示器 + 阶段驱动 UI 切换
+- WebSocket 监听补全
+- 关闭 Mock 模式
+- 移动端：底部抽屉适配
+- 新增 PUBLISH_SUGGESTION 时间线事件组件（含一键发布按钮）
+- 删除 PublishWizard 三步向导，改为一键发布 + 事后编辑
+- 社区详情页作者视角：inline 编辑、重新生成、格式显隐
+- Feed 卡片改造：候选车展示 + publishSummary 决策摘要
+- 故事展示：StoryTimelineView 组件（阶段节点叙事）
+- 报告展示：ReportView 组件（需求卡片 + 对比进度条 + 推荐卡片）
+- 模板展示：TemplateView 组件（决策框架结构化展示）
+- Feed 列表：infinite scroll 分页
