@@ -12,7 +12,7 @@ Date: 2026-03-25
 
 **现状:** Hero 区域用 `pt-20` 顶部对齐，未垂直居中。
 
-**方案:** 给 Hero 区域容器添加 `min-h-screen flex items-center`，使首屏 Hero 在视口内垂直居中。底部 feature cards 保持正常文档流。
+**方案:** 在 Hero `<section>`（约 lines 25–112）外包裹一个新的 `<div className="min-h-[calc(100vh-5rem)] flex items-center">`，使 Hero 在视口内垂直居中。Feature cards `<section>` 保持在 `<main>` 中作为兄弟元素，不受影响。注意：包裹的是 Hero section，不是整个 `<main>`。
 
 **改动文件:** `apps/web/src/app/page.tsx`
 
@@ -46,10 +46,10 @@ Date: 2026-03-25
 - hover 时暂停自动播放
 - 切换时使用淡入淡出过渡动画
 
-数据定义在 `mock-data.ts` 中，纯前端实现。
+轮播阶段数据作为组件内局部常量定义在 `JourneyCarousel.tsx` 中（非 API 数据，不放入 `mock-data.ts`）。纯前端实现。
 
 **新建文件:** `apps/web/src/components/home/JourneyCarousel.tsx`
-**改动文件:** `apps/web/src/app/page.tsx`, `apps/web/src/lib/mock-data.ts`
+**改动文件:** `apps/web/src/app/page.tsx`
 
 ---
 
@@ -81,9 +81,7 @@ Date: 2026-03-25
 - 包含：主题切换（半圆色块）+ 语言切换（中/EN 文字切换按钮）
 - 样式：`fixed top-4 right-4 z-50`，小巧的圆角胶囊，半透明背景
 - 挂载位置：根 `layout.tsx`，所有页面自动继承
-- 显示逻辑：
-  - 首页/社区页：导航栏已有主题切换，浮动栏仅在滚动超过导航栏时显示（或始终显示语言切换部分）
-  - 登录页/内页：始终显示完整浮动栏
+- 显示逻辑：所有页面始终显示完整浮动栏。移除首页和社区页导航栏中的 ThemeToggle，统一由 FloatingToolbar 提供主题和语言切换入口，避免重复
 
 **新建文件:** `apps/web/src/components/ui/FloatingToolbar.tsx`
 **改动文件:** `apps/web/src/app/layout.tsx`
@@ -94,9 +92,9 @@ Date: 2026-03-25
 
 **现状:** `MOCK_MODE = true`，但只 mock 了 GET 请求。POST 请求（发送验证码、登录验证）返回 `undefined`，导致登录流程失败。
 
-**方案:** 在 `api.ts` 的 `getMockResponse` 中补充 POST 路由：
-- `POST /auth/send-code` → `{ success: true, message: "验证码已发送" }`
-- `POST /auth/verify` → `{ token: "mock-jwt-token", user: { id: "1", name: "Mock User", phone: "138****0000" } }`
+**方案:** 在 `api.ts` 的 `getMockResponse` 中补充 POST 路由（路径需与 `OtpForm.tsx` 实际调用一致）：
+- `POST /auth/phone/send-otp` → `{ message: "验证码已发送", otp: "123456" }`（otp 字段用于开发时自动填充）
+- `POST /auth/phone/login` → `{ accessToken: "mock-access-token", refreshToken: "mock-refresh-token" }`
 
 同时修复 `request()` 函数中 POST/PATCH/DELETE 在 mock 模式下的处理逻辑，使其也经过 `getMockResponse`。
 
@@ -108,14 +106,13 @@ Date: 2026-03-25
 
 **现状:** Journey 内页组件（JourneyShell, ChatPanel, StageProgress）已使用 CSS 变量，基本适配。但 auth 相关组件可能有硬编码颜色。
 
-**方案:** 逐一检查以下组件，将硬编码 Tailwind 颜色替换为 CSS 变量：
-- `ChatInput.tsx`
-- `MessageBubble.tsx`
-- `StageProgress.tsx`
-- `JourneyShell.tsx`
-- `ChatPanel.tsx`
+**方案:** 经 review 确认，实际需要修复的组件：
+- `ChatInput.tsx` — textarea 的 `bg-white` → `bg-[var(--surface)]`
+- `MessageBubble.tsx` 中 `CarResultCards` 的品牌渐变色（`#dbeafe`, `#93c5fd` 等）属于品牌标识色，**不做替换**，保持原样
 
-**改动文件:** 上述组件中存在硬编码颜色的文件
+其余组件（`StageProgress.tsx`, `JourneyShell.tsx`, `ChatPanel.tsx`）已全面使用 CSS 变量，无需修改。
+
+**改动文件:** `apps/web/src/components/chat/ChatInput.tsx`
 
 ---
 
@@ -135,7 +132,7 @@ Date: 2026-03-25
    ```
 3. **`useT` hook** — 返回 `t(key)` 函数，从当前 locale 对应的字典取值
 4. **翻译范围:** 本次覆盖首页、登录页、社区页的用户可见文案。Journey 内页文案后续补充。
-5. **anti-FOUC:** 在 `layout.tsx` 的 head script 中同步读取 localStorage locale，设置 `data-locale` 属性
+5. **anti-FOUC:** 在 `layout.tsx` 现有的 head inline script 中合并读取 localStorage locale，设置 `document.documentElement.setAttribute('data-locale', locale)`（与 `data-theme` 同一个 script 标签，同一个 `<html>` 元素）
 
 **新建文件:** `apps/web/src/hooks/useLocale.ts`, `apps/web/src/lib/i18n.ts`, `apps/web/src/hooks/useT.ts`
 **改动文件:** `apps/web/src/app/layout.tsx`, 以及所有需要翻译的页面组件
