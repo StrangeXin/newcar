@@ -127,18 +127,18 @@ export function ComparisonMatrix({ candidates }: ComparisonMatrixProps) {
   }, [active, bestPerRow]);
 
   return (
-    <section className="rounded-[14px] border border-[var(--border)] bg-[var(--surface-subtle)] p-4 shadow-card">
+    <section className="rounded-[var(--radius-xl)] border border-[var(--border)] bg-[var(--surface-subtle)] p-4 shadow-card">
       <div className="flex items-center justify-between gap-3">
-        <h3 className="text-[13px] font-bold text-[var(--text)]">对比模式</h3>
-        <p className="text-[10px] text-[var(--text-muted)]">仅展示当前候选里最相关的维度</p>
+        <h3 className="text-[length:var(--text-sm)] font-bold text-[var(--text)]">对比模式</h3>
+        <p className="text-[length:var(--text-xs)] text-[var(--text-muted)]">仅展示当前候选里最相关的维度</p>
       </div>
       <div className="mt-4 overflow-x-auto">
         <table className="min-w-full border-collapse text-sm">
           <thead>
             <tr>
-              <th className="border-b border-[var(--border)] px-3 py-2 text-left text-[10px] uppercase tracking-[0.05em] text-[var(--text-muted)]">维度</th>
+              <th className="border-b border-[var(--border)] px-3 py-2 text-left text-[length:var(--text-xs)] uppercase tracking-[0.05em] text-[var(--text-muted)]">维度</th>
               {active.map((item) => (
-                <th key={item.id} className="border-b border-[var(--border)] px-3 py-2 text-left text-[11px] font-semibold text-[var(--text)]">
+                <th key={item.id} className="border-b border-[var(--border)] px-3 py-2 text-left text-[length:var(--text-xs)] font-semibold text-[var(--text)]">
                   {item.car.brand} {item.car.model}
                 </th>
               ))}
@@ -147,18 +147,18 @@ export function ComparisonMatrix({ candidates }: ComparisonMatrixProps) {
           <tbody>
             {rows.map((row) => (
               <tr key={row.label}>
-                <td className="border-b border-[var(--border)] px-3 py-2 text-[11px] font-semibold text-[var(--text-soft)]">{row.label}</td>
+                <td className="border-b border-[var(--border)] px-3 py-2 text-[length:var(--text-xs)] font-semibold text-[var(--text-soft)]">{row.label}</td>
                 {active.map((item) => {
                   const isBest = bestPerRow[row.label] === item.id;
                   return (
                     <td
                       key={`${row.label}-${item.id}`}
-                      className={`border-b border-[var(--border)] px-3 py-2 text-[11px] ${isBest ? 'font-bold text-[var(--accent-text)]' : 'text-[var(--text)]'}`}
+                      className={`border-b border-[var(--border)] px-3 py-2 text-[length:var(--text-xs)] ${isBest ? 'font-bold text-[var(--accent-text)]' : 'text-[var(--text)]'}`}
                     >
                       <span className="flex items-center gap-1">
                         {row.render(item)}
                         {isBest ? (
-                          <span className="inline-block rounded-[4px] bg-[var(--accent-muted)] px-1.5 py-0.5 text-[9px] font-semibold text-[var(--accent-text)]">
+                          <span className="inline-block rounded-[var(--radius-sm)] bg-[var(--accent-muted)] px-1.5 py-0.5 text-[length:var(--text-xs)] font-semibold text-[var(--accent-text)]">
                             最优
                           </span>
                         ) : null}
@@ -173,9 +173,9 @@ export function ComparisonMatrix({ candidates }: ComparisonMatrixProps) {
       </div>
 
       {aiSummary ? (
-        <div className="mt-4 rounded-[12px] border border-[var(--accent-border)] bg-[var(--accent-muted)] px-4 py-3">
-          <h4 className="text-[12px] font-bold text-[var(--accent-text)]">AI 对比分析</h4>
-          <p className="mt-1 text-[11px] leading-[1.6] text-[var(--text-soft)]">{aiSummary}</p>
+        <div className="mt-4 rounded-[var(--radius-xl)] border border-[var(--accent-border)] bg-[var(--accent-muted)] px-4 py-3">
+          <h4 className="text-[length:var(--text-sm)] font-bold text-[var(--accent-text)]">AI 对比分析</h4>
+          <p className="mt-1 text-[length:var(--text-xs)] leading-[1.6] text-[var(--text-soft)]">{aiSummary}</p>
         </div>
       ) : null}
     </section>

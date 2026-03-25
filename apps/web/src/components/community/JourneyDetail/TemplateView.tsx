@@ -20,11 +20,11 @@ export function TemplateView({ data, publishedJourneyId }: TemplateViewProps) {
     <div className="space-y-3">
       {hasStructuredTemplate ? (
         <div className="space-y-4">
-          <section className="rounded-[16px] border border-[var(--border)] bg-[var(--surface-subtle)] p-4">
+          <section className="rounded-[var(--radius-2xl)] border border-[var(--border)] bg-[var(--surface-subtle)] p-4">
             <h3 className="text-sm font-bold text-[var(--text)]">对比维度</h3>
             <div className="mt-3 flex flex-wrap gap-2">
               {template.dimensions.map((dimension) => (
-                <span key={dimension} className="rounded-full border border-[var(--border)] bg-[var(--surface)] px-3 py-1 text-[11px] text-[var(--text-soft)]">
+                <span key={dimension} className="rounded-full border border-[var(--border)] bg-[var(--surface)] px-3 py-1 text-[length:var(--text-xs)] text-[var(--text-soft)]">
                   {dimension}
                   {typeof template.weights?.[dimension] === 'number' ? ` · ${Math.round(template.weights[dimension] * 100)}%` : ''}
                 </span>
@@ -32,7 +32,7 @@ export function TemplateView({ data, publishedJourneyId }: TemplateViewProps) {
             </div>
           </section>
 
-          <section className="rounded-[16px] border border-[var(--border)] bg-[var(--surface)] p-4">
+          <section className="rounded-[var(--radius-2xl)] border border-[var(--border)] bg-[var(--surface)] p-4">
             <h3 className="text-sm font-bold text-[var(--text)]">买车前要想清楚的问题</h3>
             <ol className="mt-3 space-y-2 text-sm text-[var(--text-soft)]">
               {template.keyQuestions.map((question, index) => (
@@ -44,11 +44,11 @@ export function TemplateView({ data, publishedJourneyId }: TemplateViewProps) {
           </section>
 
           {template.candidateNames?.length ? (
-            <section className="rounded-[16px] border border-[var(--border)] bg-[var(--surface)] p-4">
+            <section className="rounded-[var(--radius-2xl)] border border-[var(--border)] bg-[var(--surface)] p-4">
               <h3 className="text-sm font-bold text-[var(--text)]">作者的候选车</h3>
               <div className="mt-3 flex flex-wrap gap-2">
                 {template.candidateNames.map((name) => (
-                  <span key={name} className="rounded-full border border-[var(--border)] bg-[var(--surface-subtle)] px-3 py-1 text-[11px] text-[var(--text-soft)]">
+                  <span key={name} className="rounded-full border border-[var(--border)] bg-[var(--surface-subtle)] px-3 py-1 text-[length:var(--text-xs)] text-[var(--text-soft)]">
                     {name}
                   </span>
                 ))}

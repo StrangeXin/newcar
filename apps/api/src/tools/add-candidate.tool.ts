@@ -61,8 +61,8 @@ export async function runAddCandidate(journeyId: string, input: Record<string, u
     }
 
     car =
-      candidates.find((candidate: any) => `${candidate.brand}${candidate.model}`.replace(/\s+/g, '') === normalizedQuery) ||
-      candidates.find((candidate: any) => `${candidate.brand} ${candidate.model}`.includes(fallbackQuery)) ||
+      candidates.find((c) => `${c.brand}${c.model}`.replace(/\s+/g, '') === normalizedQuery) ||
+      candidates.find((c) => `${c.brand} ${c.model}`.includes(fallbackQuery)) ||
       candidates[0] ||
       null;
   }

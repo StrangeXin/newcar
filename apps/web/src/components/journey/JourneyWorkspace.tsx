@@ -47,14 +47,14 @@ export function JourneyWorkspace({ journeyId, stage }: JourneyWorkspaceProps) {
         <button
           type="button"
           onClick={openSheet}
-          className="absolute bottom-0 left-0 right-0 flex items-center justify-center gap-2 rounded-t-[14px] border border-b-0 border-[var(--border)] bg-[var(--surface)] px-4 py-2.5 shadow-workspace"
+          className="absolute bottom-0 left-0 right-0 flex items-center justify-center gap-2 rounded-t-[var(--radius-xl)] border border-b-0 border-[var(--border)] bg-[var(--surface)] px-4 py-2.5 shadow-workspace"
         >
-          <ChevronUp className="h-4 w-4 text-[var(--text-muted)]" />
-          <span className="text-[12px] font-semibold text-[var(--text)]">
-            <CarFront className="mr-1 inline-block h-3.5 w-3.5 text-[var(--accent)]" aria-hidden="true" />
+          <ChevronUp className="h-4 w-4 text-[var(--text-muted)]" strokeWidth={1.85} aria-hidden="true" />
+          <span className="text-[length:var(--text-sm)] font-semibold text-[var(--text)]">
+            <CarFront className="mr-1 inline-block h-3.5 w-3.5 text-[var(--accent)]" strokeWidth={1.85} aria-hidden="true" />
             候选车
           </span>
-          <span className="rounded-full bg-[var(--accent)] px-2 py-0.5 text-[10px] font-bold text-white">
+          <span className="rounded-full bg-[var(--accent)] px-2 py-0.5 text-[length:var(--text-xs)] font-bold text-white">
             {sortedCandidates.length}
           </span>
         </button>
@@ -70,21 +70,21 @@ export function JourneyWorkspace({ journeyId, stage }: JourneyWorkspaceProps) {
 
         {/* Bottom sheet */}
         <div
-          className={`fixed inset-x-0 bottom-0 z-50 flex max-h-[75vh] flex-col rounded-t-[18px] border-t border-[var(--border)] bg-[var(--surface)] shadow-workspace transition-transform duration-300 ease-in-out ${
+          className={`fixed inset-x-0 bottom-0 z-50 flex max-h-[75vh] flex-col rounded-t-[var(--radius-2xl)] border-t border-[var(--border)] bg-[var(--surface)] shadow-workspace transition-transform duration-300 ease-in-out ${
             sheetOpen ? 'translate-y-0' : 'translate-y-full'
           }`}
         >
           {/* Sheet header */}
           <div className="flex items-center justify-between border-b border-[var(--border)] px-4 py-3">
             <div className="flex items-center gap-2">
-              <CarFront className="h-4 w-4 text-[var(--accent)]" aria-hidden="true" />
-              <span className="text-[13px] font-bold text-[var(--text)]">候选车</span>
-              <span className="rounded-full bg-[var(--accent-muted)] px-2 py-0.5 text-[10px] font-semibold text-[var(--accent-text)]">
+              <CarFront className="h-4 w-4 text-[var(--accent)]" strokeWidth={1.85} aria-hidden="true" />
+              <span className="text-[length:var(--text-sm)] font-bold text-[var(--text)]">候选车</span>
+              <span className="rounded-full bg-[var(--accent-muted)] px-2 py-0.5 text-[length:var(--text-xs)] font-semibold text-[var(--accent-text)]">
                 {sortedCandidates.length}
               </span>
             </div>
             <button type="button" onClick={closeSheet} className="rounded-full p-1 text-[var(--text-muted)] hover:bg-[var(--surface-subtle)]">
-              <X className="h-4 w-4" />
+              <X className="h-4 w-4" strokeWidth={1.85} aria-hidden="true" />
               <span className="sr-only">关闭</span>
             </button>
           </div>

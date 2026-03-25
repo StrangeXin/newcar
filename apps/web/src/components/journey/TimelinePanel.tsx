@@ -120,14 +120,14 @@ function TimelineEventCard({ event }: { event: TimelineEvent }) {
       <div className="-mx-4 flex flex-col items-center gap-1 bg-[var(--warning-muted)] px-4 py-3">
         <div className="flex w-full items-center gap-3">
           <span className="h-px flex-1 bg-[var(--warning-border)]" />
-          <span className="inline-flex items-center gap-2 whitespace-nowrap text-[12px] font-bold text-[var(--warning-text)]">
-            <Icon className="h-4 w-4" aria-hidden="true" />
+          <span className="inline-flex items-center gap-2 whitespace-nowrap text-[length:var(--text-sm)] font-bold text-[var(--warning-text)]">
+            <Icon className="h-4 w-4" strokeWidth={1.85} aria-hidden="true" />
             {event.content}
           </span>
           <span className="h-px flex-1 bg-[var(--warning-border)]" />
         </div>
         {summary ? (
-          <p className="text-[11px] leading-[1.5] text-[var(--warning-text)] opacity-80">
+          <p className="text-[length:var(--text-xs)] leading-[1.5] text-[var(--warning-text)] opacity-80">
             {summary}
           </p>
         ) : null}
@@ -137,18 +137,18 @@ function TimelineEventCard({ event }: { event: TimelineEvent }) {
 
   if (event.type === 'PUBLISH_SUGGESTION') {
     return (
-      <article className={`rounded-[16px] border px-4 py-4 ${meta.tone}`}>
-        <p className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.08em]">
-          <Icon className="h-4 w-4" aria-hidden="true" />
+      <article className={`rounded-[var(--radius-2xl)] border px-4 py-4 ${meta.tone}`}>
+        <p className="flex items-center gap-2 text-[length:var(--text-xs)] font-bold uppercase tracking-[0.08em]">
+          <Icon className="h-4 w-4" strokeWidth={1.85} aria-hidden="true" />
           {meta.title}
         </p>
-        <p className="mt-2 text-[13px] font-semibold leading-6">{event.content}</p>
-        <p className="mt-2 text-[11px] leading-5 opacity-90">
+        <p className="mt-2 text-[length:var(--text-sm)] font-semibold leading-6">{event.content}</p>
+        <p className="mt-2 text-[length:var(--text-xs)] leading-5 opacity-90">
           你的旅程已经进入可以沉淀经验的阶段，现在可以一键发布到社区，帮助正在纠结的人更快做决定。
         </p>
         <Link
           href="/journey/publish"
-          className="mt-4 inline-flex items-center rounded-full bg-[var(--accent)] px-4 py-2 text-[11px] font-semibold text-white hover:opacity-90"
+          className="mt-4 inline-flex items-center rounded-full bg-[var(--accent)] px-4 py-2 text-[length:var(--text-xs)] font-semibold text-white hover:opacity-90"
         >
           一键发布到社区
         </Link>
@@ -157,41 +157,50 @@ function TimelineEventCard({ event }: { event: TimelineEvent }) {
   }
 
   return (
-    <article className={`rounded-[14px] border px-4 py-4 ${meta.tone}`}>
+    <article className={`rounded-[var(--radius-xl)] border px-4 py-4 ${meta.tone}`}>
       <div className="flex items-start justify-between gap-3">
         <div>
-          <p className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.08em]">
-            <Icon className="h-4 w-4" aria-hidden="true" />
+          <p className="flex items-center gap-2 text-[length:var(--text-xs)] font-bold uppercase tracking-[0.08em]">
+            <Icon className="h-4 w-4" strokeWidth={1.85} aria-hidden="true" />
             {meta.title}
           </p>
-          <p className="mt-1 text-[13px] font-semibold">{event.content}</p>
+          <p className="mt-1 text-[length:var(--text-sm)] font-semibold">{event.content}</p>
         </div>
-        <span className="text-[10px] text-[var(--text-muted)]">{new Date(event.createdAt).toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })}</span>
+        <span className="text-[length:var(--text-xs)] text-[var(--text-muted)]">{new Date(event.createdAt).toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })}</span>
       </div>
       {tags.length > 0 ? (
         <div className="mt-3 flex flex-wrap gap-2">
           {tags.map((tag) => (
-            <span key={tag} className="rounded-full border border-current/15 px-2.5 py-1 text-[10px] font-medium">
+            <span key={tag} className="rounded-full border border-current/15 px-2.5 py-1 text-[length:var(--text-xs)] font-medium">
               {tag}
             </span>
           ))}
         </div>
       ) : null}
-      {reason ? <blockquote className="mt-3 border-l-2 border-current/20 pl-3 text-[12px] leading-6 opacity-90">“{reason}”</blockquote> : null}
-      {eliminationReason ? <p className="mt-3 text-[11px] opacity-80">原因：{eliminationReason}</p> : null}
+      {reason ? (
+        <blockquote className="mt-3 border-l-2 border-current/20 pl-3 text-[length:var(--text-sm)] leading-6 opacity-90">
+          &ldquo;{reason}&rdquo;
+        </blockquote>
+      ) : null}
+      {eliminationReason ? (
+        <p className="mt-3 text-[length:var(--text-xs)] opacity-80">
+          {'原因：'}
+          {eliminationReason}
+        </p>
+      ) : null}
     </article>
   );
 }
 
 function DailySnapshotCard({ snapshot }: { snapshot: JourneySnapshot }) {
   return (
-    <article className="rounded-[18px] border border-[var(--accent-border)] bg-[linear-gradient(180deg,var(--surface),var(--accent-muted))] px-5 py-5 text-[var(--text)] shadow-workspace">
-      <p className="text-[10px] font-bold uppercase tracking-[0.08em] text-[var(--accent-text)]">每日总结</p>
-      <p className="mt-2 text-[14px] font-semibold leading-7">{snapshot.narrativeSummary || '今天的旅程仍在推进中。'}</p>
+    <article className="rounded-[var(--radius-2xl)] border border-[var(--accent-border)] bg-[linear-gradient(180deg,var(--surface),var(--accent-muted))] px-5 py-5 text-[var(--text)] shadow-workspace">
+      <p className="text-[length:var(--text-xs)] font-bold uppercase tracking-[0.08em] text-[var(--accent-text)]">每日总结</p>
+      <p className="mt-2 text-[length:var(--text-base)] font-semibold leading-7">{snapshot.narrativeSummary || '今天的旅程仍在推进中。'}</p>
       {Array.isArray(snapshot.keyInsights) && snapshot.keyInsights.length > 0 ? (
-        <ul className="mt-4 space-y-2 text-[12px] text-[var(--text-soft)]">
+        <ul className="mt-4 space-y-2 text-[length:var(--text-sm)] text-[var(--text-soft)]">
           {snapshot.keyInsights.slice(0, 3).map((item) => (
-            <li key={item.insight} className="rounded-[10px] bg-white/45 px-3 py-2">
+            <li key={item.insight} className="rounded-[var(--radius-lg)] bg-[var(--surface)]/45 px-3 py-2">
               <p className="font-semibold text-[var(--text)]">{item.insight}</p>
               <p className="mt-1 leading-5">{item.evidence}</p>
             </li>
@@ -201,7 +210,7 @@ function DailySnapshotCard({ snapshot }: { snapshot: JourneySnapshot }) {
       {Array.isArray(snapshot.nextSuggestedActions) && snapshot.nextSuggestedActions.length > 0 ? (
         <div className="mt-4 flex flex-wrap gap-2">
           {snapshot.nextSuggestedActions.slice(0, 3).map((item) => (
-            <span key={item} className="rounded-full border border-[var(--accent-border)] bg-white/60 px-3 py-1 text-[10px] font-medium text-[var(--accent-text)]">
+            <span key={item} className="rounded-full border border-[var(--accent-border)] bg-[color:var(--surface)] px-3 py-1 text-[length:var(--text-xs)] font-medium text-[var(--accent-text)]">
               {item}
             </span>
           ))}
@@ -225,18 +234,18 @@ export function TimelinePanel({ events, snapshot, isLoading }: TimelinePanelProp
     <section className="flex h-full min-h-0 flex-col rounded-ws-lg border border-[var(--border)] bg-[var(--surface)] p-ws14 shadow-workspace">
       <div className="flex min-h-[28px] items-center justify-between gap-[10px]">
         <div>
-          <p className="text-[10px] font-bold uppercase tracking-[0.1em] text-[var(--accent-text)]">Timeline</p>
-          <h3 className="text-[15px] font-extrabold text-[var(--text)]">旅程主轴</h3>
+          <p className="text-[length:var(--text-xs)] font-bold uppercase tracking-[0.1em] text-[var(--accent-text)]">Timeline</p>
+          <h3 className="text-[length:var(--text-md)] font-extrabold text-[var(--text)]">旅程主轴</h3>
         </div>
-        <span className="rounded-full border border-[var(--border)] bg-[var(--surface-subtle)] px-[10px] py-1 text-[10px] font-semibold text-[var(--text-muted)]">
+        <span className="rounded-full border border-[var(--border)] bg-[var(--surface-subtle)] px-[10px] py-1 text-[length:var(--text-xs)] font-semibold text-[var(--text-muted)]">
           {events.length} 条事件
         </span>
       </div>
-      {isLoading ? <p className="mt-4 text-[11px] text-[var(--text-muted)]">正在同步时间线...</p> : null}
+      {isLoading ? <p className="mt-4 text-[length:var(--text-xs)] text-[var(--text-muted)]">正在同步时间线...</p> : null}
       <div className="mt-4 flex min-h-0 flex-1 flex-col gap-5 overflow-y-auto pr-1">
         {snapshot ? <DailySnapshotCard snapshot={snapshot} /> : null}
         {days.length === 0 && !snapshot ? (
-          <div className="rounded-[14px] border border-dashed border-[var(--border)] bg-[var(--surface-subtle)] px-4 py-6 text-[12px] text-[var(--text-muted)]">
+          <div className="rounded-[var(--radius-xl)] border border-dashed border-[var(--border)] bg-[var(--surface-subtle)] px-4 py-6 text-[length:var(--text-sm)] text-[var(--text-muted)]">
             还没有时间线事件。继续聊天后，AI 推荐、阶段推进和需求更新都会出现在这里。
           </div>
         ) : null}
@@ -247,7 +256,7 @@ export function TimelinePanel({ events, snapshot, isLoading }: TimelinePanelProp
               <span className="mt-2 min-h-0 flex-1 w-px bg-[var(--border)]" />
             </div>
             <div className="space-y-3">
-              <p className="text-[11px] font-bold uppercase tracking-[0.08em] text-[var(--text-muted)]">{day}</p>
+              <p className="text-[length:var(--text-xs)] font-bold uppercase tracking-[0.08em] text-[var(--text-muted)]">{day}</p>
               {dayEvents.map((event) => (
                 <TimelineEventCard key={event.id} event={event} />
               ))}

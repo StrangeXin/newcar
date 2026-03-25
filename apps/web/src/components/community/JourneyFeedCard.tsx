@@ -26,7 +26,7 @@ export function JourneyFeedCard({ item }: JourneyFeedCardProps) {
           <p className="text-xs text-[var(--text-muted)]">{item.user?.nickname || '匿名用户'}</p>
         </div>
         <span className="inline-flex items-center gap-1 rounded-full border border-[var(--border)] bg-[var(--surface-subtle)] px-2 py-1 text-xs text-[var(--text-soft)]">
-          {item.journey?.status === 'COMPLETED' ? <CircleDollarSign className="h-3 w-3" aria-hidden="true" /> : <Clock3 className="h-3 w-3" aria-hidden="true" />}
+          {item.journey?.status === 'COMPLETED' ? <CircleDollarSign className="h-3 w-3" strokeWidth={1.85} aria-hidden="true" /> : <Clock3 className="h-3 w-3" strokeWidth={1.85} aria-hidden="true" />}
           {item.journey?.status === 'COMPLETED' ? '已购车' : '进行中'}
         </span>
       </div>
@@ -36,7 +36,7 @@ export function JourneyFeedCard({ item }: JourneyFeedCardProps) {
       ) : null}
 
       {item.publishSummary ? (
-        <p className="mt-3 rounded-[14px] border border-[var(--accent-border)] bg-[var(--accent-muted)] px-3 py-3 text-sm leading-6 text-[var(--accent-text)]">
+        <p className="mt-3 rounded-[var(--radius-xl)] border border-[var(--accent-border)] bg-[var(--accent-muted)] px-3 py-3 text-sm leading-6 text-[var(--accent-text)]">
           "{item.publishSummary}"
         </p>
       ) : item.description ? (
@@ -45,12 +45,12 @@ export function JourneyFeedCard({ item }: JourneyFeedCardProps) {
 
       <div className="mt-3 flex flex-wrap gap-2">
         <span className="inline-flex items-center gap-1 rounded-full border border-[var(--border)] bg-[var(--surface)] px-2 py-1 text-xs text-[var(--text-soft)]">
-          <CircleDollarSign className="h-3 w-3" aria-hidden="true" />
+          <CircleDollarSign className="h-3 w-3" strokeWidth={1.85} aria-hidden="true" />
           {budgetText}
         </span>
         {useCases.slice(0, 3).map((useCase) => (
           <span key={useCase} className="inline-flex items-center gap-1 rounded-full border border-[var(--border)] bg-[var(--surface)] px-2 py-1 text-xs text-[var(--text-soft)]">
-            <Route className="h-3 w-3" aria-hidden="true" />
+            <Route className="h-3 w-3" strokeWidth={1.85} aria-hidden="true" />
             {useCase}
           </span>
         ))}
@@ -58,9 +58,9 @@ export function JourneyFeedCard({ item }: JourneyFeedCardProps) {
 
       <div className="mt-4 flex items-center justify-between">
         <div className="flex items-center gap-2 text-xs text-[var(--text-muted)]">
-          <span className="inline-flex items-center gap-1"><Heart className="h-3 w-3" aria-hidden="true" />{item.likeCount}</span>
-          <span className="inline-flex items-center gap-1"><MessageCircle className="h-3 w-3" aria-hidden="true" />{item.commentCount}</span>
-          <span className="inline-flex items-center gap-1"><GitFork className="h-3 w-3" aria-hidden="true" />{item.forkCount}</span>
+          <span className="inline-flex items-center gap-1"><Heart className="h-3 w-3" strokeWidth={1.85} aria-hidden="true" />{item.likeCount}</span>
+          <span className="inline-flex items-center gap-1"><MessageCircle className="h-3 w-3" strokeWidth={1.85} aria-hidden="true" />{item.commentCount}</span>
+          <span className="inline-flex items-center gap-1"><GitFork className="h-3 w-3" strokeWidth={1.85} aria-hidden="true" />{item.forkCount}</span>
         </div>
         <div className="flex items-center gap-2">
           <Link

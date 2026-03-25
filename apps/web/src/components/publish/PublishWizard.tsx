@@ -49,12 +49,12 @@ export function PublishWizard() {
     <section className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-card">
       <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[var(--accent-text)]">Publish Journey</p>
       <h1 className="mt-2 flex items-center gap-2 text-2xl font-extrabold text-[var(--text)]">
-        <Send className="h-5 w-5 text-[var(--accent-text)]" aria-hidden="true" />
+        <Send className="h-5 w-5 text-[var(--accent-text)]" strokeWidth={1.85} aria-hidden="true" />
         一键发布旅程
       </h1>
       <div className="mt-4 rounded-xl border border-[var(--accent-border)] bg-[var(--accent-muted)] p-4">
         <p className="flex items-center gap-2 text-sm font-semibold text-[var(--accent-text)]">
-          <Sparkles className="h-4 w-4" aria-hidden="true" />
+          <Sparkles className="h-4 w-4" strokeWidth={1.85} aria-hidden="true" />
           AI 会并行生成 story、report、template 三种格式，然后直接发布到社区
         </p>
         <ul className="mt-3 space-y-2 text-sm leading-6 text-[var(--accent-text)]/90">
@@ -67,7 +67,7 @@ export function PublishWizard() {
       <div className="mt-4 grid gap-3 md:grid-cols-2">
         <label className="text-sm font-medium text-[var(--text-soft)]">
           <span className="mb-1 inline-flex items-center gap-1">
-            <ShieldCheck className="h-4 w-4 text-[var(--success-text)]" aria-hidden="true" />
+            <ShieldCheck className="h-4 w-4 text-[var(--success-text)]" strokeWidth={1.85} aria-hidden="true" />
             可见性
           </span>
           <select
@@ -97,7 +97,7 @@ export function PublishWizard() {
           disabled={submitting || !journey?.title}
           className="inline-flex cursor-pointer items-center gap-1 rounded-xl bg-[var(--accent)] px-4 py-2 text-sm font-semibold text-white hover:bg-[var(--accent-hover)] disabled:cursor-not-allowed disabled:opacity-60"
         >
-          <CheckCircle2 className="h-4 w-4" aria-hidden="true" />
+          <CheckCircle2 className="h-4 w-4" strokeWidth={1.85} aria-hidden="true" />
           {submitting ? '生成并发布中...' : '一键发布到社区'}
         </button>
         <span className="text-xs text-[var(--text-muted)]">失败时你仍然可以回到社区页继续编辑或重新生成内容。</span>

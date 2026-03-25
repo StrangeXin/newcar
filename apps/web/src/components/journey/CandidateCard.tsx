@@ -148,7 +148,7 @@ export function CandidateCard({ candidate, onUpdated, emphasizeTags }: Candidate
   return (
     <div data-testid="candidate-card" data-candidate-name={`${candidate.car.brand} ${candidate.car.model}`}>
       <article
-        className={`rounded-[16px] border-[1.5px] px-[14px] py-[14px] shadow-[0_2px_10px_rgba(15,23,42,0.06)] ${
+        className={`rounded-[var(--radius-2xl)] border-[1.5px] px-[14px] py-[14px] shadow-[var(--shadow-card)] ${
           isWinner
             ? 'border-[var(--success-border)] bg-[linear-gradient(180deg,var(--surface),var(--success-muted))]'
             : isEliminated
@@ -159,44 +159,44 @@ export function CandidateCard({ candidate, onUpdated, emphasizeTags }: Candidate
         <div className="flex items-start justify-between gap-[10px]">
           <div className="flex items-start gap-[10px]">
             <div
-              className={`flex h-[34px] w-[46px] items-center justify-center rounded-[8px] text-[11px] font-bold text-[var(--text-soft)] ${brandTheme.icon}`}
+              className={`flex h-[34px] w-[46px] items-center justify-center rounded-[var(--radius-sm)] text-[length:var(--text-xs)] font-bold text-[var(--text-soft)] ${brandTheme.icon}`}
             >
               {candidate.car.brand || candidate.car.model.slice(0, 2)}
             </div>
             <div>
               <div className="flex flex-wrap items-center gap-2">
-                <h4 className="text-[13px] font-bold text-[var(--text)]">{candidate.car.brand} {candidate.car.model}</h4>
+                <h4 className="text-[length:var(--text-sm)] font-bold text-[var(--text)]">{candidate.car.brand} {candidate.car.model}</h4>
                 {isWinner ? (
-                  <span className="rounded-full bg-[var(--success-text)] px-2 py-0.5 text-[9px] font-bold text-white">已选定</span>
+                  <span className="rounded-full bg-[var(--success-text)] px-2 py-0.5 text-[length:var(--text-xs)] font-bold text-white">已选定</span>
                 ) : null}
                 {isEliminated ? (
-                  <span className="rounded-full border border-[var(--border)] px-2 py-0.5 text-[9px] font-medium text-[var(--text-muted)]">已淘汰</span>
+                  <span className="rounded-full border border-[var(--border)] px-2 py-0.5 text-[length:var(--text-xs)] font-medium text-[var(--text-muted)]">已淘汰</span>
                 ) : null}
               </div>
-              <p className="mt-0.5 text-[10px] text-[var(--text-muted)]">
+              <p className="mt-0.5 text-[length:var(--text-xs)] text-[var(--text-muted)]">
                 {candidate.car.fuelType === 'PHEV' ? '增程' : candidate.car.fuelType === 'BEV' ? '纯电' : candidate.car.fuelType} · {candidate.car.type} · {seatLabel}
               </p>
             </div>
           </div>
           <div className="text-right">
-            <p className={`text-[15px] font-extrabold ${isEliminated ? 'text-[var(--text-muted)]' : 'text-[var(--text)]'}`}>
+            <p className={`text-[length:var(--text-md)] font-extrabold ${isEliminated ? 'text-[var(--text-muted)]' : 'text-[var(--text)]'}`}>
               {candidate.car.msrp ? `${(candidate.car.msrp / 10000).toFixed(2)}万` : '暂无'}
             </p>
-            <p className="text-[9px] text-[var(--text-muted)]">{priceLabel}</p>
+            <p className="text-[length:var(--text-xs)] text-[var(--text-muted)]">{priceLabel}</p>
           </div>
         </div>
 
         {matchTags.length > 0 ? (
-          <div className={`mt-[10px] flex flex-wrap gap-[6px] ${emphasizeTags ? 'rounded-[10px] border border-[var(--accent-border)] bg-[var(--accent-muted)] px-2.5 py-2' : ''}`}>
+          <div className={`mt-[10px] flex flex-wrap gap-[6px] ${emphasizeTags ? 'rounded-[var(--radius-lg)] border border-[var(--accent-border)] bg-[var(--accent-muted)] px-2.5 py-2' : ''}`}>
             {matchTags.slice(0, 4).map((tag) => (
               <span
                 key={tag}
                 className={`rounded-full font-medium ${
                   emphasizeTags
-                    ? 'border-[1.5px] border-[var(--accent-border)] bg-[var(--surface)] px-3 py-[5px] text-[11px] font-semibold text-[var(--accent-text)]'
+                    ? 'border-[1.5px] border-[var(--accent-border)] bg-[var(--surface)] px-3 py-[5px] text-[length:var(--text-xs)] font-semibold text-[var(--accent-text)]'
                     : isEliminated
-                      ? 'border border-[var(--border)] bg-[var(--surface)] px-[10px] py-[4px] text-[10px] text-[var(--text-muted)]'
-                      : 'border border-[var(--accent-border)] bg-[var(--accent-muted)] px-[10px] py-[4px] text-[10px] text-[var(--accent-text)]'
+                      ? 'border border-[var(--border)] bg-[var(--surface)] px-[10px] py-[4px] text-[length:var(--text-xs)] text-[var(--text-muted)]'
+                      : 'border border-[var(--accent-border)] bg-[var(--accent-muted)] px-[10px] py-[4px] text-[length:var(--text-xs)] text-[var(--accent-text)]'
                 }`}
               >
                 {tag}
@@ -214,10 +214,10 @@ export function CandidateCard({ candidate, onUpdated, emphasizeTags }: Candidate
                 return t.includes(d) || d.includes(t);
               });
               return (
-                <div key={item.label} className="flex items-center justify-between rounded-[10px] bg-[var(--surface-subtle)] px-[10px] py-[8px] text-[11px]">
+                <div key={item.label} className="flex items-center justify-between rounded-[var(--radius-lg)] bg-[var(--surface-subtle)] px-[10px] py-[8px] text-[length:var(--text-xs)]">
                   <span className="flex items-center gap-1.5 font-medium text-[var(--text-soft)]">
                     {dimensionMatchesSomeTag ? (
-                      <Star className="h-3.5 w-3.5 text-[var(--warning-text)]" aria-hidden="true" />
+                      <Star className="h-3.5 w-3.5 text-[var(--warning-text)]" strokeWidth={1.85} aria-hidden="true" />
                     ) : null}
                     {item.label}
                   </span>
@@ -229,9 +229,9 @@ export function CandidateCard({ candidate, onUpdated, emphasizeTags }: Candidate
         ) : null}
 
         {candidate.recommendReason ? (
-          <blockquote className="mt-[12px] rounded-[12px] border border-[var(--accent-border)] bg-[var(--accent-muted)] px-[10px] py-[9px] text-[11px] leading-[1.6] text-[var(--accent-text)]">
-            <span className="mb-1 flex items-center gap-1 text-[10px] font-bold uppercase tracking-[0.06em]">
-              <Quote className="h-3.5 w-3.5" aria-hidden="true" />
+          <blockquote className="mt-[12px] rounded-[var(--radius-xl)] border border-[var(--accent-border)] bg-[var(--accent-muted)] px-[10px] py-[9px] text-[length:var(--text-xs)] leading-[1.6] text-[var(--accent-text)]">
+            <span className="mb-1 flex items-center gap-1 text-[length:var(--text-xs)] font-bold uppercase tracking-[0.06em]">
+              <Quote className="h-3.5 w-3.5" strokeWidth={1.85} aria-hidden="true" />
               推荐理由
             </span>
             {candidate.recommendReason}
@@ -239,13 +239,13 @@ export function CandidateCard({ candidate, onUpdated, emphasizeTags }: Candidate
         ) : null}
 
         {isEliminated && candidate.eliminationReason ? (
-          <p className="mt-[10px] text-[10px] text-[var(--text-muted)]">淘汰原因：{candidate.eliminationReason}</p>
+          <p className="mt-[10px] text-[length:var(--text-xs)] text-[var(--text-muted)]">淘汰原因：{candidate.eliminationReason}</p>
         ) : null}
 
         {candidate.userNotes && !showNotes ? (
-          <div className="mt-[10px] rounded-[10px] border border-[var(--border)] bg-[var(--surface-subtle)] px-[10px] py-[8px] text-[10px] text-[var(--text-soft)]">
-            <span className="mr-1 inline-flex h-4 w-4 items-center justify-center rounded-full bg-[var(--text)] text-[9px] text-white">
-              <Check className="h-2.5 w-2.5" aria-hidden="true" />
+          <div className="mt-[10px] rounded-[var(--radius-lg)] border border-[var(--border)] bg-[var(--surface-subtle)] px-[10px] py-[8px] text-[length:var(--text-xs)] text-[var(--text-soft)]">
+            <span className="mr-1 inline-flex h-4 w-4 items-center justify-center rounded-full bg-[var(--text)] text-[length:var(--text-xs)] text-white">
+              <Check className="h-2.5 w-2.5" strokeWidth={1.85} aria-hidden="true" />
             </span>
             备注：{candidate.userNotes}
           </div>
@@ -257,7 +257,7 @@ export function CandidateCard({ candidate, onUpdated, emphasizeTags }: Candidate
               type="button"
               onClick={restore}
               disabled={busy}
-              className="flex-1 cursor-pointer rounded-[8px] border-[1.5px] border-[var(--border)] bg-[var(--surface)] px-[10px] py-[6px] text-[10px] font-semibold text-[var(--text-soft)] hover:border-[var(--border-soft)] disabled:cursor-not-allowed"
+              className="flex-1 cursor-pointer rounded-[var(--radius-sm)] border-[1.5px] border-[var(--border)] bg-[var(--surface)] px-[10px] py-[6px] text-[length:var(--text-xs)] font-semibold text-[var(--text-soft)] hover:border-[var(--border-soft)] disabled:cursor-not-allowed"
             >
               恢复候选
             </button>
@@ -267,7 +267,7 @@ export function CandidateCard({ candidate, onUpdated, emphasizeTags }: Candidate
                 type="button"
                 onClick={markWinner}
                 disabled={isMock || busy || candidate.status === 'WINNER'}
-                className="flex-1 cursor-pointer rounded-[8px] bg-[var(--text)] px-[10px] py-[6px] text-[10px] font-bold text-[var(--surface)] hover:opacity-90 disabled:cursor-not-allowed"
+                className="flex-1 cursor-pointer rounded-[var(--radius-sm)] bg-[var(--text)] px-[10px] py-[6px] text-[length:var(--text-xs)] font-bold text-[var(--surface)] hover:opacity-90 disabled:cursor-not-allowed"
               >
                 选定
               </button>
@@ -275,7 +275,7 @@ export function CandidateCard({ candidate, onUpdated, emphasizeTags }: Candidate
                 type="button"
                 onClick={eliminate}
                 disabled={isMock || busy || candidate.status === 'ELIMINATED'}
-                className="flex-1 cursor-pointer rounded-[8px] border-[1.5px] border-[var(--border)] bg-[var(--surface)] px-[10px] py-[6px] text-[10px] font-medium text-[var(--text-soft)] hover:border-[var(--border-soft)] disabled:cursor-not-allowed"
+                className="flex-1 cursor-pointer rounded-[var(--radius-sm)] border-[1.5px] border-[var(--border)] bg-[var(--surface)] px-[10px] py-[6px] text-[length:var(--text-xs)] font-medium text-[var(--text-soft)] hover:border-[var(--border-soft)] disabled:cursor-not-allowed"
               >
                 淘汰
               </button>
@@ -285,7 +285,7 @@ export function CandidateCard({ candidate, onUpdated, emphasizeTags }: Candidate
             type="button"
             onClick={() => setShowNotes((v) => !v)}
             disabled={isMock}
-            className="cursor-pointer rounded-[8px] border-[1.5px] border-[var(--border)] bg-[var(--surface-subtle)] px-[10px] py-[6px] text-[10px] font-medium text-[var(--text-soft)] hover:border-[var(--border-soft)] disabled:cursor-not-allowed"
+            className="cursor-pointer rounded-[var(--radius-sm)] border-[1.5px] border-[var(--border)] bg-[var(--surface-subtle)] px-[10px] py-[6px] text-[length:var(--text-xs)] font-medium text-[var(--text-soft)] hover:border-[var(--border-soft)] disabled:cursor-not-allowed"
           >
             备注
           </button>
@@ -298,14 +298,14 @@ export function CandidateCard({ candidate, onUpdated, emphasizeTags }: Candidate
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
             rows={3}
-            className="w-full rounded-[8px] border border-[var(--border)] bg-[var(--surface)] px-[10px] py-[10px] text-[11px] outline-none ring-[var(--accent-border)] focus:ring-2"
+            className="w-full rounded-[var(--radius-sm)] border border-[var(--border)] bg-[var(--surface)] px-[10px] py-[10px] text-[length:var(--text-xs)] outline-none ring-[var(--accent-border)] focus:ring-2"
             placeholder="记录你的评价和顾虑..."
           />
           <button
             type="button"
             onClick={saveNotes}
             disabled={isMock || busy}
-            className="cursor-pointer rounded-[8px] border border-[var(--border)] px-[10px] py-[6px] text-[10px] font-semibold text-[var(--text-soft)] hover:border-[var(--border-soft)] disabled:cursor-not-allowed"
+            className="cursor-pointer rounded-[var(--radius-sm)] border border-[var(--border)] px-[10px] py-[6px] text-[length:var(--text-xs)] font-semibold text-[var(--text-soft)] hover:border-[var(--border-soft)] disabled:cursor-not-allowed"
           >
             保存备注
           </button>

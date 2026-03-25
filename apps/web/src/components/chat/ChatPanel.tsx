@@ -39,12 +39,12 @@ export function ChatPanel({ onClose }: { onClose?: () => void }) {
       <div className="flex items-center gap-[6px] border-b border-[var(--border-soft)] px-[14px] py-[14px]">
         <span className={`h-[7px] w-[7px] rounded-full ${isConnected ? 'bg-[var(--success)]' : 'bg-[var(--text-muted)]'}`} />
         <div>
-          <h2 className="flex items-center gap-2 text-[14px] font-extrabold text-[var(--text)] 2xl:text-[15px]">
+          <h2 className="flex items-center gap-2 text-[length:var(--text-base)] font-extrabold text-[var(--text)] 2xl:text-[length:var(--text-md)]">
             <IconBadge icon={Bot} tone="accent" size="sm" />
             AI 购车助手
           </h2>
         </div>
-        <p className="ml-auto rounded-full border border-[var(--border)] bg-[var(--surface-subtle)] px-2 py-1 text-[9px] text-[var(--text-muted)]">旅程模式</p>
+        <p className="ml-auto rounded-full border border-[var(--border)] bg-[var(--surface-subtle)] px-2 py-1 text-[length:var(--text-xs)] text-[var(--text-muted)]">旅程模式</p>
         <div className="flex items-center gap-2">
           {onClose ? (
             <button
@@ -58,7 +58,7 @@ export function ChatPanel({ onClose }: { onClose?: () => void }) {
         </div>
       </div>
       {!isConnected && (
-        <div className="flex items-center justify-center border-b border-[var(--warning-border)] bg-[var(--warning-muted)] px-3 py-[5px] text-[12px] font-medium text-[var(--warning-text)]">
+        <div className="flex items-center justify-center border-b border-[var(--warning-border)] bg-[var(--warning-muted)] px-3 py-[5px] text-[length:var(--text-sm)] font-medium text-[var(--warning-text)]">
           连接已断开，正在重连...
         </div>
       )}

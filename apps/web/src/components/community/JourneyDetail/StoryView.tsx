@@ -34,20 +34,20 @@ export function StoryView({ content }: StoryViewProps) {
               <span className="mt-1 h-3 w-3 rounded-full bg-[var(--accent)]" />
               <span className="mt-2 min-h-0 flex-1 w-px bg-[var(--border)]" />
             </div>
-            <div className="rounded-[16px] border border-[var(--border)] bg-[var(--surface-subtle)] px-4 py-4">
-              <p className="text-[10px] font-bold uppercase tracking-[0.08em] text-[var(--accent-text)]">{stage.stage}</p>
-              <h3 className="mt-1 text-[16px] font-bold text-[var(--text)]">{stage.headline}</h3>
+            <div className="rounded-[var(--radius-2xl)] border border-[var(--border)] bg-[var(--surface-subtle)] px-4 py-4">
+              <p className="text-[length:var(--text-xs)] font-bold uppercase tracking-[0.08em] text-[var(--accent-text)]">{stage.stage}</p>
+              <h3 className="mt-1 text-[length:var(--text-md)] font-bold text-[var(--text)]">{stage.headline}</h3>
               <p className="mt-2 text-sm leading-7 text-[var(--text-soft)]">{stage.narrative}</p>
               {stage.candidates?.length ? (
                 <div className="mt-3 flex flex-wrap gap-2">
                   {stage.candidates.map((candidate) => (
-                    <span key={candidate} className="rounded-full border border-[var(--border)] bg-[var(--surface)] px-3 py-1 text-[10px] text-[var(--text-soft)]">
+                    <span key={candidate} className="rounded-full border border-[var(--border)] bg-[var(--surface)] px-3 py-1 text-[length:var(--text-xs)] text-[var(--text-soft)]">
                       {candidate}
                     </span>
                   ))}
                 </div>
               ) : null}
-              {stage.keyDimension ? <p className="mt-3 text-[11px] font-medium text-[var(--text-muted)]">关键关注点：{stage.keyDimension}</p> : null}
+              {stage.keyDimension ? <p className="mt-3 text-[length:var(--text-xs)] font-medium text-[var(--text-muted)]">关键关注点：{stage.keyDimension}</p> : null}
             </div>
           </article>
         ))}
