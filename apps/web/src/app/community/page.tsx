@@ -7,9 +7,11 @@ import { FeedFilterState, FeedFilters } from '@/components/community/FeedFilters
 import { JourneyFeedList } from '@/components/community/JourneyFeedList';
 import { useCommunity } from '@/hooks/useCommunity';
 import { PageHeader } from '@/components/ui/PageHeader';
+import { useT } from '@/hooks/useT';
 
 function CommunityPageContent() {
   const router = useRouter();
+  const t = useT();
   const searchParams = useSearchParams();
   const queryString = searchParams.toString();
   const { items, isLoading } = useCommunity(queryString);
@@ -53,8 +55,8 @@ function CommunityPageContent() {
       >
         <PageHeader
           label="Community"
-          title={<><Sparkles className="inline h-5 w-5 text-[var(--accent)]" aria-hidden="true" /> 社区广场</>}
-          description="浏览真实购车历程，并从模板快速开始你的旅程。"
+          title={<><Sparkles className="inline h-5 w-5 text-[var(--accent)]" aria-hidden="true" /> {t['community.title']}</>}
+          description={t['community.desc']}
         />
       </header>
 
