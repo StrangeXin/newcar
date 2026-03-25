@@ -10,12 +10,12 @@ import { useT } from '@/hooks/useT';
 export default function LoginPage() {
   const t = useT();
   return (
-    <main className="mx-auto flex min-h-screen w-full max-w-5xl items-center px-6 py-12 md:py-16">
-      <div className="relative grid w-full gap-8 rounded-3xl border border-[var(--border)] bg-[var(--surface)]/90 p-6 shadow-card backdrop-blur-sm md:grid-cols-2 md:p-10">
-        <div className="absolute right-4 top-4 flex items-center gap-1">
-          <ThemeToggle />
-          <LocaleToggle />
-        </div>
+    <main className="mx-auto flex min-h-screen w-full max-w-5xl flex-col items-center justify-center px-6 py-12 md:py-16">
+      <div className="mb-2 flex w-full justify-end gap-1">
+        <ThemeToggle />
+        <LocaleToggle />
+      </div>
+      <div className="grid w-full gap-8 rounded-3xl border border-[var(--border)] bg-[var(--surface)]/90 p-6 shadow-card backdrop-blur-sm md:grid-cols-2 md:p-10">
         <section className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-6">
           <p className="inline-flex items-center gap-1 text-xs font-semibold uppercase tracking-[0.18em] text-[var(--accent-text-soft)]">
             <LockKeyhole className="h-3.5 w-3.5" aria-hidden="true" />
