@@ -200,38 +200,6 @@ textarea:focus {
   background-color: var(--surface);
 }
 
-/* Theme remap: convert old sky-* usage to warm/young accent language. */
-.text-sky-700 {
-  color: #c2410c !important;
-}
-
-.text-sky-800 {
-  color: #9a3412 !important;
-}
-
-.bg-sky-50 {
-  background-color: #fff7ed !important;
-}
-
-.bg-sky-100 {
-  background-color: #ffedd5 !important;
-}
-
-.bg-sky-700 {
-  background-color: #c2410c !important;
-}
-
-.bg-sky-600 {
-  background-color: #ea580c !important;
-}
-
-.border-sky-200 {
-  border-color: #fed7aa !important;
-}
-
-.ring-sky-300 {
-  --tw-ring-color: #fdba74 !important;
-}
 
 @media (prefers-reduced-motion: reduce) {
   *,

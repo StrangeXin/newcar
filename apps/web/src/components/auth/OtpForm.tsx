@@ -70,7 +70,7 @@ export function OtpForm() {
     <div className="space-y-4">
       {step === 1 ? (
         <form onSubmit={handleSendOtp} className="space-y-3" noValidate>
-          <label className="block text-sm font-medium text-slate-700" htmlFor="phone">
+          <label className="block text-sm font-medium text-[var(--text-soft)]" htmlFor="phone">
             手机号
           </label>
           <input
@@ -83,20 +83,20 @@ export function OtpForm() {
             value={phone}
             onChange={(e) => setPhone(e.target.value)}
             placeholder="请输入手机号"
-            className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm outline-none ring-sky-300 transition focus:ring-2"
+            className="w-full rounded-xl border border-[var(--border)] bg-[var(--surface)] px-4 py-3 text-sm outline-none ring-[var(--accent-border)] transition focus:ring-2"
           />
           <button
             data-testid="send-otp-button"
             type="submit"
             disabled={loading}
-            className="w-full cursor-pointer rounded-xl bg-slate-900 px-4 py-3 text-sm font-semibold text-white hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-60"
+            className="w-full cursor-pointer rounded-xl bg-[var(--accent)] px-4 py-3 text-sm font-semibold text-white hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-60"
           >
             {loading ? '发送中...' : '发送验证码'}
           </button>
         </form>
       ) : (
         <form onSubmit={handleVerifyOtp} className="space-y-3" noValidate>
-          <label className="block text-sm font-medium text-slate-700" htmlFor="otp">
+          <label className="block text-sm font-medium text-[var(--text-soft)]" htmlFor="otp">
             验证码
           </label>
           <input
@@ -108,20 +108,20 @@ export function OtpForm() {
             value={otp}
             onChange={(e) => setOtp(e.target.value)}
             placeholder="请输入6位验证码"
-            className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm outline-none ring-sky-300 transition focus:ring-2"
+            className="w-full rounded-xl border border-[var(--border)] bg-[var(--surface)] px-4 py-3 text-sm outline-none ring-[var(--accent-border)] transition focus:ring-2"
           />
           <button
             data-testid="verify-otp-button"
             type="submit"
             disabled={loading}
-            className="w-full cursor-pointer rounded-xl bg-slate-900 px-4 py-3 text-sm font-semibold text-white hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-60"
+            className="w-full cursor-pointer rounded-xl bg-[var(--accent)] px-4 py-3 text-sm font-semibold text-white hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-60"
           >
             {loading ? '登录中...' : '验证并登录'}
           </button>
           <button
             type="button"
             onClick={() => setStep(1)}
-            className="w-full cursor-pointer rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm font-semibold text-slate-800 hover:border-slate-400"
+            className="w-full cursor-pointer rounded-xl border border-[var(--border)] bg-[var(--surface)] px-4 py-3 text-sm font-semibold text-[var(--text)] hover:border-[var(--border-soft)]"
           >
             返回修改手机号
           </button>
@@ -133,13 +133,13 @@ export function OtpForm() {
           id="otp-hint"
           data-testid="otp-hint"
           aria-live="polite"
-          className="rounded-lg bg-amber-50 px-3 py-2 text-xs text-amber-700"
+          className="rounded-lg bg-[var(--warning-muted)] px-3 py-2 text-xs text-[var(--warning-text)]"
         >
           开发环境验证码：{hintOtp}
         </p>
       ) : null}
       {error ? (
-        <p id="otp-error" role="alert" aria-live="assertive" className="text-sm text-red-600">
+        <p id="otp-error" role="alert" aria-live="assertive" className="text-sm text-[var(--error)]">
           {error}
         </p>
       ) : null}
