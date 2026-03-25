@@ -1,8 +1,34 @@
 import Anthropic from '@anthropic-ai/sdk';
+import { Prisma } from '@prisma/client';
 import { config } from '../config';
 import { prisma } from '../lib/prisma';
 import { moderationService } from './moderation.service';
 import { TIMELINE_EVENT_TYPES, buildTimelineEventContent, timelineService } from './timeline.service';
+
+type CandidateWithCar = Prisma.CarCandidateGetPayload<{
+  include: { car: true };
+}>;
+
+type JourneyWithCandidatesAndSnapshots = Prisma.JourneyGetPayload<{
+  include: {
+    candidates: { include: { car: true } };
+    snapshots: true;
+  };
+}>;
+
+type JourneyWithRelations = JourneyWithCandidatesAndSnapshots & {
+  user?: Prisma.UserGetPayload<{}>;
+};
+
+type SnapshotRecord = Prisma.JourneySnapshotGetPayload<{}> | null;
+
+interface Requirements {
+  budgetMin?: number;
+  budgetMax?: number;
+  useCases?: string[];
+  fuelTypePreference?: string[];
+  [key: string]: unknown;
+}
 
 const VALID_FORMATS = ['story', 'report', 'template'];
 
@@ -65,7 +91,7 @@ export class PublishService {
     });
   }
 
-  private buildCandidateName(candidate: any) {
+  private buildCandidateName(candidate: CandidateWithCar) {
     return [candidate?.car?.brand, candidate?.car?.model, candidate?.car?.variant].filter(Boolean).join(' ').trim();
   }
 
@@ -89,14 +115,14 @@ export class PublishService {
     }
   }
 
-  async generateStory(journey: any, latestSnapshot: any): Promise<StoryTimeline> {
+  async generateStory(journey: JourneyWithCandidatesAndSnapshots, latestSnapshot: SnapshotRecord): Promise<StoryTimeline> {
     const client = this.getClient();
 
     const candidates = journey.candidates || [];
-    const finalCandidate = candidates.find((c: any) => c.status === 'WINNER') || candidates.find((c: any) => c.status === 'ACTIVE');
+    const finalCandidate = candidates.find((c) => c.status === 'WINNER') || candidates.find((c) => c.status === 'ACTIVE');
 
     const candidateList = candidates
-      .map((c: any) => {
+      .map((c) => {
         const label = c.status === 'WINNER' ? '（最终选择）' : c.status === 'ELIMINATED' ? '（已排除）' : '（候选中）';
         return `- ${this.buildCandidateName(c)}${label}`;
       })
@@ -147,8 +173,8 @@ JSON 结构：
             stage: 'AWARENESS',
             headline: '明确购车方向',
             narrative: latestSnapshot?.narrativeSummary || '从需求澄清开始，逐步缩小车型范围。',
-            candidates: candidates.slice(0, 2).map((candidate: any) => this.buildCandidateName(candidate)),
-            keyDimension: candidates[0]?.relevantDimensions?.[0] || '预算',
+            candidates: candidates.slice(0, 2).map((candidate) => this.buildCandidateName(candidate)),
+            keyDimension: (candidates[0]?.relevantDimensions as string[] | undefined)?.[0] || '预算',
           },
           {
             stage: journey.stage,
@@ -157,7 +183,7 @@ JSON 结构：
               ? `在持续比较后，最终更倾向 ${this.buildCandidateName(finalCandidate)}，核心原因是它更贴近当前最在意的维度。`
               : '当前已经进入收敛阶段，开始从候选车中做取舍。',
             candidates: finalCandidate ? [this.buildCandidateName(finalCandidate)] : [],
-            keyDimension: finalCandidate?.relevantDimensions?.[0] || '综合体验',
+            keyDimension: (finalCandidate?.relevantDimensions as string[] | undefined)?.[0] || '综合体验',
           },
         ],
       });
@@ -169,7 +195,7 @@ JSON 结构：
             stage: 'AWARENESS',
             headline: '明确需求',
             narrative: latestSnapshot?.narrativeSummary || '逐步明确了预算、用途和偏好。',
-            candidates: candidates.slice(0, 2).map((candidate: any) => this.buildCandidateName(candidate)),
+            candidates: candidates.slice(0, 2).map((candidate) => this.buildCandidateName(candidate)),
             keyDimension: '预算',
           },
         ],
@@ -177,12 +203,12 @@ JSON 结构：
     }
   }
 
-  async generateReport(journey: any, candidates: any[]): Promise<ReportData> {
+  async generateReport(journey: JourneyWithCandidatesAndSnapshots, candidates: CandidateWithCar[]): Promise<ReportData> {
     const client = this.getClient();
-    const requirements = (journey.requirements as any) || {};
+    const requirements = (journey.requirements as Requirements) || {};
 
     const candidateList = candidates
-      .map((c: any) => {
+      .map((c) => {
         const car = c.car;
         return `${car.brand} ${car.model} ${car.variant}（${car.fuelType}，指导价 ${car.msrp ? (car.msrp / 10000).toFixed(1) + ' 万' : '未知'}）`;
       })
@@ -237,14 +263,14 @@ ${candidateList || '暂无'}
           budget: `${requirements.budgetMin || '未设定'}-${requirements.budgetMax || '未设定'}万`,
           fuelPreference: (requirements.fuelTypePreference || []).join('、') || '未设定',
           useCases: requirements.useCases || [],
-          coreDimensions: candidates.flatMap((candidate: any) => candidate.relevantDimensions || []).slice(0, 4),
+          coreDimensions: candidates.flatMap((candidate) => (candidate.relevantDimensions as string[]) || []).slice(0, 4),
         },
-        comparison: candidates.map((candidate: any) => ({
+        comparison: candidates.map((candidate) => ({
           carName: this.buildCandidateName(candidate),
           scores: {
             价格: clampScore(100 - ((candidate.car?.msrp || 0) / 10000)),
             空间: clampScore(candidate.car?.type === 'SUV' ? 85 : 65),
-            续航: clampScore(candidate.car?.baseSpecs?.range || 70),
+            续航: clampScore((candidate.car?.baseSpecs as Record<string, unknown> | null)?.range || 70),
           },
           highlight: candidate.recommendReason || `${this.buildCandidateName(candidate)} 在当前候选中有清晰优势。`,
         })),
@@ -260,7 +286,7 @@ ${candidateList || '暂无'}
           budget: `${requirements.budgetMin || '未设定'}-${requirements.budgetMax || '未设定'}万`,
           fuelPreference: (requirements.fuelTypePreference || []).join('、') || '未设定',
           useCases: requirements.useCases || [],
-          coreDimensions: candidates.flatMap((candidate: any) => candidate.relevantDimensions || []).slice(0, 4),
+          coreDimensions: candidates.flatMap((candidate) => (candidate.relevantDimensions as string[]) || []).slice(0, 4),
         },
         comparison: [],
         recommendation: {
@@ -271,15 +297,15 @@ ${candidateList || '暂无'}
     }
   }
 
-  async generateTemplate(journey: any, candidates: any[]): Promise<TemplateData> {
+  async generateTemplate(journey: JourneyWithCandidatesAndSnapshots, candidates: CandidateWithCar[]): Promise<TemplateData> {
     const client = this.getClient();
 
-    const activeCandidates = candidates.filter((c: any) => c.status === 'ACTIVE' || c.status === 'WINNER');
-    const candidateCarIds = activeCandidates.map((c: any) => c.carId);
-    const candidateNames = activeCandidates.map((c: any) => this.buildCandidateName(c));
+    const activeCandidates = candidates.filter((c) => c.status === 'ACTIVE' || c.status === 'WINNER');
+    const candidateCarIds = activeCandidates.map((c) => c.carId);
+    const candidateNames = activeCandidates.map((c) => this.buildCandidateName(c));
 
     const candidateList = candidates
-      .map((c: any) => {
+      .map((c) => {
         const car = c.car;
         return `${car.brand} ${car.model} ${car.variant}（${car.fuelType}，${car.type}）`;
       })
@@ -328,9 +354,9 @@ ${candidateList || '暂无'}
     }
   }
 
-  async generatePublishSummary(journey: any, candidates: any[], latestSnapshot: any): Promise<string> {
+  async generatePublishSummary(journey: JourneyWithCandidatesAndSnapshots, candidates: CandidateWithCar[], latestSnapshot: SnapshotRecord): Promise<string> {
     const client = this.getClient();
-    const winner = candidates.find((candidate: any) => candidate.status === 'WINNER') || candidates[0];
+    const winner = candidates.find((candidate) => candidate.status === 'WINNER') || candidates[0];
     const fallback = winner
       ? `${journey.title}，最终因为${winner.recommendReason || '更匹配核心需求'}选择了${this.buildCandidateName(winner)}`
       : latestSnapshot?.narrativeSummary?.slice(0, 50) || journey.title;
@@ -344,7 +370,7 @@ ${candidateList || '暂无'}
           messages: [
             {
               role: 'user',
-              content: `标题：${journey.title}\n候选车：${candidates.map((candidate: any) => this.buildCandidateName(candidate)).join('、')}\n摘要：${latestSnapshot?.narrativeSummary || ''}\n最终更倾向：${winner ? this.buildCandidateName(winner) : '未定'}\n请输出一句 50 字以内的决策摘要。`,
+              content: `标题：${journey.title}\n候选车：${candidates.map((candidate) => this.buildCandidateName(candidate)).join('、')}\n摘要：${latestSnapshot?.narrativeSummary || ''}\n最终更倾向：${winner ? this.buildCandidateName(winner) : '未定'}\n请输出一句 50 字以内的决策摘要。`,
             },
           ],
         })
@@ -394,24 +420,14 @@ ${candidateList || '暂无'}
     const candidates = journey.candidates;
 
     // 4. 并行生成内容
-    const contentGenerations: Promise<any>[] = [];
     const formatKeys = publishedFormats.map((f) => f.toLowerCase());
 
-    const storyPromise = formatKeys.includes('story')
-      ? this.generateStory(journey, latestSnapshot)
-      : Promise.resolve(null);
-    const reportPromise = formatKeys.includes('report')
-      ? this.generateReport(journey, candidates)
-      : Promise.resolve(null);
-    const templatePromise = formatKeys.includes('template')
-      ? this.generateTemplate(journey, candidates)
-      : Promise.resolve(null);
-
-    contentGenerations.push(storyPromise, reportPromise, templatePromise);
     const [storyContent, reportData, templateData, publishSummary] = await Promise.all([
-      ...contentGenerations,
+      formatKeys.includes('story') ? this.generateStory(journey, latestSnapshot) : Promise.resolve(null),
+      formatKeys.includes('report') ? this.generateReport(journey, candidates) : Promise.resolve(null),
+      formatKeys.includes('template') ? this.generateTemplate(journey, candidates) : Promise.resolve(null),
       this.generatePublishSummary(journey, candidates, latestSnapshot),
-    ]);
+    ] as const);
 
     // 5. 合并内容审核
     const contentForReview = [
@@ -425,11 +441,11 @@ ${candidateList || '暂无'}
     const reviewResult = await moderationService.preReview(contentForReview);
 
     // 7. 构建 tags
-    const requirements = (journey.requirements as any) || {};
-    const fuelTypes = [...new Set(candidates.map((c: any) => c.car?.fuelType).filter(Boolean))];
+    const requirements = (journey.requirements as Requirements) || {};
+    const fuelTypes = [...new Set(candidates.map((c) => c.car?.fuelType).filter(Boolean))];
     const tags = {
-      carIds: candidates.map((c: any) => c.carId),
-      candidateNames: candidates.map((c: any) => this.buildCandidateName(c)),
+      carIds: candidates.map((c) => c.carId),
+      candidateNames: candidates.map((c) => this.buildCandidateName(c)),
       budgetMin: requirements.budgetMin,
       budgetMax: requirements.budgetMax,
       useCases: requirements.useCases || [],
@@ -445,15 +461,19 @@ ${candidateList || '暂无'}
 
     let result;
     if (existing) {
-      const updateData: any = {
+      const updateData: Prisma.PublishedJourneyUpdateInput = {
         title,
         description,
         publishSummary,
         publishedFormats: formatKeys,
         tags,
         storyContent: storyContent ? JSON.stringify(storyContent) : existing.storyContent,
-        reportData: reportData ?? existing.reportData,
-        templateData: templateData ?? existing.templateData,
+        reportData: reportData
+          ? (reportData as unknown as Prisma.InputJsonValue)
+          : existing.reportData ?? Prisma.JsonNull,
+        templateData: templateData
+          ? (templateData as unknown as Prisma.InputJsonValue)
+          : existing.templateData ?? Prisma.JsonNull,
         visibility,
         contentStatus,
         contentVersion: existing.contentVersion + 1,
@@ -464,7 +484,7 @@ ${candidateList || '暂无'}
         data: updateData,
       });
     } else {
-      const createData: any = {
+      const createData: Prisma.PublishedJourneyUncheckedCreateInput = {
         journeyId,
         userId: journey.userId,
         title,
@@ -473,8 +493,8 @@ ${candidateList || '暂无'}
         publishedFormats: formatKeys,
         tags,
         storyContent: storyContent ? JSON.stringify(storyContent) : null,
-        reportData: reportData ?? null,
-        templateData: templateData ?? null,
+        reportData: reportData ? (reportData as unknown as Prisma.InputJsonValue) : Prisma.JsonNull,
+        templateData: templateData ? (templateData as unknown as Prisma.InputJsonValue) : Prisma.JsonNull,
         visibility,
         contentStatus,
         lastSyncedAt: new Date(),
@@ -522,7 +542,7 @@ ${candidateList || '暂无'}
       throw new Error('Published journey not found');
     }
 
-    const journey = published.journey as any;
+    const journey = published.journey;
     const latestSnapshot = journey.snapshots?.[0] || null;
     const candidates = journey.candidates || [];
 
@@ -533,7 +553,7 @@ ${candidateList || '暂无'}
         data: {
           storyContent: JSON.stringify(storyContent),
           lastSyncedAt: new Date(),
-        } as any,
+        },
       });
     }
 
@@ -542,9 +562,9 @@ ${candidateList || '暂无'}
       return prisma.publishedJourney.update({
         where: { id: publishedJourneyId },
         data: {
-          reportData,
+          reportData: reportData as unknown as Prisma.InputJsonValue,
           lastSyncedAt: new Date(),
-        } as any,
+        },
       });
     }
 
@@ -553,9 +573,9 @@ ${candidateList || '暂无'}
       return prisma.publishedJourney.update({
         where: { id: publishedJourneyId },
         data: {
-          templateData,
+          templateData: templateData as unknown as Prisma.InputJsonValue,
           lastSyncedAt: new Date(),
-        } as any,
+        },
       });
     }
 
@@ -565,7 +585,7 @@ ${candidateList || '暂无'}
       data: {
         publishSummary,
         lastSyncedAt: new Date(),
-      } as any,
+      },
     });
   }
 

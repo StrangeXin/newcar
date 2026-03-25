@@ -57,6 +57,11 @@ export function ChatPanel({ onClose }: { onClose?: () => void }) {
           ) : null}
         </div>
       </div>
+      {!isConnected && (
+        <div className="flex items-center justify-center border-b border-[var(--warning-border)] bg-[var(--warning-muted)] px-3 py-[5px] text-[12px] font-medium text-[var(--warning-text)]">
+          连接已断开，正在重连...
+        </div>
+      )}
       <MessageList messages={messages} isLoading={isLoading} />
       <ChatInput disabled={isLoading || !journey?.id} onSend={onSend} />
     </aside>

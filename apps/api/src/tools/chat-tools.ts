@@ -8,10 +8,12 @@ export type ChatToolName = 'car_search' | 'car_detail' | 'journey_update' | 'add
 export interface ChatSideEffect {
   event:
     | 'candidate_added'
+    | 'candidate_added'
     | 'candidate_eliminated'
     | 'candidate_winner'
     | 'journey_updated'
     | 'stage_changed'
+    | 'ai_insight'
     | 'publish_suggestion'
     | 'journey_published';
   data: unknown;

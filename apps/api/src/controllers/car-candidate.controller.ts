@@ -55,8 +55,8 @@ export class CarCandidateController {
       });
 
       return res.status(201).json(candidate);
-    } catch (error: any) {
-      return res.status(400).json({ error: error.message });
+    } catch (error: unknown) {
+      return res.status(400).json({ error: error instanceof Error ? error.message : String(error) });
     }
   }
 
@@ -71,8 +71,8 @@ export class CarCandidateController {
 
       const candidates = await carCandidateService.getCandidatesByJourney(journeyId);
       return res.json({ candidates });
-    } catch (error: any) {
-      return res.status(500).json({ error: error.message });
+    } catch (error: unknown) {
+      return res.status(500).json({ error: error instanceof Error ? error.message : String(error) });
     }
   }
 
@@ -118,8 +118,8 @@ export class CarCandidateController {
       }
 
       return res.json(candidate);
-    } catch (error: any) {
-      return res.status(400).json({ error: error.message });
+    } catch (error: unknown) {
+      return res.status(400).json({ error: error instanceof Error ? error.message : String(error) });
     }
   }
 
@@ -147,8 +147,8 @@ export class CarCandidateController {
           },
         ],
       });
-    } catch (error: any) {
-      return res.status(400).json({ error: error.message });
+    } catch (error: unknown) {
+      return res.status(400).json({ error: error instanceof Error ? error.message : String(error) });
     }
   }
 
@@ -164,8 +164,8 @@ export class CarCandidateController {
 
       const candidate = await carCandidateService.updateNotes(candidateId, notes);
       return res.json(candidate);
-    } catch (error: any) {
-      return res.status(400).json({ error: error.message });
+    } catch (error: unknown) {
+      return res.status(400).json({ error: error instanceof Error ? error.message : String(error) });
     }
   }
 }

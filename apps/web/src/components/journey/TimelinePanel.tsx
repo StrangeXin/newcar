@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { Brain, CarFront, CheckCircle2, Flag, Lightbulb, NotebookPen, Sparkles, XCircle } from 'lucide-react';
+import { Brain, CarFront, CheckCircle2, DollarSign, Flag, Lightbulb, NotebookPen, Sparkles, User, XCircle } from 'lucide-react';
 import { JourneySnapshot, TimelineEvent } from '@/types/api';
 
 interface TimelinePanelProps {
@@ -55,6 +55,18 @@ function getMeta(event: TimelineEvent) {
         tone: 'border-[var(--accent-border)] bg-[var(--surface)] text-[var(--accent-text)]',
         title: 'AI 洞察',
       };
+    case 'PRICE_CHANGE':
+      return {
+        icon: DollarSign,
+        tone: 'border-[var(--warning-border)] bg-[var(--warning-muted)] text-[var(--warning-text)]',
+        title: '价格变动',
+      };
+    case 'USER_ACTION':
+      return {
+        icon: User,
+        tone: 'border-[var(--border)] bg-[var(--surface-subtle)] text-[var(--text-soft)]',
+        title: '用户操作',
+      };
     case 'PUBLISH_SUGGESTION':
       return {
         icon: Sparkles,
@@ -70,6 +82,31 @@ function getMeta(event: TimelineEvent) {
   }
 }
 
+const stageSummaryMap: Record<string, string> = {
+  AWARENESS: '开始了解你的用车需求',
+  CONSIDERATION: '开始探索合适的车型',
+  COMPARISON: '进入深度对比阶段',
+  DECISION: '即将做出最终选择',
+  PURCHASE: '恭喜做出了决定！',
+};
+
+function getStageSummary(event: TimelineEvent): string | null {
+  if (typeof event.metadata?.summary === 'string' && event.metadata.summary) {
+    return event.metadata.summary;
+  }
+  const toStage = typeof event.metadata?.toStage === 'string' ? event.metadata.toStage : null;
+  if (toStage && stageSummaryMap[toStage]) {
+    return stageSummaryMap[toStage];
+  }
+  // Try to infer from event content
+  for (const [key, value] of Object.entries(stageSummaryMap)) {
+    if (event.content?.includes(key)) {
+      return value;
+    }
+  }
+  return null;
+}
+
 function TimelineEventCard({ event }: { event: TimelineEvent }) {
   const meta = getMeta(event);
   const Icon = meta.icon;
@@ -78,13 +115,22 @@ function TimelineEventCard({ event }: { event: TimelineEvent }) {
   const eliminationReason = typeof event.metadata?.eliminationReason === 'string' ? event.metadata.eliminationReason : '';
 
   if (event.type === 'STAGE_CHANGED') {
+    const summary = getStageSummary(event);
     return (
-      <div className={`rounded-[14px] border px-4 py-3 ${meta.tone}`}>
-        <p className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.08em]">
-          <Icon className="h-4 w-4" aria-hidden="true" />
-          {meta.title}
-        </p>
-        <p className="mt-1 text-[13px] font-semibold">{event.content}</p>
+      <div className="-mx-4 flex flex-col items-center gap-1 bg-[var(--warning-muted)] px-4 py-3">
+        <div className="flex w-full items-center gap-3">
+          <span className="h-px flex-1 bg-[var(--warning-border)]" />
+          <span className="inline-flex items-center gap-2 whitespace-nowrap text-[12px] font-bold text-[var(--warning-text)]">
+            <Icon className="h-4 w-4" aria-hidden="true" />
+            {event.content}
+          </span>
+          <span className="h-px flex-1 bg-[var(--warning-border)]" />
+        </div>
+        {summary ? (
+          <p className="text-[11px] leading-[1.5] text-[var(--warning-text)] opacity-80">
+            {summary}
+          </p>
+        ) : null}
       </div>
     );
   }

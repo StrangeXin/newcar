@@ -1,3 +1,4 @@
+import { Prisma } from '@prisma/client';
 import { prisma } from '../lib/prisma';
 
 interface Requirements {
@@ -30,14 +31,14 @@ export class CandidateScoringService {
   private readonly rankThrottleMs = 5 * 60 * 1000;
 
   async scoreCandidates(journeyId: string): Promise<void> {
-    const journey = (await prisma.journey.findUnique({
+    const journey = await prisma.journey.findUnique({
       where: { id: journeyId },
       include: {
         candidates: {
           include: { car: true },
         },
       },
-    })) as any;
+    });
 
     if (!journey) {
       throw new Error('Journey not found');
@@ -67,7 +68,7 @@ export class CandidateScoringService {
   }
 
   async updateRankScore(journeyId: string, candidateId?: string, options: { force?: boolean } = {}) {
-    const journey = (await prisma.journey.findUnique({
+    const journey = await prisma.journey.findUnique({
       where: { id: journeyId },
       include: {
         candidates: {
@@ -78,7 +79,7 @@ export class CandidateScoringService {
           take: 100,
         },
       },
-    })) as any;
+    });
 
     if (!journey) {
       throw new Error('Journey not found');
@@ -95,7 +96,7 @@ export class CandidateScoringService {
       }
 
       const score = this.calculateRankScore(candidate, journey.requirements as Requirements, journey.behaviorEvents || []);
-      await (prisma as any).carCandidate.update({
+      await prisma.carCandidate.update({
         where: { id: candidate.id },
         data: { candidateRankScore: score },
       });

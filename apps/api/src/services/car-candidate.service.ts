@@ -40,17 +40,17 @@ export class CarCandidateService {
         nextData.userNotes = data.userNotes;
       }
       if (data.matchTags && data.matchTags.length > 0) {
-        nextData.matchTags = mergeStringArray((existing as any).matchTags, data.matchTags);
+        nextData.matchTags = mergeStringArray(existing.matchTags, data.matchTags);
       }
-      if (data.recommendReason && !(existing as any).recommendReason) {
+      if (data.recommendReason && !existing.recommendReason) {
         nextData.recommendReason = data.recommendReason;
       }
       if (data.relevantDimensions && data.relevantDimensions.length > 0) {
-        nextData.relevantDimensions = mergeStringArray((existing as any).relevantDimensions, data.relevantDimensions);
+        nextData.relevantDimensions = mergeStringArray(existing.relevantDimensions, data.relevantDimensions);
       }
 
       if (Object.keys(nextData).length > 0) {
-        const updated = await (prisma as any).carCandidate.update({
+        const updated = await prisma.carCandidate.update({
           where: { id: existing.id },
           data: nextData,
           include: { car: true },
@@ -62,7 +62,7 @@ export class CarCandidateService {
       return existing;
     }
 
-    const candidate = await (prisma as any).carCandidate.create({
+    const candidate = await prisma.carCandidate.create({
       data: {
         journeyId: data.journeyId,
         carId: data.carId,
@@ -101,8 +101,8 @@ export class CarCandidateService {
       const statusDelta = (statusPriority[a.status] ?? 99) - (statusPriority[b.status] ?? 99);
       if (statusDelta !== 0) return statusDelta;
 
-      const scoreA = Number((a as any).candidateRankScore ?? a.aiMatchScore ?? 0);
-      const scoreB = Number((b as any).candidateRankScore ?? b.aiMatchScore ?? 0);
+      const scoreA = Number(a.candidateRankScore ?? a.aiMatchScore ?? 0);
+      const scoreB = Number(b.candidateRankScore ?? b.aiMatchScore ?? 0);
       if (scoreA !== scoreB) return scoreB - scoreA;
 
       return new Date(b.addedAt).getTime() - new Date(a.addedAt).getTime();
@@ -115,7 +115,7 @@ export class CarCandidateService {
     status: CandidateStatus,
     eliminationReason?: string
   ) {
-    const candidate = await (prisma as any).carCandidate.update({
+    const candidate = await prisma.carCandidate.update({
       where: { id: candidateId },
       data: {
         status,
@@ -170,7 +170,7 @@ export class CarCandidateService {
     }
 
     const [, winner] = await prisma.$transaction([
-      (prisma as any).carCandidate.updateMany({
+      prisma.carCandidate.updateMany({
         where: {
           journeyId: candidate.journeyId,
           id: { not: candidateId },
@@ -182,7 +182,7 @@ export class CarCandidateService {
           candidateRankScore: 0,
         },
       }),
-      (prisma as any).carCandidate.update({
+      prisma.carCandidate.update({
         where: { id: candidateId },
         data: { status: CandidateStatus.WINNER, candidateRankScore: 1 },
         include: { car: true },
@@ -213,7 +213,7 @@ export class CarCandidateService {
 
   // 移除候选车型
   async removeCandidate(candidateId: string) {
-    const candidate = await (prisma as any).carCandidate.update({
+    const candidate = await prisma.carCandidate.update({
       where: { id: candidateId },
       data: { status: CandidateStatus.ELIMINATED, candidateRankScore: 0 },
     });

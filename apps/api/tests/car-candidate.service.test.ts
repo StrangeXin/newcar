@@ -12,6 +12,12 @@ vi.mock('../src/lib/prisma', () => ({
   prisma: mockedPrisma,
 }));
 
+vi.mock('../src/services/candidate-scoring.service', () => ({
+  candidateScoringService: {
+    updateRankScore: vi.fn().mockResolvedValue(undefined),
+  },
+}));
+
 describe('CarCandidateService', () => {
   beforeEach(() => {
     vi.clearAllMocks();

@@ -10,6 +10,9 @@ vi.mock('../src/lib/prisma', () => ({
       create: vi.fn(),
       update: vi.fn(),
     },
+    timelineEvent: {
+      create: vi.fn().mockResolvedValue({ id: 'te-1', type: 'JOURNEY_PUBLISHED' }),
+    },
   },
 }));
 
@@ -69,9 +72,9 @@ describe('PublishService', () => {
     mockedPrisma.publishedJourney.create.mockReset();
     mockedPrisma.publishedJourney.update.mockReset();
 
-    vi.spyOn(publishService, 'generateStory').mockResolvedValue('故事内容');
-    vi.spyOn(publishService, 'generateReport').mockResolvedValue({ report: true });
-    vi.spyOn(publishService, 'generateTemplate').mockResolvedValue({ template: true, candidateCarIds: ['car-1'] });
+    vi.spyOn(publishService, 'generateStory').mockResolvedValue({ stages: [{ stage: 'AWARENESS', headline: '明确需求', narrative: '故事内容' }] });
+    vi.spyOn(publishService, 'generateReport').mockResolvedValue({ userProfile: { budget: '20-30万', fuelPreference: '纯电', useCases: ['family'], coreDimensions: ['空间'] }, comparison: [], recommendation: { carName: '测试车', reasoning: '测试理由' } });
+    vi.spyOn(publishService, 'generateTemplate').mockResolvedValue({ dimensions: [], weights: {}, keyQuestions: [], candidateCarIds: ['car-1'], candidateNames: ['测试车'] });
 
     mockedPrisma.journey.findUnique.mockResolvedValue(buildJourney() as any);
     mockedPrisma.publishedJourney.findUnique.mockResolvedValue(null);

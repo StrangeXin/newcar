@@ -9,9 +9,10 @@ import { Candidate } from '@/types/api';
 interface CandidateCardProps {
   candidate: Candidate;
   onUpdated: () => Promise<unknown>;
+  emphasizeTags?: boolean;
 }
 
-export function CandidateCard({ candidate, onUpdated }: CandidateCardProps) {
+export function CandidateCard({ candidate, onUpdated, emphasizeTags }: CandidateCardProps) {
   const [busy, setBusy] = useState(false);
   const [showNotes, setShowNotes] = useState(false);
   const [notes, setNotes] = useState(candidate.userNotes || '');
@@ -186,14 +187,16 @@ export function CandidateCard({ candidate, onUpdated }: CandidateCardProps) {
         </div>
 
         {matchTags.length > 0 ? (
-          <div className="mt-[10px] flex flex-wrap gap-[6px]">
+          <div className={`mt-[10px] flex flex-wrap gap-[6px] ${emphasizeTags ? 'rounded-[10px] border border-[var(--accent-border)] bg-[var(--accent-muted)] px-2.5 py-2' : ''}`}>
             {matchTags.slice(0, 4).map((tag) => (
               <span
                 key={tag}
-                className={`rounded-full px-[10px] py-[4px] text-[10px] font-medium ${
-                  isEliminated
-                    ? 'border border-[var(--border)] bg-[var(--surface)] text-[var(--text-muted)]'
-                    : 'border border-[var(--accent-border)] bg-[var(--accent-muted)] text-[var(--accent-text)]'
+                className={`rounded-full font-medium ${
+                  emphasizeTags
+                    ? 'border-[1.5px] border-[var(--accent-border)] bg-[var(--surface)] px-3 py-[5px] text-[11px] font-semibold text-[var(--accent-text)]'
+                    : isEliminated
+                      ? 'border border-[var(--border)] bg-[var(--surface)] px-[10px] py-[4px] text-[10px] text-[var(--text-muted)]'
+                      : 'border border-[var(--accent-border)] bg-[var(--accent-muted)] px-[10px] py-[4px] text-[10px] text-[var(--accent-text)]'
                 }`}
               >
                 {tag}
@@ -204,15 +207,24 @@ export function CandidateCard({ candidate, onUpdated }: CandidateCardProps) {
 
         {dimensionValues.length > 0 ? (
           <div className="mt-[12px] grid gap-[8px]">
-            {dimensionValues.map((item) => (
-              <div key={item.label} className="flex items-center justify-between rounded-[10px] bg-[var(--surface-subtle)] px-[10px] py-[8px] text-[11px]">
-                <span className="flex items-center gap-1.5 font-medium text-[var(--text-soft)]">
-                  <Star className="h-3.5 w-3.5 text-[var(--warning-text)]" aria-hidden="true" />
-                  {item.label}
-                </span>
-                <span className="font-semibold text-[var(--text)]">{item.value}</span>
-              </div>
-            ))}
+            {dimensionValues.map((item) => {
+              const dimensionMatchesSomeTag = matchTags.some((tag) => {
+                const t = tag.toLowerCase();
+                const d = item.label.toLowerCase();
+                return t.includes(d) || d.includes(t);
+              });
+              return (
+                <div key={item.label} className="flex items-center justify-between rounded-[10px] bg-[var(--surface-subtle)] px-[10px] py-[8px] text-[11px]">
+                  <span className="flex items-center gap-1.5 font-medium text-[var(--text-soft)]">
+                    {dimensionMatchesSomeTag ? (
+                      <Star className="h-3.5 w-3.5 text-[var(--warning-text)]" aria-hidden="true" />
+                    ) : null}
+                    {item.label}
+                  </span>
+                  <span className="font-semibold text-[var(--text)]">{item.value}</span>
+                </div>
+              );
+            })}
           </div>
         ) : null}
 

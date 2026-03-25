@@ -58,7 +58,7 @@ export class AiChatService {
     userId?: string;
     sessionId: string;
     message: string;
-  }): Promise<{ message: string; conversationId: string; extractedSignals: any[] }> {
+  }): Promise<{ message: string; conversationId: string; extractedSignals: Array<{ type: string; value: string; confidence: number; updatedAt: string }> }> {
     const result = await this.runChat({
       journeyId: data.journeyId,
       userId: data.userId,
@@ -217,7 +217,7 @@ export class AiChatService {
   private async runChat(data: ChatOptions): Promise<{
     fullContent: string;
     conversationId: string;
-    extractedSignals: any[];
+    extractedSignals: Array<{ type: string; value: string; confidence: number; updatedAt: string }>;
   }> {
     this.logChat(data.traceId, 'chat_start', {
       journeyId: data.journeyId,
@@ -348,7 +348,21 @@ export class AiChatService {
           stage: journey.stage as JourneyStage,
           status: journey.status,
           requirements: existingRequirements,
-          candidates: journey.candidates as any,
+          candidates: journey.candidates?.map((c) => ({
+            id: c.id,
+            status: c.status,
+            addedReason: c.addedReason,
+            userNotes: c.userNotes,
+            car: c.car ? {
+              id: c.car.id,
+              brand: c.car.brand,
+              model: c.car.model,
+              variant: c.car.variant,
+              msrp: c.car.msrp,
+              fuelType: c.car.fuelType,
+              type: c.car.type,
+            } : undefined,
+          })),
         },
         conversationId: conversation.id,
         history,
@@ -525,7 +539,7 @@ export class AiChatService {
     if (/理想\s*l6|理想l6|l6/.test(lowerMessage)) {
       const cars = await carService.searchCars({ q: 'L6', limit: 10 });
       const targetCar =
-        cars.find((car: any) => car.brand.includes('理想') && car.model.toLowerCase().includes('l6')) || cars[0];
+        cars.find((car) => car.brand.includes('理想') && car.model.toLowerCase().includes('l6')) || cars[0];
 
       if (targetCar) {
         targetCarName = `${targetCar.brand} ${targetCar.model}`;

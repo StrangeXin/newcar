@@ -1,71 +1,98 @@
 'use client';
 
-import { useMemo, useState } from 'react';
-import { Columns2, ListTree } from 'lucide-react';
+import { useCallback, useMemo, useState } from 'react';
+import { CarFront, ChevronUp, X } from 'lucide-react';
 import { useCandidates } from '@/hooks/useCandidates';
 import { useSnapshot } from '@/hooks/useSnapshot';
 import { useTimeline } from '@/hooks/useTimeline';
+import { JourneyStage } from '@/types/api';
 import { CandidateList } from './CandidateList';
 import { TimelinePanel } from './TimelinePanel';
 
 interface JourneyWorkspaceProps {
   journeyId: string;
+  stage: JourneyStage;
 }
 
-export function JourneyWorkspace({ journeyId }: JourneyWorkspaceProps) {
-  const [mobilePane, setMobilePane] = useState<'timeline' | 'candidates'>('timeline');
+export function JourneyWorkspace({ journeyId, stage }: JourneyWorkspaceProps) {
+  const [sheetOpen, setSheetOpen] = useState(false);
   const timeline = useTimeline(journeyId);
   const snapshot = useSnapshot(journeyId);
   const candidates = useCandidates(journeyId);
 
   const sortedCandidates = useMemo(() => candidates.candidates, [candidates.candidates]);
 
+  const openSheet = useCallback(() => setSheetOpen(true), []);
+  const closeSheet = useCallback(() => setSheetOpen(false), []);
+
   return (
     <div className="flex h-full min-h-0 flex-col gap-[10px] overflow-hidden">
-      <div className="flex items-center justify-between rounded-ws-lg border border-[var(--border)] bg-[var(--surface)] px-3 py-2 shadow-workspace md:hidden">
-        <div>
-          <p className="text-[10px] font-bold uppercase tracking-[0.08em] text-[var(--accent-text)]">Workspace</p>
-          <p className="text-[12px] font-semibold text-[var(--text)]">时间线与候选车联动更新</p>
-        </div>
-        <div className="inline-flex rounded-full border border-[var(--border)] bg-[var(--surface-subtle)] p-1">
-          <button
-            type="button"
-            onClick={() => setMobilePane('timeline')}
-            className={`rounded-full px-3 py-1 text-[10px] font-semibold ${mobilePane === 'timeline' ? 'bg-[var(--accent)] text-white' : 'text-[var(--text-soft)]'}`}
-          >
-            <span className="inline-flex items-center gap-1">
-              <ListTree className="h-3 w-3" aria-hidden="true" />
-              时间线
-            </span>
-          </button>
-          <button
-            type="button"
-            onClick={() => setMobilePane('candidates')}
-            className={`rounded-full px-3 py-1 text-[10px] font-semibold ${mobilePane === 'candidates' ? 'bg-[var(--accent)] text-white' : 'text-[var(--text-soft)]'}`}
-          >
-            <span className="inline-flex items-center gap-1">
-              <Columns2 className="h-3 w-3" aria-hidden="true" />
-              候选车
-            </span>
-          </button>
-        </div>
-      </div>
-
+      {/* Desktop: side-by-side grid */}
       <div className="hidden min-h-0 flex-1 gap-[10px] lg:grid lg:grid-cols-[minmax(0,1.15fr)_minmax(320px,0.85fr)]">
         <div className="min-h-0">
           <TimelinePanel events={timeline.events} snapshot={snapshot.snapshot} isLoading={timeline.isLoading || snapshot.isLoading} />
         </div>
         <div className="min-h-0">
-          <CandidateList candidates={sortedCandidates} isLoading={candidates.isLoading} refresh={candidates.refresh} />
+          <CandidateList candidates={sortedCandidates} isLoading={candidates.isLoading} refresh={candidates.refresh} stage={stage} />
         </div>
       </div>
 
-      <div className="min-h-0 flex-1 lg:hidden">
-        {mobilePane === 'timeline' ? (
+      {/* Mobile: timeline always visible + bottom sheet for candidates */}
+      <div className="relative min-h-0 flex-1 lg:hidden">
+        <div className="h-full pb-12">
           <TimelinePanel events={timeline.events} snapshot={snapshot.snapshot} isLoading={timeline.isLoading || snapshot.isLoading} />
-        ) : (
-          <CandidateList candidates={sortedCandidates} isLoading={candidates.isLoading} refresh={candidates.refresh} />
+        </div>
+
+        {/* Bottom handle bar */}
+        <button
+          type="button"
+          onClick={openSheet}
+          className="absolute bottom-0 left-0 right-0 flex items-center justify-center gap-2 rounded-t-[14px] border border-b-0 border-[var(--border)] bg-[var(--surface)] px-4 py-2.5 shadow-workspace"
+        >
+          <ChevronUp className="h-4 w-4 text-[var(--text-muted)]" />
+          <span className="text-[12px] font-semibold text-[var(--text)]">
+            <CarFront className="mr-1 inline-block h-3.5 w-3.5 text-[var(--accent)]" aria-hidden="true" />
+            候选车
+          </span>
+          <span className="rounded-full bg-[var(--accent)] px-2 py-0.5 text-[10px] font-bold text-white">
+            {sortedCandidates.length}
+          </span>
+        </button>
+
+        {/* Backdrop overlay */}
+        {sheetOpen && (
+          <div
+            className="fixed inset-0 z-40 bg-black/40 transition-opacity"
+            onClick={closeSheet}
+            aria-hidden="true"
+          />
         )}
+
+        {/* Bottom sheet */}
+        <div
+          className={`fixed inset-x-0 bottom-0 z-50 flex max-h-[75vh] flex-col rounded-t-[18px] border-t border-[var(--border)] bg-[var(--surface)] shadow-workspace transition-transform duration-300 ease-in-out ${
+            sheetOpen ? 'translate-y-0' : 'translate-y-full'
+          }`}
+        >
+          {/* Sheet header */}
+          <div className="flex items-center justify-between border-b border-[var(--border)] px-4 py-3">
+            <div className="flex items-center gap-2">
+              <CarFront className="h-4 w-4 text-[var(--accent)]" aria-hidden="true" />
+              <span className="text-[13px] font-bold text-[var(--text)]">候选车</span>
+              <span className="rounded-full bg-[var(--accent-muted)] px-2 py-0.5 text-[10px] font-semibold text-[var(--accent-text)]">
+                {sortedCandidates.length}
+              </span>
+            </div>
+            <button type="button" onClick={closeSheet} className="rounded-full p-1 text-[var(--text-muted)] hover:bg-[var(--surface-subtle)]">
+              <X className="h-4 w-4" />
+              <span className="sr-only">关闭</span>
+            </button>
+          </div>
+          {/* Sheet body */}
+          <div className="min-h-0 flex-1 overflow-y-auto p-3">
+            <CandidateList candidates={sortedCandidates} isLoading={candidates.isLoading} refresh={candidates.refresh} stage={stage} />
+          </div>
+        </div>
       </div>
     </div>
   );

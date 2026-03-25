@@ -32,7 +32,7 @@ export default function JourneyPage() {
         </div>
       ) : null}
       {!isLoading && !journey && !error ? <NewJourneyWizard onCreated={refresh} /> : null}
-      {journey && !error ? <JourneyWorkspace journeyId={journey.id} /> : null}
+      {journey && !error ? <JourneyWorkspace journeyId={journey.id} stage={journey.stage} /> : null}
     </main>
   );
 }
