@@ -28,10 +28,12 @@ export type ToolChatMessage = BaseMessage & {
   status: 'running' | 'done';
 };
 
+export type SideEffectEvent = 'candidate_added' | 'journey_updated' | 'stage_changed';
+
 export type SideEffectChatMessage = BaseMessage & {
   kind: 'side_effect';
-  event: 'candidate_added' | 'journey_updated' | 'stage_changed';
-  data: any;
+  event: SideEffectEvent;
+  data: Record<string, unknown>;
 };
 
 export type CarResultChatMessage = BaseMessage & {
@@ -77,12 +79,21 @@ function parseToolInput(input: unknown) {
   return input && typeof input === 'object' ? (input as Record<string, unknown>) : {};
 }
 
-function parseCarResults(result: unknown): CarResultChatMessage['cars'] {
-  if (!result || typeof result !== 'object' || !('cars' in result) || !Array.isArray((result as any).cars)) {
-    return [];
-  }
+interface RawCarResult {
+  id?: unknown;
+  brand?: unknown;
+  model?: unknown;
+  type?: unknown;
+  fuelType?: unknown;
+  msrp?: unknown;
+}
 
-  return (result as any).cars.map((car: any, index: number) => ({
+function parseCarResults(result: unknown): CarResultChatMessage['cars'] {
+  if (!result || typeof result !== 'object' || !('cars' in result)) return [];
+  const obj = result as { cars: unknown };
+  if (!Array.isArray(obj.cars)) return [];
+
+  return (obj.cars as RawCarResult[]).map((car, index) => ({
     id: String(car.id),
     brand: String(car.brand || ''),
     model: String(car.model || ''),
@@ -185,7 +196,7 @@ export const useChatStore = create<ChatState>((set, getState) => ({
         | { type: 'token'; delta: string }
         | { type: 'tool_start'; name: ToolName; input: Record<string, unknown> }
         | { type: 'tool_done'; name: ToolName; result: unknown }
-        | { type: 'side_effect'; event: SideEffectChatMessage['event']; data: any }
+        | { type: 'side_effect'; event: SideEffectEvent; data: Record<string, unknown> }
         | { type: 'done'; conversationId: string; fullContent: string }
         | { type: 'error'; code: string; message: string };
 
@@ -286,10 +297,13 @@ export const useChatStore = create<ChatState>((set, getState) => ({
             payload.event === 'candidate_added' && message.kind === 'car_results'
               ? {
                   ...message,
-                  cars: message.cars.map((car) =>
-                    car.id === payload.data?.carId || car.id === payload.data?.car?.id
-                      ? { ...car, addedCandidate: payload.data }
-                      : car
+                  cars: message.cars.map((car) => {
+                    const d = payload.data as Record<string, unknown>;
+                    const carObj = d?.car as Record<string, unknown> | undefined;
+                    return car.id === d?.carId || car.id === carObj?.id
+                      ? { ...car, addedCandidate: d as unknown as Candidate }
+                      : car;
+                  }
                   ),
                 }
               : message

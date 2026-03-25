@@ -10,7 +10,7 @@ import { mockNotifications } from './workspace-mock-data';
 const TYPE_META: Record<string, { label: string; tone: string }> = {
   PRICE_DROP: { label: '降价', tone: 'border-[var(--success-border)] bg-[var(--success-muted)] text-[var(--success-text)]' },
   NEW_VARIANT: { label: '新款', tone: 'border-[var(--accent-border)] bg-[var(--accent-muted)] text-[var(--accent-text)]' },
-  NEW_REVIEW: { label: '口碑', tone: 'border-indigo-200 bg-indigo-50 text-indigo-700' },
+  NEW_REVIEW: { label: '口碑', tone: 'border-[var(--info)]/20 bg-[var(--info)]/10 text-[var(--info)]' },
   POLICY_UPDATE: { label: '政策', tone: 'border-[var(--warning-border)] bg-[var(--warning-muted)] text-[var(--warning-text)]' },
   OTA_RECALL: { label: '提醒', tone: 'border-[var(--error)]/20 bg-[var(--error)]/10 text-[var(--error)]' },
 };

@@ -1,16 +1,68 @@
+// ── Enums ──────────────────────────────────────────────
+
+export type JourneyStage = 'AWARENESS' | 'CONSIDERATION' | 'COMPARISON' | 'DECISION' | 'PURCHASE';
+
+export type JourneyStatus = 'ACTIVE' | 'COMPLETED' | 'ABANDONED';
+
+export type CandidateStatus = 'ACTIVE' | 'ELIMINATED' | 'WINNER';
+
+export type FuelType = 'BEV' | 'PHEV' | 'HEV' | 'ICE' | 'EREV';
+
+export type PublishFormat = 'story' | 'report' | 'template';
+
+export type Visibility = 'PUBLIC' | 'UNLISTED';
+
+export type ContentStatus = 'PENDING' | 'APPROVED' | 'REJECTED';
+
+export type NotificationType =
+  | 'AI_INSIGHT' | 'PRICE_CHANGE' | 'STAGE_CHANGE'
+  | 'PRICE_DROP' | 'NEW_VARIANT' | 'NEW_REVIEW'
+  | 'POLICY_UPDATE' | 'OTA_RECALL';
+
+// ── Structured sub-types ───────────────────────────────
+
+export interface JourneyRequirements {
+  budget?: { min: number; max: number };
+  budgetMin?: number;
+  budgetMax?: number;
+  fuelType?: string;
+  fuelTypePreference?: string[];
+  bodyType?: string;
+  seats?: number;
+  useCases?: string[];
+  priorities?: string[];
+}
+
+export interface CarBaseSpecs {
+  range?: number;
+  acceleration?: number;
+  length?: number;
+  [key: string]: number | undefined;
+}
+
+export interface CommunityTags {
+  budgetMin?: number;
+  budgetMax?: number;
+  useCases?: string[];
+  fuelTypes?: string[];
+  [key: string]: unknown;
+}
+
+// ── Domain entities ────────────────────────────────────
+
 export interface Journey {
   id: string;
   userId?: string;
   title: string;
-  stage: string;
-  status: string;
-  requirements?: Record<string, unknown>;
+  stage: JourneyStage;
+  status: JourneyStatus;
+  requirements?: JourneyRequirements;
   aiConfidenceScore?: number | null;
 }
 
 export interface NotificationItem {
   id: string;
-  type: string;
+  type: NotificationType;
   title: string;
   body?: string | null;
   metadata?: Record<string, unknown>;
@@ -40,8 +92,8 @@ export interface CarInfo {
   model: string;
   variant: string;
   type: string;
-  fuelType: string;
-  baseSpecs?: Record<string, unknown> | null;
+  fuelType: FuelType | string;
+  baseSpecs?: CarBaseSpecs | null;
   msrp?: number | null;
 }
 
@@ -49,7 +101,7 @@ export interface Candidate {
   id: string;
   journeyId: string;
   carId: string;
-  status: 'ACTIVE' | 'ELIMINATED' | 'WINNER';
+  status: CandidateStatus;
   aiMatchScore?: number | null;
   userInterestScore?: number | null;
   priceAtAdd?: number | null;
@@ -63,17 +115,17 @@ export interface CommunityJourney {
   journeyId: string;
   title: string;
   description?: string | null;
-  publishedFormats: string[];
-  tags?: Record<string, unknown> | null;
+  publishedFormats: PublishFormat[];
+  tags?: CommunityTags | null;
   storyContent?: string | null;
-  reportData?: unknown;
-  templateData?: unknown;
-  visibility: string;
+  reportData?: Record<string, unknown>;
+  templateData?: Record<string, unknown>;
+  visibility: Visibility;
   viewCount: number;
   likeCount: number;
   commentCount: number;
   forkCount: number;
-  contentStatus: string;
+  contentStatus: ContentStatus;
   publishedAt: string;
   user?: {
     id: string;
@@ -82,9 +134,9 @@ export interface CommunityJourney {
   };
   journey?: {
     id: string;
-    status: string;
-    stage: string;
-    requirements?: Record<string, unknown>;
+    status: JourneyStatus;
+    stage: JourneyStage;
+    requirements?: JourneyRequirements;
     startedAt?: string;
     completedAt?: string | null;
   };

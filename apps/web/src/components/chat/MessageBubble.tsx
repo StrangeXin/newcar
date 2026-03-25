@@ -34,10 +34,10 @@ export function MessageBubble({ message }: MessageBubbleProps) {
   if (message.kind === 'side_effect') {
     const label =
       message.event === 'candidate_added'
-        ? `${message.data?.car?.brand || ''} ${message.data?.car?.model || ''} 已加入候选列表`
+        ? (() => { const car = message.data?.car as Record<string, unknown> | undefined; return `${car?.brand || ''} ${car?.model || ''} 已加入候选列表`; })()
         : message.event === 'journey_updated'
           ? '旅程需求已更新'
-          : `旅程已推进到 ${message.data?.stage || '下一阶段'}`;
+          : `旅程已推进到 ${(message.data?.stage as string) || '下一阶段'}`;
 
     return (
       <div className="flex items-start gap-[6px]">
