@@ -20,7 +20,21 @@ export function JourneyWorkspace({ journeyId, stage }: JourneyWorkspaceProps) {
   const snapshot = useSnapshot(journeyId);
   const candidates = useCandidates(journeyId);
 
-  const sortedCandidates = useMemo(() => candidates.candidates, [candidates.candidates]);
+  const sortedCandidates = useMemo(() => {
+    const list = [...candidates.candidates];
+    const statusOrder: Record<string, number> = { WINNER: 0, ACTIVE: 1, ELIMINATED: 2 };
+    return list.sort((a, b) => {
+      const sa = statusOrder[a.status] ?? 1;
+      const sb = statusOrder[b.status] ?? 1;
+      if (sa !== sb) return sa - sb;
+      if (sa === 1) {
+        const ra = (a as { candidateRankScore?: number | null }).candidateRankScore ?? 0;
+        const rb = (b as { candidateRankScore?: number | null }).candidateRankScore ?? 0;
+        return rb - ra;
+      }
+      return 0;
+    });
+  }, [candidates.candidates]);
 
   const openSheet = useCallback(() => setSheetOpen(true), []);
   const closeSheet = useCallback(() => setSheetOpen(false), []);

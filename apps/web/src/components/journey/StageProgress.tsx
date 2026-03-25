@@ -41,7 +41,7 @@ function StageItem({ index, label, active, completed, fullWidth = false }: Stage
     <li
       data-testid={`stage-${STAGES[index].key.toLowerCase()}`}
       data-active={active ? 'true' : 'false'}
-      className={`flex items-center gap-[6px] rounded-[10px] border border-[1.5px] px-[10px] py-[8px] text-[length:var(--text-sm)] font-semibold whitespace-nowrap ${fullWidth ? 'w-full' : ''} ${toneClass}`}
+      className={`flex items-center gap-[6px] rounded-[var(--radius-lg)] border border-[1.5px] px-[10px] py-[8px] text-[length:var(--text-sm)] font-semibold whitespace-nowrap ${fullWidth ? 'w-full' : ''} ${toneClass}`}
     >
       <span className={`inline-flex h-5 w-5 items-center justify-center rounded-full text-[length:var(--text-xs)] font-bold ${dotClass}`}>
         {completed ? '✓' : index + 1}
@@ -55,7 +55,7 @@ function DesktopStageProgress({ currentIndex, confidence }: { currentIndex: numb
   return (
     <aside className="hidden h-full min-h-0 w-full flex-col overflow-hidden rounded-ws-lg border border-[var(--border)] bg-[var(--surface)] p-ws14 shadow-workspace xl:flex">
       <p className="text-[length:var(--text-xs)] font-bold uppercase tracking-[0.12em] text-[var(--accent-text)]">Journey Stage</p>
-      <h2 className="mt-1 flex items-center gap-2 text-[18px] font-extrabold text-[var(--text)]">
+      <h2 className="mt-1 flex items-center gap-2 text-[length:var(--text-lg)] font-extrabold text-[var(--text)]">
         <Route className="h-4 w-4 text-[var(--accent)]" strokeWidth={1.85} aria-hidden="true" />
         旅程进度
       </h2>
@@ -73,12 +73,12 @@ function DesktopStageProgress({ currentIndex, confidence }: { currentIndex: numb
         ))}
       </ol>
 
-      <div className="mt-[10px] rounded-[10px] border border-[var(--accent-border)] bg-[var(--accent-muted)] p-[10px]">
+      <div className="mt-[10px] rounded-[var(--radius-lg)] border border-[var(--accent-border)] bg-[var(--accent-muted)] p-[10px]">
         <p className="flex items-center gap-1 text-[length:var(--text-xs)] font-bold uppercase tracking-[0.08em] text-[var(--accent-text)]">
           <Brain className="h-3 w-3" strokeWidth={1.85} aria-hidden="true" />
           AI 置信度
         </p>
-        <p className="mt-0.5 text-[22px] font-extrabold leading-none text-[var(--accent-text-soft)]">{confidence || 0}%</p>
+        <p className="mt-0.5 text-[length:var(--text-xl)] font-extrabold leading-none text-[var(--accent-text-soft)]">{confidence || 0}%</p>
         <div className="mt-[6px] h-[3px] rounded-full bg-[var(--accent-border)]">
           <div className="h-[3px] rounded-full bg-[var(--accent)]" style={{ width: `${confidence || 8}%` }} />
         </div>
@@ -87,7 +87,7 @@ function DesktopStageProgress({ currentIndex, confidence }: { currentIndex: numb
 
       <Link
         href="/journey/publish"
-        className="mt-[10px] flex w-full cursor-pointer items-center justify-center gap-1 rounded-[10px] border-[1.5px] border-[var(--border)] bg-[var(--surface)] px-[10px] py-[8px] text-center text-[length:var(--text-xs)] font-bold text-[var(--text-soft)] hover:border-[var(--border-soft)]"
+        className="mt-[10px] flex w-full cursor-pointer items-center justify-center gap-1 rounded-[var(--radius-lg)] border-[1.5px] border-[var(--border)] bg-[var(--surface)] px-[10px] py-[8px] text-center text-[length:var(--text-xs)] font-bold text-[var(--text-soft)] hover:border-[var(--border-soft)]"
       >
         <Upload className="h-3.5 w-3.5" strokeWidth={1.85} aria-hidden="true" />
         发布我的旅程

@@ -83,4 +83,109 @@ describe('runAddCandidate', () => {
       priceAtAdd: 249800,
     });
   });
+
+  /* ------------------------------------------------------------------ */
+  /* New test cases                                                      */
+  /* ------------------------------------------------------------------ */
+
+  it('direct carId lookup succeeds (valid car ID)', async () => {
+    mocks.getCarById.mockResolvedValueOnce({
+      id: 'car-byd-seal',
+      brand: '比亚迪',
+      model: '海豹',
+      msrp: 189800,
+    });
+    mocks.addCandidate.mockResolvedValueOnce({
+      id: 'candidate-3',
+      carId: 'car-byd-seal',
+      car: { brand: '比亚迪', model: '海豹' },
+    });
+
+    const result = await runAddCandidate('journey-1', { carId: 'car-byd-seal' });
+
+    expect(mocks.getCarById).toHaveBeenCalledWith('car-byd-seal');
+    expect(mocks.searchCars).not.toHaveBeenCalled();
+    expect(mocks.addCandidate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        journeyId: 'journey-1',
+        carId: 'car-byd-seal',
+      })
+    );
+    expect(result.output).toEqual(expect.objectContaining({ id: 'candidate-3' }));
+  });
+
+  it('car not found throws error with clear message', async () => {
+    mocks.getCarById.mockResolvedValueOnce(null);
+    mocks.searchCars.mockResolvedValue([]);
+
+    await expect(runAddCandidate('journey-1', { carId: 'nonexistent' })).rejects.toThrow('Car not found');
+  });
+
+  it('compact brand+model search: "深蓝S7" splits Chinese brand + alphanumeric model', async () => {
+    mocks.getCarById.mockResolvedValueOnce(null);
+    // First searchCars (full query "深蓝S7") returns empty
+    mocks.searchCars.mockResolvedValueOnce([]);
+    // Second searchCars (compact split: brand='深蓝', q='S7') returns result
+    mocks.searchCars.mockResolvedValueOnce([
+      { id: 'car-deepal-s7', brand: '深蓝', model: 'S7' },
+    ]);
+    mocks.addCandidate.mockResolvedValueOnce({
+      id: 'candidate-4',
+      carId: 'car-deepal-s7',
+    });
+
+    await runAddCandidate('journey-1', { carId: '深蓝S7' });
+
+    // First call is the full query search
+    expect(mocks.searchCars).toHaveBeenNthCalledWith(1, expect.objectContaining({ q: '深蓝S7' }));
+    // Second call uses compact brand split (Chinese + alphanumeric)
+    expect(mocks.searchCars).toHaveBeenNthCalledWith(2, expect.objectContaining({ brand: '深蓝', q: 'S7' }));
+    expect(mocks.addCandidate).toHaveBeenCalledWith(
+      expect.objectContaining({ carId: 'car-deepal-s7' })
+    );
+  });
+
+  it('space-separated search: "理想 L6" → compact match on normalized "理想L6" splits brand+q', async () => {
+    // fallbackQuery = '理想 L6', normalizedQuery = '理想L6'
+    // First searchCars (q='理想 L6') returns empty
+    mocks.searchCars.mockResolvedValueOnce([]);
+    // compactMatch on normalizedQuery '理想L6' → brand='理想', q='L6'
+    mocks.searchCars.mockResolvedValueOnce([
+      { id: 'car-li-l6', brand: '理想', model: 'L6' },
+    ]);
+    mocks.addCandidate.mockResolvedValueOnce({
+      id: 'candidate-5',
+      carId: 'car-li-l6',
+    });
+
+    await runAddCandidate('journey-1', { query: '理想 L6' });
+
+    // Second call should have brand split from compact match
+    expect(mocks.searchCars).toHaveBeenNthCalledWith(2, expect.objectContaining({ brand: '理想', q: 'L6' }));
+  });
+
+  it('side effects return correct shape: { event: candidate_added, data: candidate }', async () => {
+    vi.clearAllMocks();
+    const carObj = {
+      id: 'car-test-x',
+      brand: 'Test',
+      model: 'X',
+    };
+    mocks.getCarById.mockResolvedValueOnce(carObj);
+    const candidateObj = {
+      id: 'candidate-6',
+      carId: 'car-test-x',
+      journeyId: 'journey-1',
+      car: { brand: 'Test', model: 'X' },
+    };
+    mocks.addCandidate.mockResolvedValueOnce(candidateObj);
+
+    const result = await runAddCandidate('journey-1', { carId: 'car-test-x' });
+
+    expect(result.sideEffects).toHaveLength(1);
+    expect(result.sideEffects[0]).toEqual({
+      event: 'candidate_added',
+      data: candidateObj,
+    });
+  });
 });

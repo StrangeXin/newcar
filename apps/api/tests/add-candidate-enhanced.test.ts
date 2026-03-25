@@ -62,4 +62,54 @@ describe('add_candidate enhanced payload', () => {
     });
     expect(result.sideEffects[0].event).toBe('candidate_added');
   });
+
+  it('normalizeStringArray handles non-array input → matchTags/relevantDimensions become undefined', async () => {
+    mockGetCarById.mockResolvedValue({
+      id: 'car-2',
+      brand: '小鹏',
+      model: 'G6',
+    });
+    mockAddCandidate.mockResolvedValue({
+      id: 'candidate-2',
+      carId: 'car-2',
+    });
+
+    await runAddCandidate('journey-1', {
+      carId: 'car-2',
+      matchTags: 'not-an-array',
+      relevantDimensions: 42,
+    });
+
+    expect(mockAddCandidate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        matchTags: undefined,
+        relevantDimensions: undefined,
+      })
+    );
+  });
+
+  it('normalizeStringArray trims and filters empty strings', async () => {
+    mockGetCarById.mockResolvedValue({
+      id: 'car-3',
+      brand: '问界',
+      model: 'M7',
+    });
+    mockAddCandidate.mockResolvedValue({
+      id: 'candidate-3',
+      carId: 'car-3',
+    });
+
+    await runAddCandidate('journey-1', {
+      carId: 'car-3',
+      matchTags: ['  预算命中  ', '', '  ', '家用首选'],
+      relevantDimensions: ['空间', '  ', '续航  '],
+    });
+
+    expect(mockAddCandidate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        matchTags: ['预算命中', '家用首选'],
+        relevantDimensions: ['空间', '续航'],
+      })
+    );
+  });
 });
