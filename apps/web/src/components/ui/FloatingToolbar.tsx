@@ -8,7 +8,7 @@ export function FloatingToolbar() {
   const nextLocale = locale === 'zh' ? 'en' : 'zh';
 
   return (
-    <div className="fixed right-4 top-4 z-50 flex items-center gap-1.5 rounded-full border border-[var(--border)]/60 bg-[var(--surface)]/80 px-1.5 py-1 shadow-[var(--shadow-sm)] backdrop-blur-md">
+    <div className="fixed right-4 top-3 z-[60] flex items-center gap-1.5 rounded-full border border-[var(--border)]/60 bg-[var(--surface)]/80 px-1.5 py-1 shadow-[var(--shadow-sm)] backdrop-blur-md">
       <ThemeToggle />
       <div className="h-4 w-px bg-[var(--border)]" />
       <button

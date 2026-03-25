@@ -24,8 +24,7 @@ export default function HomePage() {
         </div>
       </nav>
 
-      <main className="mx-auto w-full max-w-6xl px-6 pb-12 pt-20">
-        <div className="flex min-h-[calc(100vh-5rem)] items-center">
+      <main className="mx-auto flex min-h-screen w-full max-w-6xl flex-col justify-center px-6 py-20">
         <section className="grid w-full items-center gap-8 md:grid-cols-2">
           <div>
             <p className="text-[var(--text-xs)] font-semibold uppercase tracking-[0.16em] text-[var(--accent-text-soft)]">
@@ -47,7 +46,6 @@ export default function HomePage() {
           </div>
           <JourneyCarousel t={t} />
         </section>
-        </div>
 
         <section className="mt-8 grid gap-4 md:grid-cols-3">
           <article className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow-card)]">
