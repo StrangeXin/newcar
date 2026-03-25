@@ -65,7 +65,7 @@ export default function HomePage() {
           </article>
           <article className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow-card)]">
             <h2 className="flex items-center gap-2 text-base font-bold text-[var(--text)]">
-              <span className="inline-flex h-7 w-7 items-center justify-center rounded-md bg-[var(--success-muted)] text-[var(--success-text)]">
+              <span className="inline-flex h-7 w-7 items-center justify-center rounded-md bg-[var(--accent-muted)] text-[var(--accent-text)]">
                 <MessageSquareText className="h-4 w-4" aria-hidden="true" />
               </span>
               {t['home.feature.ai.title']}
