@@ -30,6 +30,7 @@ export function ForkButton({ publishedJourneyId }: ForkButtonProps) {
   return (
     <div>
       <button
+        data-testid="fork-button"
         type="button"
         onClick={fork}
         disabled={loading}

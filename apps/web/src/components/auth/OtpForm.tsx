@@ -137,7 +137,7 @@ export function OtpForm() {
           aria-live="polite"
           className="rounded-lg bg-[var(--warning-muted)] px-3 py-2 text-xs text-[var(--warning-text)]"
         >
-          {t['auth.dev_hint']}
+          {t['auth.dev_hint'].replace('123456', hintOtp)}
         </p>
       ) : null}
       {error ? (

@@ -27,9 +27,9 @@ export function StoryView({ content }: StoryViewProps) {
 
   if (structured?.stages?.length) {
     return (
-      <div className="space-y-6">
+      <div data-testid="story-view" className="space-y-6">
         {structured.stages.map((stage) => (
-          <article key={`${stage.stage}-${stage.headline}`} className="grid grid-cols-[20px_minmax(0,1fr)] gap-3">
+          <article key={`${stage.stage}-${stage.headline}`} data-testid="story-stage" className="grid grid-cols-[20px_minmax(0,1fr)] gap-3">
             <div className="flex flex-col items-center">
               <span className="mt-1 h-3 w-3 rounded-full bg-[var(--accent)]" />
               <span className="mt-2 min-h-0 flex-1 w-px bg-[var(--border)]" />

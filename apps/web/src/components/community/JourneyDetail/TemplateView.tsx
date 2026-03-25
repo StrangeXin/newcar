@@ -17,10 +17,10 @@ export function TemplateView({ data, publishedJourneyId }: TemplateViewProps) {
     Array.isArray(template.keyQuestions);
 
   return (
-    <div className="space-y-3">
+    <div data-testid="template-view" className="space-y-3">
       {hasStructuredTemplate ? (
         <div className="space-y-4">
-          <section className="rounded-[var(--radius-2xl)] border border-[var(--border)] bg-[var(--surface-subtle)] p-4">
+          <section data-testid="template-dimensions" className="rounded-[var(--radius-2xl)] border border-[var(--border)] bg-[var(--surface-subtle)] p-4">
             <h3 className="text-sm font-bold text-[var(--text)]">对比维度</h3>
             <div className="mt-3 flex flex-wrap gap-2">
               {template.dimensions.map((dimension) => (
@@ -32,7 +32,7 @@ export function TemplateView({ data, publishedJourneyId }: TemplateViewProps) {
             </div>
           </section>
 
-          <section className="rounded-[var(--radius-2xl)] border border-[var(--border)] bg-[var(--surface)] p-4">
+          <section data-testid="template-questions" className="rounded-[var(--radius-2xl)] border border-[var(--border)] bg-[var(--surface)] p-4">
             <h3 className="text-sm font-bold text-[var(--text)]">买车前要想清楚的问题</h3>
             <ol className="mt-3 space-y-2 text-sm text-[var(--text-soft)]">
               {template.keyQuestions.map((question, index) => (

@@ -117,7 +117,7 @@ function TimelineEventCard({ event }: { event: TimelineEvent }) {
   if (event.type === 'STAGE_CHANGED') {
     const summary = getStageSummary(event);
     return (
-      <div className="-mx-4 flex flex-col items-center gap-1 bg-[var(--warning-muted)] px-4 py-3">
+      <div data-testid="timeline-milestone" data-event-type={event.type} className="-mx-4 flex flex-col items-center gap-1 bg-[var(--warning-muted)] px-4 py-3">
         <div className="flex w-full items-center gap-3">
           <span className="h-px flex-1 bg-[var(--warning-border)]" />
           <span className="inline-flex items-center gap-2 whitespace-nowrap text-[length:var(--text-sm)] font-bold text-[var(--warning-text)]">
@@ -137,7 +137,7 @@ function TimelineEventCard({ event }: { event: TimelineEvent }) {
 
   if (event.type === 'PUBLISH_SUGGESTION') {
     return (
-      <article className={`rounded-[var(--radius-2xl)] border px-4 py-4 ${meta.tone}`}>
+      <article data-testid="publish-suggestion" data-event-type={event.type} className={`rounded-[var(--radius-2xl)] border px-4 py-4 ${meta.tone}`}>
         <p className="flex items-center gap-2 text-[length:var(--text-xs)] font-bold uppercase tracking-[0.08em]">
           <Icon className="h-4 w-4" strokeWidth={1.85} aria-hidden="true" />
           {meta.title}
@@ -157,7 +157,7 @@ function TimelineEventCard({ event }: { event: TimelineEvent }) {
   }
 
   return (
-    <article className={`rounded-[var(--radius-xl)] border px-4 py-4 ${meta.tone}`}>
+    <article data-testid="timeline-event" data-event-type={event.type} className={`rounded-[var(--radius-xl)] border px-4 py-4 ${meta.tone}`}>
       <div className="flex items-start justify-between gap-3">
         <div>
           <p className="flex items-center gap-2 text-[length:var(--text-xs)] font-bold uppercase tracking-[0.08em]">
@@ -194,7 +194,7 @@ function TimelineEventCard({ event }: { event: TimelineEvent }) {
 
 function DailySnapshotCard({ snapshot }: { snapshot: JourneySnapshot }) {
   return (
-    <article className="rounded-[var(--radius-2xl)] border border-[var(--accent-border)] bg-[linear-gradient(180deg,var(--surface),var(--accent-muted))] px-5 py-5 text-[var(--text)] shadow-workspace">
+    <article data-testid="daily-snapshot" className="rounded-[var(--radius-2xl)] border border-[var(--accent-border)] bg-[linear-gradient(180deg,var(--surface),var(--accent-muted))] px-5 py-5 text-[var(--text)] shadow-workspace">
       <p className="text-[length:var(--text-xs)] font-bold uppercase tracking-[0.08em] text-[var(--accent-text)]">每日总结</p>
       <p className="mt-2 text-[length:var(--text-base)] font-semibold leading-7">{snapshot.narrativeSummary || '今天的旅程仍在推进中。'}</p>
       {Array.isArray(snapshot.keyInsights) && snapshot.keyInsights.length > 0 ? (
@@ -231,7 +231,7 @@ export function TimelinePanel({ events, snapshot, isLoading }: TimelinePanelProp
   const days = Object.entries(grouped);
 
   return (
-    <section className="flex h-full min-h-0 flex-col rounded-ws-lg border border-[var(--border)] bg-[var(--surface)] p-ws14 shadow-workspace">
+    <section data-testid="timeline-panel" className="flex h-full min-h-0 flex-col rounded-ws-lg border border-[var(--border)] bg-[var(--surface)] p-ws14 shadow-workspace">
       <div className="flex min-h-[28px] items-center justify-between gap-[10px]">
         <div>
           <p className="text-[length:var(--text-xs)] font-bold uppercase tracking-[0.1em] text-[var(--accent-text)]">Timeline</p>
@@ -241,11 +241,11 @@ export function TimelinePanel({ events, snapshot, isLoading }: TimelinePanelProp
           {events.length} 条事件
         </span>
       </div>
-      {isLoading ? <p className="mt-4 text-[length:var(--text-xs)] text-[var(--text-muted)]">正在同步时间线...</p> : null}
+      {isLoading ? <p data-testid="timeline-loading" className="mt-4 text-[length:var(--text-xs)] text-[var(--text-muted)]">正在同步时间线...</p> : null}
       <div className="mt-4 flex min-h-0 flex-1 flex-col gap-5 overflow-y-auto pr-1">
         {snapshot ? <DailySnapshotCard snapshot={snapshot} /> : null}
         {days.length === 0 && !snapshot ? (
-          <div className="rounded-[var(--radius-xl)] border border-dashed border-[var(--border)] bg-[var(--surface-subtle)] px-4 py-6 text-[length:var(--text-sm)] text-[var(--text-muted)]">
+          <div data-testid="timeline-empty" className="rounded-[var(--radius-xl)] border border-dashed border-[var(--border)] bg-[var(--surface-subtle)] px-4 py-6 text-[length:var(--text-sm)] text-[var(--text-muted)]">
             还没有时间线事件。继续聊天后，AI 推荐、阶段推进和需求更新都会出现在这里。
           </div>
         ) : null}

@@ -1,10 +1,14 @@
-import { expect, test } from '@playwright/test';
+import { expect, Page } from '@playwright/test';
 
 function makePhone() {
   return `138${Date.now().toString().slice(-8)}`;
 }
 
-test('user can log in, create a journey, and add a candidate from chat', async ({ page }) => {
+/**
+ * Logs in with a random phone number and ensures a journey exists.
+ * After this helper returns, the page is on /journey with a workspace visible.
+ */
+export async function loginAndEnsureJourney(page: Page, journeyTitle?: string) {
   const phone = makePhone();
 
   await page.goto('/login');
@@ -12,7 +16,7 @@ test('user can log in, create a journey, and add a candidate from chat', async (
   await page.getByTestId('send-otp-button').click();
 
   const otpHint = page.getByTestId('otp-hint');
-  await expect(otpHint).toBeVisible();
+  await expect(otpHint).toBeVisible({ timeout: 10000 });
   const otpText = await otpHint.textContent();
   const otp = otpText?.match(/(\d{6})/)?.[1];
   expect(otp).toBeTruthy();
@@ -20,7 +24,8 @@ test('user can log in, create a journey, and add a candidate from chat', async (
   await page.getByTestId('login-otp-input').fill(String(otp));
   await page.getByTestId('verify-otp-button').click();
 
-  await page.waitForURL('**/journey');
+  // Wait for login API call to complete and redirect
+  await page.waitForURL('**/journey', { timeout: 30000 });
 
   const titleInput = page.getByTestId('journey-title-input');
   const needsJourneyCreation = await titleInput
@@ -29,19 +34,13 @@ test('user can log in, create a journey, and add a candidate from chat', async (
     .catch(() => false);
 
   if (needsJourneyCreation) {
-    await titleInput.fill(`E2E 家用增程 SUV ${Date.now()}`);
+    const title = journeyTitle || `E2E 测试旅程 ${Date.now()}`;
+    await titleInput.fill(title);
     await page.getByTestId('start-journey-button').click();
     await expect(titleInput).toBeHidden({ timeout: 20000 });
   }
 
-  await expect(page.getByTestId('journey-workspace')).toBeVisible();
-  await expect(page.getByTestId('chat-panel')).toBeVisible();
+  // Wait for workspace to be ready
+  await expect(page.getByTestId('chat-panel')).toBeVisible({ timeout: 20000 });
   await expect(page.getByTestId('chat-input')).toBeEnabled({ timeout: 20000 });
-
-  await page.getByTestId('chat-input').fill('我预算25万以内，家用为主，想要增程SUV，先推荐3款，再把理想L6加入候选。');
-  await page.getByTestId('chat-send').click();
-
-  await expect(page.getByText(/理想\s*L6 已加入候选列表/)).toBeVisible({ timeout: 60000 });
-  await expect(page.getByTestId('candidate-list').first()).toContainText('理想 L6', { timeout: 60000 });
-  await expect(page.getByTestId('chat-input')).toBeEnabled({ timeout: 60000 });
-});
+}

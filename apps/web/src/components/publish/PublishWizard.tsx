@@ -46,7 +46,7 @@ export function PublishWizard() {
   }
 
   return (
-    <section className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-card">
+    <section data-testid="publish-wizard" className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-card">
       <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[var(--accent-text)]">Publish Journey</p>
       <h1 className="mt-2 flex items-center gap-2 text-2xl font-extrabold text-[var(--text)]">
         <Send className="h-5 w-5 text-[var(--accent-text)]" strokeWidth={1.85} aria-hidden="true" />
@@ -73,6 +73,7 @@ export function PublishWizard() {
           <select
             value={visibility}
             onChange={(e) => setVisibility(e.target.value as 'PUBLIC' | 'UNLISTED')}
+            data-testid="publish-visibility-select"
             className="mt-1 w-full rounded-xl border border-[var(--border)] px-3 py-2 text-sm text-[var(--text)] outline-none ring-[var(--accent-border)] focus:ring-2"
           >
             <option value="PUBLIC">PUBLIC</option>
@@ -85,6 +86,7 @@ export function PublishWizard() {
           <textarea
             value={description}
             onChange={(e) => setDescription(e.target.value)}
+            data-testid="publish-description"
             className="mt-1 min-h-24 w-full rounded-xl border border-[var(--border)] px-3 py-2 text-sm text-[var(--text)] outline-none ring-[var(--accent-border)] focus:ring-2"
           />
         </label>
@@ -95,6 +97,7 @@ export function PublishWizard() {
           type="button"
           onClick={publish}
           disabled={submitting || !journey?.title}
+          data-testid="publish-submit"
           className="inline-flex cursor-pointer items-center gap-1 rounded-xl bg-[var(--accent)] px-4 py-2 text-sm font-semibold text-white hover:bg-[var(--accent-hover)] disabled:cursor-not-allowed disabled:opacity-60"
         >
           <CheckCircle2 className="h-4 w-4" strokeWidth={1.85} aria-hidden="true" />
@@ -103,7 +106,7 @@ export function PublishWizard() {
         <span className="text-xs text-[var(--text-muted)]">失败时你仍然可以回到社区页继续编辑或重新生成内容。</span>
       </div>
 
-      {error ? <p className="mt-3 text-sm text-[var(--error)]">{error}</p> : null}
+      {error ? <p data-testid="publish-error" className="mt-3 text-sm text-[var(--error)]">{error}</p> : null}
     </section>
   );
 }

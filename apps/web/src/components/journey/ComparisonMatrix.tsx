@@ -127,7 +127,7 @@ export function ComparisonMatrix({ candidates }: ComparisonMatrixProps) {
   }, [active, bestPerRow]);
 
   return (
-    <section className="rounded-[var(--radius-xl)] border border-[var(--border)] bg-[var(--surface-subtle)] p-4 shadow-card">
+    <section data-testid="comparison-matrix" className="rounded-[var(--radius-xl)] border border-[var(--border)] bg-[var(--surface-subtle)] p-4 shadow-card">
       <div className="flex items-center justify-between gap-3">
         <h3 className="text-[length:var(--text-sm)] font-bold text-[var(--text)]">对比模式</h3>
         <p className="text-[length:var(--text-xs)] text-[var(--text-muted)]">仅展示当前候选里最相关的维度</p>
@@ -158,7 +158,7 @@ export function ComparisonMatrix({ candidates }: ComparisonMatrixProps) {
                       <span className="flex items-center gap-1">
                         {row.render(item)}
                         {isBest ? (
-                          <span className="inline-block rounded-[var(--radius-sm)] bg-[var(--accent-muted)] px-1.5 py-0.5 text-[length:var(--text-xs)] font-semibold text-[var(--accent-text)]">
+                          <span data-testid="comparison-best-badge" className="inline-block rounded-[var(--radius-sm)] bg-[var(--accent-muted)] px-1.5 py-0.5 text-[length:var(--text-xs)] font-semibold text-[var(--accent-text)]">
                             最优
                           </span>
                         ) : null}
@@ -173,7 +173,7 @@ export function ComparisonMatrix({ candidates }: ComparisonMatrixProps) {
       </div>
 
       {aiSummary ? (
-        <div className="mt-4 rounded-[var(--radius-xl)] border border-[var(--accent-border)] bg-[var(--accent-muted)] px-4 py-3">
+        <div data-testid="comparison-summary" className="mt-4 rounded-[var(--radius-xl)] border border-[var(--accent-border)] bg-[var(--accent-muted)] px-4 py-3">
           <h4 className="text-[length:var(--text-sm)] font-bold text-[var(--accent-text)]">AI 对比分析</h4>
           <p className="mt-1 text-[length:var(--text-xs)] leading-[1.6] text-[var(--text-soft)]">{aiSummary}</p>
         </div>

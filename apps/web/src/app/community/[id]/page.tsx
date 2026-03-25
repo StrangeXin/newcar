@@ -197,13 +197,13 @@ export default function CommunityDetailPage() {
   const hasTemplate = journey.publishedFormats.includes('template');
 
   return (
-    <main className="mx-auto min-h-screen w-full max-w-5xl space-y-4 px-4 py-6">
+    <main data-testid="community-detail" className="mx-auto min-h-screen w-full max-w-5xl space-y-4 px-4 py-6">
       <header className="relative rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-card">
         <div className="absolute right-4 top-4 flex items-center gap-1">
           <ThemeToggle />
           <LocaleToggle />
         </div>
-        <h1 className="text-2xl font-extrabold text-[var(--text)]">{journey.title}</h1>
+        <h1 data-testid="detail-title" className="text-2xl font-extrabold text-[var(--text)]">{journey.title}</h1>
         {journey.description ? <p className="mt-2 text-sm text-[var(--text-soft)]">{journey.description}</p> : null}
         {journey.publishSummary ? (
           <p className="mt-3 rounded-[14px] border border-[var(--accent-border)] bg-[var(--accent-muted)] px-3 py-3 text-sm leading-6 text-[var(--accent-text)]">
@@ -221,6 +221,7 @@ export default function CommunityDetailPage() {
             <GitFork className="h-3 w-3" aria-hidden="true" /> {journey.forkCount}
           </span>
           <button
+            data-testid="detail-like-button"
             type="button"
             onClick={like}
             disabled={likeBusy}
@@ -230,6 +231,7 @@ export default function CommunityDetailPage() {
             点赞
           </button>
           <button
+            data-testid="detail-like-button"
             type="button"
             onClick={unlike}
             disabled={likeBusy}
@@ -241,7 +243,7 @@ export default function CommunityDetailPage() {
       </header>
 
       {isAuthor ? (
-        <section className="rounded-2xl border border-[var(--accent-border)] bg-[var(--accent-muted)] p-5 shadow-card">
+        <section data-testid="author-edit-section" className="rounded-2xl border border-[var(--accent-border)] bg-[var(--accent-muted)] p-5 shadow-card">
           <h2 className="text-sm font-bold text-[var(--accent-text)]">作者编辑区</h2>
           <div className="mt-4 grid gap-3 md:grid-cols-2">
             <label className="text-sm font-medium text-[var(--text-soft)]">
@@ -339,7 +341,7 @@ export default function CommunityDetailPage() {
         </section>
       ) : null}
 
-      <div className="flex gap-2">
+      <div data-testid="detail-tabs" className="flex gap-2">
         {hasStory ? (
           <button type="button" onClick={() => setTab('story')} className={tabClass(tab === 'story')}>
             <BookText className="mr-1 inline h-3.5 w-3.5" aria-hidden="true" />

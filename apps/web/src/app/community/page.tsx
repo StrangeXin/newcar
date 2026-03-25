@@ -50,7 +50,7 @@ function CommunityPageContent() {
   };
 
   return (
-    <main className="mx-auto min-h-screen w-full max-w-6xl space-y-4 px-4 py-6">
+    <main data-testid="community-page" className="mx-auto min-h-screen w-full max-w-6xl space-y-4 px-4 py-6">
       <header
         className="relative rounded-[var(--radius-xl)] border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow-card)]"
         style={{ background: 'var(--bg-gradient), var(--surface)' }}
@@ -67,7 +67,9 @@ function CommunityPageContent() {
       </header>
 
       <FeedFilters value={value} onChange={onFilterChange} />
-      <JourneyFeedList items={items} isLoading={isLoading} isLoadingMore={isLoadingMore} hasMore={hasMore} onLoadMore={loadMore} />
+      <div data-testid="community-feed">
+        <JourneyFeedList items={items} isLoading={isLoading} isLoadingMore={isLoadingMore} hasMore={hasMore} onLoadMore={loadMore} />
+      </div>
     </main>
   );
 }

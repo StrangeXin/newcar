@@ -40,7 +40,7 @@ export function JourneyWorkspace({ journeyId, stage }: JourneyWorkspaceProps) {
   const closeSheet = useCallback(() => setSheetOpen(false), []);
 
   return (
-    <div className="flex h-full min-h-0 flex-col gap-[10px] overflow-hidden">
+    <div data-testid="journey-workspace" className="flex h-full min-h-0 flex-col gap-[10px] overflow-hidden">
       {/* Desktop: side-by-side grid */}
       <div className="hidden min-h-0 flex-1 gap-[10px] lg:grid lg:grid-cols-[minmax(0,1.15fr)_minmax(320px,0.85fr)]">
         <div className="min-h-0">
@@ -61,6 +61,7 @@ export function JourneyWorkspace({ journeyId, stage }: JourneyWorkspaceProps) {
         <button
           type="button"
           onClick={openSheet}
+          data-testid="mobile-candidate-handle"
           className="absolute bottom-0 left-0 right-0 flex items-center justify-center gap-2 rounded-t-[var(--radius-xl)] border border-b-0 border-[var(--border)] bg-[var(--surface)] px-4 py-2.5 shadow-workspace"
         >
           <ChevronUp className="h-4 w-4 text-[var(--text-muted)]" strokeWidth={1.85} aria-hidden="true" />
@@ -84,6 +85,7 @@ export function JourneyWorkspace({ journeyId, stage }: JourneyWorkspaceProps) {
 
         {/* Bottom sheet */}
         <div
+          data-testid="mobile-candidate-sheet"
           className={`fixed inset-x-0 bottom-0 z-50 flex max-h-[75vh] flex-col rounded-t-[var(--radius-2xl)] border-t border-[var(--border)] bg-[var(--surface)] shadow-workspace transition-transform duration-300 ease-in-out ${
             sheetOpen ? 'translate-y-0' : 'translate-y-full'
           }`}

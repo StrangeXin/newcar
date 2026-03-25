@@ -19,10 +19,10 @@ export function JourneyFeedCard({ item }: JourneyFeedCardProps) {
       : '预算未标注';
 
   return (
-    <article className="rounded-[var(--radius-xl)] border border-[var(--border)] bg-[var(--surface)] p-4 shadow-[var(--shadow-card)]">
+    <article data-testid="feed-card" data-journey-id={item.id} className="rounded-[var(--radius-xl)] border border-[var(--border)] bg-[var(--surface)] p-4 shadow-[var(--shadow-card)]">
       <div className="flex items-center justify-between gap-3">
         <div>
-          <p className="font-[family-name:var(--font-display)] text-[var(--text-lg)] font-bold text-[var(--text)]">{item.title}</p>
+          <p data-testid="feed-card-title" className="font-[family-name:var(--font-display)] text-[var(--text-lg)] font-bold text-[var(--text)]">{item.title}</p>
           <p className="text-xs text-[var(--text-muted)]">{item.user?.nickname || '匿名用户'}</p>
         </div>
         <span className="inline-flex items-center gap-1 rounded-full border border-[var(--border)] bg-[var(--surface-subtle)] px-2 py-1 text-xs text-[var(--text-soft)]">
@@ -32,11 +32,11 @@ export function JourneyFeedCard({ item }: JourneyFeedCardProps) {
       </div>
 
       {candidateNames.length > 0 ? (
-        <p className="mt-3 text-sm font-semibold text-[var(--text)]">{candidateNames.join('  vs  ')}</p>
+        <p data-testid="feed-card-candidates" className="mt-3 text-sm font-semibold text-[var(--text)]">{candidateNames.join('  vs  ')}</p>
       ) : null}
 
       {item.publishSummary ? (
-        <p className="mt-3 rounded-[var(--radius-xl)] border border-[var(--accent-border)] bg-[var(--accent-muted)] px-3 py-3 text-sm leading-6 text-[var(--accent-text)]">
+        <p data-testid="feed-card-summary" className="mt-3 rounded-[var(--radius-xl)] border border-[var(--accent-border)] bg-[var(--accent-muted)] px-3 py-3 text-sm leading-6 text-[var(--accent-text)]">
           "{item.publishSummary}"
         </p>
       ) : item.description ? (
