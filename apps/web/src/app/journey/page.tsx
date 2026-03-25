@@ -20,13 +20,13 @@ export default function JourneyPage() {
   return (
     <main className="flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
       {isLoading ? (
-        <div className="inline-flex items-center gap-1.5 rounded-ws-lg border border-slate-200 bg-white/90 p-ws14 text-[11px] text-slate-500 shadow-workspace">
-          <LoaderCircle className="h-3.5 w-3.5 animate-spin text-orange-600" aria-hidden="true" />
+        <div className="inline-flex items-center gap-1.5 rounded-ws-lg border border-[var(--border)] bg-[var(--surface)] p-ws14 text-[11px] text-[var(--text-muted)] shadow-workspace">
+          <LoaderCircle className="h-3.5 w-3.5 animate-spin text-[var(--accent)]" aria-hidden="true" />
           正在加载旅程数据...
         </div>
       ) : null}
       {error ? (
-        <div className="inline-flex items-center gap-1.5 rounded-ws-lg border border-red-200 bg-red-50 p-ws14 text-[11px] text-red-700 shadow-workspace">
+        <div className="inline-flex items-center gap-1.5 rounded-ws-lg border border-[var(--error)]/20 bg-[var(--error)]/10 p-ws14 text-[11px] text-[var(--error)] shadow-workspace">
           <AlertTriangle className="h-3.5 w-3.5" aria-hidden="true" />
           {error.message}
         </div>

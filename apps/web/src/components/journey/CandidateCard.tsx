@@ -86,14 +86,14 @@ export function CandidateCard({ candidate, onUpdated }: CandidateCardProps) {
           bar: 'bg-[linear-gradient(90deg,#10b981,#059669)]',
         }
         : {
-            icon: 'bg-slate-100',
+            icon: 'bg-[var(--surface-subtle)]',
             bar: 'bg-[linear-gradient(90deg,#94a3b8,#475569)]',
           };
   const seatLabel = seats === 5 ? '五座' : seats === 6 ? '六座' : `${seats}座`;
   const priceLabel = isEliminated ? '超出预算' : '起售价';
   const noteTone = isEliminated
-    ? 'border border-dashed border-slate-200 bg-slate-50 text-slate-500'
-    : 'bg-sky-50 text-sky-800';
+    ? 'border border-dashed border-[var(--border)] bg-[var(--surface-subtle)] text-[var(--text-muted)]'
+    : 'bg-[var(--accent-muted)] text-[var(--accent-text)]';
 
   useEffect(() => {
     if (isMock) {
@@ -124,10 +124,10 @@ export function CandidateCard({ candidate, onUpdated }: CandidateCardProps) {
         subtitle={`${candidate.car.fuelType === 'PHEV' ? '增程' : candidate.car.fuelType === 'BEV' ? '纯电' : candidate.car.fuelType} · ${seatLabel} ${candidate.car.type}`}
         rightMeta={(
           <div className="text-right">
-            <p className={`text-[14px] font-extrabold ${isEliminated ? 'text-slate-400' : 'text-slate-900'}`}>
+            <p className={`text-[14px] font-extrabold ${isEliminated ? 'text-[var(--text-muted)]' : 'text-[var(--text)]'}`}>
               {candidate.car.msrp ? `${(candidate.car.msrp / 10000).toFixed(2)}万` : '暂无'}
             </p>
-            <p className="text-[9px] text-slate-400">{priceLabel}</p>
+            <p className="text-[9px] text-[var(--text-muted)]">{priceLabel}</p>
           </div>
         )}
         progressPercent={score}
@@ -147,7 +147,7 @@ export function CandidateCard({ candidate, onUpdated }: CandidateCardProps) {
                 type="button"
                 onClick={restore}
                 disabled={busy}
-                className="flex-1 cursor-pointer rounded-[8px] border-[1.5px] border-slate-300 bg-white px-[10px] py-[6px] text-[10px] font-semibold text-slate-600 hover:border-slate-400 disabled:cursor-not-allowed"
+                className="flex-1 cursor-pointer rounded-[8px] border-[1.5px] border-[var(--border)] bg-[var(--surface)] px-[10px] py-[6px] text-[10px] font-semibold text-[var(--text-soft)] hover:border-[var(--border-soft)] disabled:cursor-not-allowed"
               >
                 恢复候选
               </button>
@@ -157,7 +157,7 @@ export function CandidateCard({ candidate, onUpdated }: CandidateCardProps) {
                   type="button"
                   onClick={markWinner}
                   disabled={isMock || busy || candidate.status === 'WINNER'}
-                  className="flex-1 cursor-pointer rounded-[8px] bg-slate-900 px-[10px] py-[6px] text-[10px] font-bold text-white hover:bg-slate-800 disabled:cursor-not-allowed"
+                  className="flex-1 cursor-pointer rounded-[8px] bg-[var(--text)] px-[10px] py-[6px] text-[10px] font-bold text-[var(--surface)] hover:opacity-90 disabled:cursor-not-allowed"
                 >
                   选定
                 </button>
@@ -165,7 +165,7 @@ export function CandidateCard({ candidate, onUpdated }: CandidateCardProps) {
                   type="button"
                   onClick={eliminate}
                   disabled={isMock || busy || candidate.status === 'ELIMINATED'}
-                  className="flex-1 cursor-pointer rounded-[8px] border-[1.5px] border-slate-300 bg-white px-[10px] py-[6px] text-[10px] font-medium text-slate-600 hover:border-slate-400 disabled:cursor-not-allowed"
+                  className="flex-1 cursor-pointer rounded-[8px] border-[1.5px] border-[var(--border)] bg-[var(--surface)] px-[10px] py-[6px] text-[10px] font-medium text-[var(--text-soft)] hover:border-[var(--border-soft)] disabled:cursor-not-allowed"
                 >
                   淘汰
                 </button>
@@ -175,7 +175,7 @@ export function CandidateCard({ candidate, onUpdated }: CandidateCardProps) {
               type="button"
               onClick={() => setShowNotes((v) => !v)}
               disabled={isMock}
-              className="cursor-pointer rounded-[8px] border-[1.5px] border-slate-300 bg-slate-50 px-[10px] py-[6px] text-[10px] font-medium text-slate-700 hover:border-slate-400 disabled:cursor-not-allowed"
+              className="cursor-pointer rounded-[8px] border-[1.5px] border-[var(--border)] bg-[var(--surface-subtle)] px-[10px] py-[6px] text-[10px] font-medium text-[var(--text-soft)] hover:border-[var(--border-soft)] disabled:cursor-not-allowed"
             >
               备注
             </button>
@@ -189,14 +189,14 @@ export function CandidateCard({ candidate, onUpdated }: CandidateCardProps) {
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
             rows={3}
-            className="w-full rounded-[8px] border border-slate-300 bg-white px-[10px] py-[10px] text-[11px] outline-none ring-sky-300 focus:ring-2"
+            className="w-full rounded-[8px] border border-[var(--border)] bg-[var(--surface)] px-[10px] py-[10px] text-[11px] outline-none ring-[var(--accent-border)] focus:ring-2"
             placeholder="记录你的评价和顾虑..."
           />
           <button
             type="button"
             onClick={saveNotes}
             disabled={isMock || busy}
-            className="cursor-pointer rounded-[8px] border border-slate-300 px-[10px] py-[6px] text-[10px] font-semibold text-slate-700 hover:border-slate-400 disabled:cursor-not-allowed"
+            className="cursor-pointer rounded-[8px] border border-[var(--border)] px-[10px] py-[6px] text-[10px] font-semibold text-[var(--text-soft)] hover:border-[var(--border-soft)] disabled:cursor-not-allowed"
           >
             保存备注
           </button>
