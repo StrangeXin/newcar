@@ -21,10 +21,49 @@ function getMockResponse<T>(path: string, method: HttpMethod = 'GET'): T | null 
     if (path === '/auth/phone/send-otp') return { message: '验证码已发送', otp: '123456' } as T;
     if (path === '/auth/phone/login') return { accessToken: 'mock-access-token', refreshToken: 'mock-refresh-token' } as T;
     if (path.match(/\/community\/[^/]+\/fork/)) return { id: 'mock-journey-id' } as T;
+    if (path === '/journeys') return mockJourney as T;
+    if (path.match(/\/journeys\/[^/]+\/candidates\/[^/]+\/winner/)) return { success: true } as T;
+    if (path.match(/\/journeys\/[^/]+\/publish$/)) return { ...mockCommunityJourneys[0], id: 'mock-published-1' } as T;
     return {} as T;
   }
 
+  // PATCH routes
+  if (method === 'PATCH') {
+    if (path.match(/\/journeys\/[^/]+\/candidates\/[^/]+\/notes/)) return { success: true } as T;
+    if (path.match(/\/journeys\/[^/]+\/candidates\/[^/]+/)) return { success: true } as T;
+    return {} as T;
+  }
+
+  // DELETE routes
+  if (method === 'DELETE') {
+    return {} as T;
+  }
+
+  // GET routes
   if (path === '/journeys/active') return mockJourney as T;
+  if (path.match(/\/journeys\/[^/]+\/publish\/preview/)) {
+    return {
+      story: {
+        title: mockJourney.title,
+        narrative: mockSnapshot.narrativeSummary,
+        highlights: (mockSnapshot.keyInsights ?? []).map((i) => i.insight),
+      },
+      report: {
+        title: mockJourney.title,
+        candidates: mockCandidates.map((c) => ({
+          name: c.car ? `${c.car.brand} ${c.car.model}` : c.carId,
+          score: c.aiMatchScore,
+          notes: c.userNotes,
+        })),
+        insights: (mockSnapshot.keyInsights ?? []),
+      },
+      template: {
+        title: mockJourney.title,
+        requirements: mockJourney.requirements,
+        stages: ['DISCOVERY', 'COMPARISON', 'DECISION'],
+      },
+    } as T;
+  }
   if (path.match(/\/journeys\/[^/]+\/candidates/)) return { candidates: mockCandidates } as T;
   if (path.match(/\/snapshots\/[^/]+\/snapshot/)) return mockSnapshot as T;
   if (path === '/notifications') return mockNotifications as T;
