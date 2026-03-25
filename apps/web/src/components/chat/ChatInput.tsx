@@ -50,7 +50,7 @@ export function ChatInput({ disabled, onSend }: ChatInputProps) {
           disabled={disabled}
           rows={1}
           placeholder="问我任何购车问题…"
-          className="h-[38px] min-h-[38px] flex-1 resize-none rounded-[10px] border-[1.5px] border-[var(--border)] bg-white px-[10px] py-[8px] text-[11px] leading-[1.2] text-[var(--text)] outline-none transition focus:border-[var(--accent)] focus:shadow-[0_0_0_3px_var(--focus-glow)] disabled:cursor-not-allowed disabled:opacity-60"
+          className="h-[38px] min-h-[38px] flex-1 resize-none rounded-[10px] border-[1.5px] border-[var(--border)] bg-[var(--surface)] px-[10px] py-[8px] text-[11px] leading-[1.2] text-[var(--text)] outline-none transition focus:border-[var(--accent)] focus:shadow-[0_0_0_3px_var(--focus-glow)] disabled:cursor-not-allowed disabled:opacity-60"
         />
         <button
           data-testid="chat-send"

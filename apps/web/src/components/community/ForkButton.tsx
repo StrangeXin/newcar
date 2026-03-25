@@ -33,7 +33,7 @@ export function ForkButton({ publishedJourneyId }: ForkButtonProps) {
         type="button"
         onClick={fork}
         disabled={loading}
-        className="inline-flex cursor-pointer items-center gap-1 rounded-xl bg-orange-500 px-3 py-2 text-xs font-semibold text-white hover:bg-orange-600 disabled:cursor-not-allowed disabled:opacity-60"
+        className="inline-flex cursor-pointer items-center gap-1 rounded-xl bg-[var(--accent)] px-3 py-2 text-xs font-semibold text-white hover:bg-[var(--accent-hover)] disabled:cursor-not-allowed disabled:opacity-60"
       >
         <GitFork className="h-3.5 w-3.5" aria-hidden="true" />
         {loading ? '创建中...' : '从此出发'}
