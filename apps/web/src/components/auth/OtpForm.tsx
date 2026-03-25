@@ -4,6 +4,7 @@ import { FormEvent, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { post } from '@/lib/api';
 import { setToken } from '@/lib/auth';
+import { useT } from '@/hooks/useT';
 
 interface SendOtpResponse {
   message: string;
@@ -17,6 +18,7 @@ interface LoginResponse {
 
 export function OtpForm() {
   const router = useRouter();
+  const t = useT();
   const [phone, setPhone] = useState('');
   const [otp, setOtp] = useState('');
   const [step, setStep] = useState<1 | 2>(1);
@@ -71,7 +73,7 @@ export function OtpForm() {
       {step === 1 ? (
         <form onSubmit={handleSendOtp} className="space-y-3" noValidate>
           <label className="block text-sm font-medium text-[var(--text-soft)]" htmlFor="phone">
-            手机号
+            {t['auth.phone.label']}
           </label>
           <input
             data-testid="login-phone-input"
@@ -82,7 +84,7 @@ export function OtpForm() {
             aria-describedby={error ? 'otp-error' : undefined}
             value={phone}
             onChange={(e) => setPhone(e.target.value)}
-            placeholder="请输入手机号"
+            placeholder={t['auth.phone.placeholder']}
             className="w-full rounded-xl border border-[var(--border)] bg-[var(--surface)] px-4 py-3 text-sm outline-none ring-[var(--accent-border)] transition focus:ring-2"
           />
           <button
@@ -91,13 +93,13 @@ export function OtpForm() {
             disabled={loading}
             className="w-full cursor-pointer rounded-xl bg-[var(--accent)] px-4 py-3 text-sm font-semibold text-white hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-60"
           >
-            {loading ? '发送中...' : '发送验证码'}
+            {loading ? t['auth.sending'] : t['auth.send_code']}
           </button>
         </form>
       ) : (
         <form onSubmit={handleVerifyOtp} className="space-y-3" noValidate>
           <label className="block text-sm font-medium text-[var(--text-soft)]" htmlFor="otp">
-            验证码
+            {t['auth.otp.label']}
           </label>
           <input
             data-testid="login-otp-input"
@@ -107,7 +109,7 @@ export function OtpForm() {
             aria-describedby={error ? 'otp-error' : hintOtp ? 'otp-hint' : undefined}
             value={otp}
             onChange={(e) => setOtp(e.target.value)}
-            placeholder="请输入6位验证码"
+            placeholder={t['auth.otp.placeholder']}
             className="w-full rounded-xl border border-[var(--border)] bg-[var(--surface)] px-4 py-3 text-sm outline-none ring-[var(--accent-border)] transition focus:ring-2"
           />
           <button
@@ -116,14 +118,14 @@ export function OtpForm() {
             disabled={loading}
             className="w-full cursor-pointer rounded-xl bg-[var(--accent)] px-4 py-3 text-sm font-semibold text-white hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-60"
           >
-            {loading ? '登录中...' : '验证并登录'}
+            {loading ? t['auth.logging_in'] : t['auth.login']}
           </button>
           <button
             type="button"
             onClick={() => setStep(1)}
             className="w-full cursor-pointer rounded-xl border border-[var(--border)] bg-[var(--surface)] px-4 py-3 text-sm font-semibold text-[var(--text)] hover:border-[var(--border-soft)]"
           >
-            返回修改手机号
+            {t['auth.back']}
           </button>
         </form>
       )}
@@ -135,7 +137,7 @@ export function OtpForm() {
           aria-live="polite"
           className="rounded-lg bg-[var(--warning-muted)] px-3 py-2 text-xs text-[var(--warning-text)]"
         >
-          开发环境验证码：{hintOtp}
+          {t['auth.dev_hint']}
         </p>
       ) : null}
       {error ? (
