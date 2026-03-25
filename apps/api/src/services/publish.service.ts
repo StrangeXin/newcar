@@ -53,6 +53,10 @@ function asObject(value: unknown): Record<string, unknown> {
   return value && typeof value === 'object' && !Array.isArray(value) ? (value as Record<string, unknown>) : {};
 }
 
+function delay(ms: number) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
 export class PublishService {
   private getClient(): Anthropic {
     return new Anthropic({
@@ -72,6 +76,16 @@ export class PublishService {
       return JSON.parse(jsonMatch[0]) as T;
     } catch {
       return fallback;
+    }
+  }
+
+  private async withSingleRetry<T>(label: string, task: () => Promise<T>): Promise<T> {
+    try {
+      return await task();
+    } catch (error) {
+      console.error(`${label} attempt 1 failed:`, error);
+      await delay(250);
+      return task();
     }
   }
 
@@ -118,12 +132,14 @@ JSON 结构：
 }`;
 
     try {
-      const response = await client.messages.create({
-        model: config.ai.model,
-        max_tokens: 2048,
-        system: '你是一个擅长撰写真实购车经历故事的写手，帮助用户记录和分享他们的购车历程。',
-        messages: [{ role: 'user', content: prompt }],
-      });
+      const response = await this.withSingleRetry('generateStory', () =>
+        client.messages.create({
+          model: config.ai.model,
+          max_tokens: 2048,
+          system: '你是一个擅长撰写真实购车经历故事的写手，帮助用户记录和分享他们的购车历程。',
+          messages: [{ role: 'user', content: prompt }],
+        })
+      );
       const text = response.content[0].type === 'text' ? response.content[0].text : '';
       return this.parseJsonBlock<StoryTimeline>(text, {
         stages: [
@@ -207,12 +223,14 @@ ${candidateList || '暂无'}
 }`;
 
     try {
-      const response = await client.messages.create({
-        model: config.ai.model,
-        max_tokens: 2048,
-        system: '你是一位专业的购车顾问，擅长数据分析和决策报告撰写。',
-        messages: [{ role: 'user', content: prompt }],
-      });
+      const response = await this.withSingleRetry('generateReport', () =>
+        client.messages.create({
+          model: config.ai.model,
+          max_tokens: 2048,
+          system: '你是一位专业的购车顾问，擅长数据分析和决策报告撰写。',
+          messages: [{ role: 'user', content: prompt }],
+        })
+      );
       const text = response.content[0].type === 'text' ? response.content[0].text : '{}';
       return this.parseJsonBlock<ReportData>(text, {
         userProfile: {
@@ -284,12 +302,14 @@ ${candidateList || '暂无'}
 }`;
 
     try {
-      const response = await client.messages.create({
-        model: config.ai.model,
-        max_tokens: 1024,
-        system: '你是一位购车决策专家，帮助提炼可复用的选车方法论。',
-        messages: [{ role: 'user', content: prompt }],
-      });
+      const response = await this.withSingleRetry('generateTemplate', () =>
+        client.messages.create({
+          model: config.ai.model,
+          max_tokens: 1024,
+          system: '你是一位购车决策专家，帮助提炼可复用的选车方法论。',
+          messages: [{ role: 'user', content: prompt }],
+        })
+      );
       const text = response.content[0].type === 'text' ? response.content[0].text : '{}';
       const jsonMatch = text.match(/\{[\s\S]*\}/);
       if (jsonMatch) {
@@ -316,17 +336,19 @@ ${candidateList || '暂无'}
       : latestSnapshot?.narrativeSummary?.slice(0, 50) || journey.title;
 
     try {
-      const response = await client.messages.create({
-        model: config.ai.model,
-        max_tokens: 120,
-        system: '你是一个擅长写简洁决策摘要的编辑。输出一句 50 字以内中文摘要，不要引号，不要解释。',
-        messages: [
-          {
-            role: 'user',
-            content: `标题：${journey.title}\n候选车：${candidates.map((candidate: any) => this.buildCandidateName(candidate)).join('、')}\n摘要：${latestSnapshot?.narrativeSummary || ''}\n最终更倾向：${winner ? this.buildCandidateName(winner) : '未定'}\n请输出一句 50 字以内的决策摘要。`,
-          },
-        ],
-      });
+      const response = await this.withSingleRetry('generatePublishSummary', () =>
+        client.messages.create({
+          model: config.ai.model,
+          max_tokens: 120,
+          system: '你是一个擅长写简洁决策摘要的编辑。输出一句 50 字以内中文摘要，不要引号，不要解释。',
+          messages: [
+            {
+              role: 'user',
+              content: `标题：${journey.title}\n候选车：${candidates.map((candidate: any) => this.buildCandidateName(candidate)).join('、')}\n摘要：${latestSnapshot?.narrativeSummary || ''}\n最终更倾向：${winner ? this.buildCandidateName(winner) : '未定'}\n请输出一句 50 字以内的决策摘要。`,
+            },
+          ],
+        })
+      );
       const text = response.content[0].type === 'text' ? response.content[0].text.trim() : fallback;
       return text || fallback;
     } catch {
@@ -477,6 +499,74 @@ ${candidateList || '暂无'}
     });
 
     return result;
+  }
+
+  async regeneratePublishedContent(
+    publishedJourneyId: string,
+    format: 'story' | 'report' | 'template' | 'summary'
+  ) {
+    const published = await prisma.publishedJourney.findUnique({
+      where: { id: publishedJourneyId },
+      include: {
+        journey: {
+          include: {
+            candidates: { include: { car: true } },
+            snapshots: { orderBy: { generatedAt: 'desc' }, take: 1 },
+            user: true,
+          },
+        },
+      },
+    });
+
+    if (!published || !published.journey) {
+      throw new Error('Published journey not found');
+    }
+
+    const journey = published.journey as any;
+    const latestSnapshot = journey.snapshots?.[0] || null;
+    const candidates = journey.candidates || [];
+
+    if (format === 'story') {
+      const storyContent = await this.generateStory(journey, latestSnapshot);
+      return prisma.publishedJourney.update({
+        where: { id: publishedJourneyId },
+        data: {
+          storyContent: JSON.stringify(storyContent),
+          lastSyncedAt: new Date(),
+        } as any,
+      });
+    }
+
+    if (format === 'report') {
+      const reportData = await this.generateReport(journey, candidates);
+      return prisma.publishedJourney.update({
+        where: { id: publishedJourneyId },
+        data: {
+          reportData,
+          lastSyncedAt: new Date(),
+        } as any,
+      });
+    }
+
+    if (format === 'template') {
+      const templateData = await this.generateTemplate(journey, candidates);
+      return prisma.publishedJourney.update({
+        where: { id: publishedJourneyId },
+        data: {
+          templateData,
+          lastSyncedAt: new Date(),
+        } as any,
+      });
+    }
+
+    const publishSummary = await this.generatePublishSummary(journey, candidates, latestSnapshot);
+    return prisma.publishedJourney.update({
+      where: { id: publishedJourneyId },
+      data: {
+        publishSummary,
+        lastSyncedAt: new Date(),
+      } as any,
+    });
   }
 
   async previewPublish(journeyId: string, publishedFormats: string[]): Promise<object> {

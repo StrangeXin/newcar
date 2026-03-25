@@ -102,7 +102,7 @@ export class PublishedJourneyController {
       }
 
       const { id } = req.params;
-      const { visibility, publishedFormats } = req.body;
+      const { visibility, publishedFormats, title, description, publishSummary, storyContent, reportData, templateData } = req.body;
 
       const published = await prisma.publishedJourney.findUnique({ where: { id } });
       if (!published) {
@@ -116,6 +116,18 @@ export class PublishedJourneyController {
 
       if (visibility !== undefined) {
         updateData.visibility = visibility;
+      }
+
+      if (typeof title === 'string') {
+        updateData.title = title.trim();
+      }
+
+      if (description !== undefined) {
+        updateData.description = typeof description === 'string' ? description : null;
+      }
+
+      if (publishSummary !== undefined) {
+        updateData.publishSummary = typeof publishSummary === 'string' ? publishSummary : null;
       }
 
       if (publishedFormats !== undefined) {
@@ -133,13 +145,55 @@ export class PublishedJourneyController {
         updateData.publishedFormats = publishedFormats.map((f: string) => f.toLowerCase());
       }
 
+      if (storyContent !== undefined) {
+        updateData.storyContent = typeof storyContent === 'string' ? storyContent : JSON.stringify(storyContent);
+      }
+
+      if (reportData !== undefined) {
+        updateData.reportData = reportData;
+      }
+
+      if (templateData !== undefined) {
+        updateData.templateData = templateData;
+      }
+
       const result = await prisma.publishedJourney.update({
         where: { id },
-        data: updateData,
+        data: updateData as any,
       });
 
       void communityService.invalidateCommunityListCache();
 
+      return res.json(result);
+    } catch (error) {
+      return res.status(500).json({ error: (error as Error).message });
+    }
+  }
+
+  async regenerate(req: AuthenticatedRequest, res: Response) {
+    try {
+      const userId = req.userId;
+      if (!userId) {
+        return res.status(401).json({ error: 'Unauthorized' });
+      }
+
+      const { id } = req.params;
+      const format = String(req.body?.format || '').trim().toLowerCase() as 'story' | 'report' | 'template' | 'summary';
+
+      if (!['story', 'report', 'template', 'summary'].includes(format)) {
+        return res.status(400).json({ error: 'Invalid format' });
+      }
+
+      const published = await prisma.publishedJourney.findUnique({ where: { id } });
+      if (!published) {
+        return res.status(404).json({ error: 'Published journey not found' });
+      }
+      if (published.userId !== userId) {
+        return res.status(403).json({ error: 'Forbidden' });
+      }
+
+      const result = await publishService.regeneratePublishedContent(id, format);
+      void communityService.invalidateCommunityListCache();
       return res.json(result);
     } catch (error) {
       return res.status(500).json({ error: (error as Error).message });

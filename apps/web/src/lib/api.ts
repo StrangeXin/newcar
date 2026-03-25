@@ -25,6 +25,7 @@ function getMockResponse<T>(path: string, method: HttpMethod = 'GET'): T | null 
     if (path === '/journeys') return mockJourney as T;
     if (path.match(/\/journeys\/[^/]+\/candidates\/[^/]+\/winner/)) return { success: true } as T;
     if (path.match(/\/journeys\/[^/]+\/publish$/)) return { ...mockCommunityJourneys[0], id: 'mock-published-1' } as T;
+    if (path.match(/\/published-journeys\/[^/]+\/regenerate$/)) return mockCommunityJourneys[0] as T;
     return {} as T;
   }
 
@@ -32,6 +33,7 @@ function getMockResponse<T>(path: string, method: HttpMethod = 'GET'): T | null 
   if (method === 'PATCH') {
     if (path.match(/\/journeys\/[^/]+\/candidates\/[^/]+\/notes/)) return { success: true } as T;
     if (path.match(/\/journeys\/[^/]+\/candidates\/[^/]+/)) return { success: true } as T;
+    if (path.match(/\/published-journeys\/[^/]+$/)) return mockCommunityJourneys[0] as T;
     return {} as T;
   }
 

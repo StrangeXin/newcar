@@ -20,6 +20,10 @@ publishedJourneyRoutes.patch('/:id', authMiddleware, (req, res) =>
   publishedJourneyController.update(req, res)
 );
 
+publishedJourneyRoutes.post('/:id/regenerate', authMiddleware, (req, res) =>
+  publishedJourneyController.regenerate(req, res)
+);
+
 publishedJourneyRoutes.delete('/:id', authMiddleware, (req, res) =>
   publishedJourneyController.unpublish(req, res)
 );
