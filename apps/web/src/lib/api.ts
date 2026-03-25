@@ -13,8 +13,16 @@ export const MOCK_MODE = true; // Set to false to use real API
 
 type HttpMethod = 'GET' | 'POST' | 'PATCH' | 'DELETE';
 
-function getMockResponse<T>(path: string): T | null {
+function getMockResponse<T>(path: string, method: HttpMethod = 'GET'): T | null {
   if (!MOCK_MODE) return null;
+
+  // POST routes
+  if (method === 'POST') {
+    if (path === '/auth/phone/send-otp') return { message: '验证码已发送', otp: '123456' } as T;
+    if (path === '/auth/phone/login') return { accessToken: 'mock-access-token', refreshToken: 'mock-refresh-token' } as T;
+    if (path.match(/\/community\/[^/]+\/fork/)) return { id: 'mock-journey-id' } as T;
+    return {} as T;
+  }
 
   if (path === '/journeys/active') return mockJourney as T;
   if (path.match(/\/journeys\/[^/]+\/candidates/)) return { candidates: mockCandidates } as T;
@@ -81,17 +89,20 @@ export async function get<T>(path: string): Promise<T> {
 }
 
 export async function post<T>(path: string, body?: unknown): Promise<T> {
-  if (MOCK_MODE) return undefined as T;
+  const mock = getMockResponse<T>(path, 'POST');
+  if (mock !== null) return mock;
   return request<T>(path, 'POST', body);
 }
 
 export async function patch<T>(path: string, body?: unknown): Promise<T> {
-  if (MOCK_MODE) return undefined as T;
+  const mock = getMockResponse<T>(path, 'PATCH');
+  if (mock !== null) return mock;
   return request<T>(path, 'PATCH', body);
 }
 
 export async function del<T>(path: string): Promise<T> {
-  if (MOCK_MODE) return undefined as T;
+  const mock = getMockResponse<T>(path, 'DELETE');
+  if (mock !== null) return mock;
   return request<T>(path, 'DELETE');
 }
 
