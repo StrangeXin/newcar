@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { CarFront, MessageSquareText, Route } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
+import { JourneyCarousel } from '@/components/home/JourneyCarousel';
 
 export default function HomePage() {
   return (
@@ -40,74 +41,7 @@ export default function HomePage() {
               <Link href="/community"><Button variant="secondary" size="lg">浏览社区</Button></Link>
             </div>
           </div>
-          <div className="rounded-[var(--radius-xl)] border border-[var(--border)] bg-[var(--surface-subtle)] p-5">
-            <div className="rounded-[var(--radius-lg)] border border-[var(--border)] bg-[var(--surface)] p-4">
-              <p className="text-[var(--text-xs)] font-semibold uppercase tracking-[0.1em] text-[var(--accent-text-soft)]">
-                AI Journey Preview
-              </p>
-
-              {/* Simulated journey stages */}
-              <div className="mt-3 space-y-2">
-                <div className="flex items-center gap-2">
-                  <span className="flex h-5 w-5 items-center justify-center rounded-full bg-[var(--success)] text-[8px] text-white">✓</span>
-                  <span className="text-[11px] font-medium text-[var(--success-text)]">需求确认</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className="flex h-5 w-5 items-center justify-center rounded-full bg-[var(--accent)] text-[8px] text-white">2</span>
-                  <span className="text-[11px] font-semibold text-[var(--accent)]">候选筛选中</span>
-                </div>
-              </div>
-
-              {/* Simulated AI chat */}
-              <div className="mt-3 space-y-2">
-                <div className="rounded-[3px_12px_12px_12px] border border-[var(--border)] bg-[var(--surface-subtle)] p-2.5 text-[11px] text-[var(--text)]">
-                  <p className="font-medium text-[var(--accent)]">AI 助手</p>
-                  <p className="mt-1 leading-relaxed">根据您「家用、预算25万、增程优先」的需求，为您筛选了3款候选车型：</p>
-                </div>
-
-                {/* Mini car cards */}
-                <div className="space-y-1.5">
-                  <div className="flex items-center justify-between rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--surface)] px-3 py-2">
-                    <div>
-                      <p className="text-[11px] font-semibold text-[var(--text)]">理想 L6</p>
-                      <p className="text-[10px] text-[var(--text-muted)]">增程 · 五座 · 24.98万起</p>
-                    </div>
-                    <div className="flex items-center gap-1.5">
-                      <div className="h-1.5 w-12 rounded-full bg-[var(--accent-border)]"><div className="h-1.5 w-[92%] rounded-full bg-[var(--accent)]"></div></div>
-                      <span className="text-[10px] font-semibold text-[var(--accent)]">92%</span>
-                    </div>
-                  </div>
-                  <div className="flex items-center justify-between rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--surface)] px-3 py-2">
-                    <div>
-                      <p className="text-[11px] font-semibold text-[var(--text)]">问界 M7</p>
-                      <p className="text-[10px] text-[var(--text-muted)]">增程 · 五座 · 24.98万起</p>
-                    </div>
-                    <div className="flex items-center gap-1.5">
-                      <div className="h-1.5 w-12 rounded-full bg-[var(--accent-border)]"><div className="h-1.5 w-[85%] rounded-full bg-[var(--accent)]"></div></div>
-                      <span className="text-[10px] font-semibold text-[var(--accent)]">85%</span>
-                    </div>
-                  </div>
-                  <div className="flex items-center justify-between rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--surface)] px-3 py-2">
-                    <div>
-                      <p className="text-[11px] font-semibold text-[var(--text)]">小鹏 G6</p>
-                      <p className="text-[10px] text-[var(--text-muted)]">纯电 · 五座 · 20.99万起</p>
-                    </div>
-                    <div className="flex items-center gap-1.5">
-                      <div className="h-1.5 w-12 rounded-full bg-[var(--accent-border)]"><div className="h-1.5 w-[78%] rounded-full bg-[var(--accent)]"></div></div>
-                      <span className="text-[10px] font-semibold text-[var(--accent)]">78%</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Simulated action chips */}
-              <div className="mt-3 flex flex-wrap gap-1.5">
-                <span className="rounded-full bg-[var(--accent-muted)] px-2.5 py-1 text-[10px] font-medium text-[var(--accent-text)]">帮我对比续航</span>
-                <span className="rounded-full bg-[var(--accent-muted)] px-2.5 py-1 text-[10px] font-medium text-[var(--accent-text)]">算用车成本</span>
-                <span className="rounded-full bg-[var(--accent-muted)] px-2.5 py-1 text-[10px] font-medium text-[var(--accent-text)]">附近试驾</span>
-              </div>
-            </div>
-          </div>
+          <JourneyCarousel t={{}} />
         </section>
         </div>
 
