@@ -3,6 +3,8 @@
 import { useEffect, useState } from 'react';
 import { ChatPanel } from '@/components/chat/ChatPanel';
 import { StageProgress } from '@/components/journey/StageProgress';
+import { ThemeToggle } from '@/components/ui/ThemeToggle';
+import { LocaleToggle } from '@/components/ui/LocaleToggle';
 
 export function JourneyShell({ children }: { children: React.ReactNode }) {
   const [mobileChatOpen, setMobileChatOpen] = useState(false);
@@ -20,7 +22,11 @@ export function JourneyShell({ children }: { children: React.ReactNode }) {
   }, [mobileChatOpen]);
 
   return (
-    <div className="min-h-screen pb-24 md:h-[100dvh] md:min-h-0 md:overflow-hidden md:pb-0">
+    <div className="relative min-h-screen pb-24 md:h-[100dvh] md:min-h-0 md:overflow-hidden md:pb-0">
+      <div className="absolute right-3 top-3 z-50 flex items-center gap-1">
+        <ThemeToggle />
+        <LocaleToggle />
+      </div>
       <div className="mx-auto grid h-full max-w-[1920px] items-stretch gap-3 px-3 py-3 md:grid-cols-[minmax(0,1fr)_320px] md:grid-rows-[auto_minmax(0,1fr)] xl:grid-cols-[220px_minmax(0,1.2fr)_minmax(320px,1fr)] xl:grid-rows-none">
         <div className="hidden h-full min-h-0 md:col-span-full md:block xl:col-span-1">
           <StageProgress />

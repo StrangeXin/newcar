@@ -3,6 +3,8 @@
 import Link from 'next/link';
 import { CarFront, MessageSquareText, Route } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
+import { ThemeToggle } from '@/components/ui/ThemeToggle';
+import { LocaleToggle } from '@/components/ui/LocaleToggle';
 import { JourneyCarousel } from '@/components/home/JourneyCarousel';
 import { useT } from '@/hooks/useT';
 
@@ -18,6 +20,8 @@ export default function HomePage() {
           <Link href="/community" className="text-[var(--text-sm)] font-medium text-[var(--text-soft)] hover:text-[var(--text)]">
             {t['nav.community']}
           </Link>
+          <ThemeToggle />
+          <LocaleToggle />
           <Link href="/login">
             <Button size="sm">{t['nav.login']}</Button>
           </Link>

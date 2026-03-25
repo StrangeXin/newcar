@@ -218,13 +218,13 @@ export function JourneyCarousel({ t }: { t: Messages }) {
           ))}
         </div>
 
-        {/* Content area with fade transition */}
-        <div className="relative mt-3 min-h-[200px]">
+        {/* Content area with fade transition — fixed height prevents layout shift */}
+        <div className="relative mt-3 h-[220px] overflow-hidden">
           {stages.map((s, i) => (
             <div
               key={s.key}
-              className={`transition-opacity duration-500 ${
-                i === active ? 'relative opacity-100' : 'pointer-events-none absolute inset-0 opacity-0'
+              className={`absolute inset-0 transition-opacity duration-500 ${
+                i === active ? 'opacity-100' : 'pointer-events-none opacity-0'
               }`}
             >
               {s.content}

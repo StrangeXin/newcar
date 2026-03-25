@@ -7,6 +7,8 @@ import { FeedFilterState, FeedFilters } from '@/components/community/FeedFilters
 import { JourneyFeedList } from '@/components/community/JourneyFeedList';
 import { useCommunity } from '@/hooks/useCommunity';
 import { PageHeader } from '@/components/ui/PageHeader';
+import { ThemeToggle } from '@/components/ui/ThemeToggle';
+import { LocaleToggle } from '@/components/ui/LocaleToggle';
 import { useT } from '@/hooks/useT';
 
 function CommunityPageContent() {
@@ -50,9 +52,13 @@ function CommunityPageContent() {
   return (
     <main className="mx-auto min-h-screen w-full max-w-6xl space-y-4 px-4 py-6">
       <header
-        className="rounded-[var(--radius-xl)] border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow-card)]"
+        className="relative rounded-[var(--radius-xl)] border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow-card)]"
         style={{ background: 'var(--bg-gradient), var(--surface)' }}
       >
+        <div className="absolute right-4 top-4 flex items-center gap-1">
+          <ThemeToggle />
+          <LocaleToggle />
+        </div>
         <PageHeader
           label="Community"
           title={<><Sparkles className="inline h-5 w-5 text-[var(--accent)]" aria-hidden="true" /> {t['community.title']}</>}
