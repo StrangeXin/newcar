@@ -100,7 +100,7 @@ export function PublishWizard() {
             type="button"
             onClick={fetchPreview}
             disabled={!canNextStep1 || loadingPreview}
-            className="inline-flex cursor-pointer items-center gap-1 rounded-xl bg-orange-500 px-4 py-2 text-sm font-semibold text-white hover:bg-orange-600 disabled:cursor-not-allowed disabled:opacity-60"
+            className="inline-flex cursor-pointer items-center gap-1 rounded-xl bg-[var(--accent)] px-4 py-2 text-sm font-semibold text-white hover:bg-[var(--accent-hover)] disabled:cursor-not-allowed disabled:opacity-60"
           >
             <Eye className="h-4 w-4" aria-hidden="true" />
             {loadingPreview ? '生成预览中...' : '下一步：查看预览'}
@@ -203,7 +203,7 @@ export function PublishWizard() {
               type="button"
               onClick={publish}
               disabled={submitting || !canPublish}
-              className="inline-flex cursor-pointer items-center gap-1 rounded-xl bg-orange-500 px-4 py-2 text-sm font-semibold text-white hover:bg-orange-600 disabled:cursor-not-allowed disabled:opacity-60"
+              className="inline-flex cursor-pointer items-center gap-1 rounded-xl bg-[var(--accent)] px-4 py-2 text-sm font-semibold text-white hover:bg-[var(--accent-hover)] disabled:cursor-not-allowed disabled:opacity-60"
             >
               <CheckCircle2 className="h-4 w-4" aria-hidden="true" />
               {submitting ? '发布中...' : '确认发布'}
