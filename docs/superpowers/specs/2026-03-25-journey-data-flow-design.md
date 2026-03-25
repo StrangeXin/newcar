@@ -63,6 +63,8 @@ type 枚举值：
 | `AI_INSIGHT` | AI 生成洞察 |
 | `PRICE_CHANGE` | 价格变动 |
 | `USER_ACTION` | 用户主动操作（浏览、对比等） |
+| `PUBLISH_SUGGESTION` | 阶段推进至 DECISION/PURCHASE 时自动生成 |
+| `JOURNEY_PUBLISHED` | 旅程发布成功 |
 
 ### 1.3 行为信号 → 排序权重
 
@@ -225,6 +227,7 @@ type 枚举值：
 interface JourneySideEffect {
   type: 'candidate_added' | 'candidate_eliminated' | 'candidate_winner'
       | 'journey_updated' | 'stage_changed' | 'ai_insight'
+      | 'publish_suggestion' | 'journey_published'
   timelineEvent: {
     id: string
     type: TimelineEventType
@@ -313,6 +316,8 @@ type 为 `PUBLISH_SUGGESTION`，由阶段推进时自动触发。
 4. **默认配置**：title = 旅程标题，visibility = PUBLIC，所有格式都生成
 
 不再需要三步向导。
+
+**错误处理**：任一格式生成失败时重试一次；仍失败则跳过该格式，用已成功的格式发布。用户可通过事后编辑中的"重新生成"补回失败格式。publishSummary 同样支持重新生成。
 
 ### 6.3 事后编辑
 
