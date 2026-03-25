@@ -12,7 +12,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="zh-CN" className={`${playfair.variable} ${inter.variable}`} suppressHydrationWarning>
       <head>
         <script dangerouslySetInnerHTML={{
-          __html: `(function(){try{var t=localStorage.getItem('theme')||'orange';document.documentElement.setAttribute('data-theme',t);}catch(e){}})();`
+          __html: `(function(){try{var t=localStorage.getItem('theme')||'orange';document.documentElement.setAttribute('data-theme',t);var l=localStorage.getItem('locale')||'zh';document.documentElement.setAttribute('data-locale',l);}catch(e){}})();`
         }} />
       </head>
       <body className="antialiased">
