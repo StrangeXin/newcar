@@ -1,9 +1,13 @@
+'use client';
+
 import Link from 'next/link';
 import { CarFront, MessageSquareText, Route } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { JourneyCarousel } from '@/components/home/JourneyCarousel';
+import { useT } from '@/hooks/useT';
 
 export default function HomePage() {
+  const t = useT();
   return (
     <>
       <nav className="fixed inset-x-0 top-0 z-50 flex items-center justify-between border-b border-[var(--border-soft)]/50 bg-[var(--bg)]/80 px-6 py-3 backdrop-blur-md">
@@ -12,10 +16,10 @@ export default function HomePage() {
         </span>
         <div className="flex items-center gap-3">
           <Link href="/community" className="text-[var(--text-sm)] font-medium text-[var(--text-soft)] hover:text-[var(--text)]">
-            社区
+            {t['nav.community']}
           </Link>
           <Link href="/login">
-            <Button size="sm">登录</Button>
+            <Button size="sm">{t['nav.login']}</Button>
           </Link>
         </div>
       </nav>
@@ -25,23 +29,23 @@ export default function HomePage() {
         <section className="grid w-full items-center gap-8 md:grid-cols-2">
           <div>
             <p className="text-[var(--text-xs)] font-semibold uppercase tracking-[0.16em] text-[var(--accent-text-soft)]">
-              NewCar Workspace
+              {t['home.badge']}
             </p>
             <h1 className="mt-4 font-[family-name:var(--font-display)] text-[var(--text-4xl)] font-extrabold leading-[var(--leading-tight)] text-[var(--text)]">
-              让购车决策像项目管理一样清晰
+              {t['home.title']}
             </h1>
             <p className="mt-1 font-[family-name:var(--font-display)] text-[var(--text-xl)] text-[var(--text-soft)]">
-              Your car buying journey, organized.
+              {t['home.subtitle']}
             </p>
             <p className="mt-5 text-[var(--text-base)] leading-[var(--leading-relaxed)] text-[var(--text-soft)]">
-              从需求澄清、候选筛选到最终成交，把分散的信息变成同一条可追踪的 Journey，减少纠结和决策噪音。
+              {t['home.desc']}
             </p>
             <div className="mt-9 flex flex-wrap gap-4">
-              <Link href="/login"><Button size="lg">开始我的旅程</Button></Link>
-              <Link href="/community"><Button variant="secondary" size="lg">浏览社区</Button></Link>
+              <Link href="/login"><Button size="lg">{t['home.cta.start']}</Button></Link>
+              <Link href="/community"><Button variant="secondary" size="lg">{t['home.cta.community']}</Button></Link>
             </div>
           </div>
-          <JourneyCarousel t={{}} />
+          <JourneyCarousel t={t} />
         </section>
         </div>
 
@@ -51,10 +55,10 @@ export default function HomePage() {
               <span className="inline-flex h-7 w-7 items-center justify-center rounded-md bg-[var(--accent-muted)] text-[var(--accent-text)]">
                 <Route className="h-4 w-4" aria-hidden="true" />
               </span>
-              旅程看板
+              {t['home.feature.kanban.title']}
             </h2>
             <p className="mt-2 text-sm text-[var(--text-soft)]">
-              每个候选车型的证据、风险和结论都在同一处沉淀，团队协同更高效。
+              {t['home.feature.kanban.desc']}
             </p>
           </article>
           <article className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow-card)]">
@@ -62,10 +66,10 @@ export default function HomePage() {
               <span className="inline-flex h-7 w-7 items-center justify-center rounded-md bg-[var(--success-muted)] text-[var(--success-text)]">
                 <MessageSquareText className="h-4 w-4" aria-hidden="true" />
               </span>
-              AI 对话驱动
+              {t['home.feature.ai.title']}
             </h2>
             <p className="mt-2 text-sm text-[var(--text-soft)]">
-              用自然语言补全需求、对比车型并生成下一步行动建议，减少信息盲区。
+              {t['home.feature.ai.desc']}
             </p>
           </article>
           <article className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow-card)]">
@@ -73,10 +77,10 @@ export default function HomePage() {
               <span className="inline-flex h-7 w-7 items-center justify-center rounded-md bg-[var(--accent-muted)] text-[var(--accent-text)]">
                 <CarFront className="h-4 w-4" aria-hidden="true" />
               </span>
-              结果可复盘
+              {t['home.feature.review.title']}
             </h2>
             <p className="mt-2 text-sm text-[var(--text-soft)]">
-              关键决策路径与依据自动保留，方便回看与沉淀可复用的购车方法论。
+              {t['home.feature.review.desc']}
             </p>
           </article>
         </section>
