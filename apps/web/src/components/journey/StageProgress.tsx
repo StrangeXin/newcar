@@ -5,6 +5,8 @@ import { useEffect } from 'react';
 import { Brain, Route, Upload } from 'lucide-react';
 import { useJourney } from '@/hooks/useJourney';
 import { JOURNEY_SIDE_EFFECT_EVENT, JourneySideEffectEvent } from '@/lib/journey-workspace-events';
+import { ThemeToggle } from '@/components/ui/ThemeToggle';
+import { LocaleToggle } from '@/components/ui/LocaleToggle';
 
 const STAGES = [
   { key: 'AWARENESS', label: '需求确认' },
@@ -90,6 +92,11 @@ function DesktopStageProgress({ currentIndex, confidence }: { currentIndex: numb
         <Upload className="h-3.5 w-3.5" aria-hidden="true" />
         发布我的旅程
       </Link>
+
+      <div className="mt-[10px] flex items-center gap-1">
+        <ThemeToggle />
+        <LocaleToggle />
+      </div>
     </aside>
   );
 }
