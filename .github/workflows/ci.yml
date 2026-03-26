@@ -1,24 +1,80 @@
 name: CI
 
 on:
+  push:
+    branches: [main]
   pull_request:
     branches: [main]
 
 jobs:
-  test:
+  type-check:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
           cache: 'npm'
-
       - run: npm ci
-
       - run: npm run build --workspace=packages/shared
-
-      - run: npm test --workspace=apps/api
-
       - run: npx tsc --noEmit --workspace=apps/api
+      - run: cd apps/web && npx tsc --noEmit
+
+  unit-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+      - run: npm ci
+      - run: npm run build --workspace=packages/shared
+      - run: cd apps/api && npx vitest run
+
+  e2e:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_DB: newcar
+          POSTGRES_USER: newcar
+          POSTGRES_PASSWORD: newcar_dev
+        ports: ['5433:5432']
+      redis:
+        image: redis:7-alpine
+        ports: ['6379:6379']
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+      - run: npm ci
+      - run: npm run build --workspace=packages/shared
+      - run: npx playwright install chromium
+      - run: cd apps/api && npx prisma db push
+        env:
+          DATABASE_URL: postgresql://newcar:newcar_dev@localhost:5433/newcar
+      - run: npx playwright test
+        env:
+          DATABASE_URL: postgresql://newcar:newcar_dev@localhost:5433/newcar
+          REDIS_URL: redis://localhost:6379
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-traces
+          path: test-results/
+
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+      - run: npm ci
+      - run: npm run build --workspace=packages/shared
+      - run: cd apps/web && npx next build
