@@ -38,7 +38,7 @@ export class AuthService {
 
     const sessionId = generateSessionId();
     await this.createUserSession(sessionId, user.id);
-    const accessToken = this.generateAccessToken(user.id, sessionId);
+    const accessToken = this.generateAccessToken(user.id, sessionId, user.role);
     const refreshToken = this.generateRefreshToken(user.id, sessionId);
 
     return { user, accessToken, refreshToken };
@@ -63,7 +63,7 @@ export class AuthService {
 
     const sessionId = generateSessionId();
     await this.createUserSession(sessionId, user.id);
-    const accessToken = this.generateAccessToken(user.id, sessionId);
+    const accessToken = this.generateAccessToken(user.id, sessionId, user.role);
     const refreshToken = this.generateRefreshToken(user.id, sessionId);
 
     return { user, accessToken, refreshToken };
@@ -88,9 +88,9 @@ export class AuthService {
     return { migrated: true };
   }
 
-  private generateAccessToken(userId: string, sessionId: string): string {
+  private generateAccessToken(userId: string, sessionId: string, role?: string): string {
     const expiresIn = config.jwt.expiresIn as jwt.SignOptions['expiresIn'];
-    return jwt.sign({ userId, sessionId, type: 'access' }, config.jwt.secret, {
+    return jwt.sign({ userId, sessionId, role, type: 'access' }, config.jwt.secret, {
       expiresIn,
     });
   }

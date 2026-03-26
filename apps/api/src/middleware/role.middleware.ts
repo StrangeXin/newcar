@@ -1,23 +1,17 @@
 import { NextFunction, Response } from 'express';
-import { prisma } from '../lib/prisma';
 import { AuthenticatedRequest } from './auth';
 
 export function requireRole(roles: string[]) {
-  return async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+  return (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     if (!req.userId) {
       return res.status(401).json({ error: 'Unauthorized' });
     }
 
-    const user = await prisma.user.findUnique({
-      where: { id: req.userId },
-      select: { role: true },
-    });
-
-    if (!user) {
+    if (!req.userRole) {
       return res.status(401).json({ error: 'Unauthorized' });
     }
 
-    if (!roles.includes(user.role)) {
+    if (!roles.includes(req.userRole)) {
       return res.status(403).json({ error: 'Forbidden' });
     }
 

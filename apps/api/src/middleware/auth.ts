@@ -4,6 +4,7 @@ import { authService } from '../services/auth.service';
 export interface AuthenticatedRequest extends Request {
   userId?: string;
   sessionId?: string;
+  userRole?: string;
 }
 
 export function authMiddleware(req: AuthenticatedRequest, res: Response, next: NextFunction) {
@@ -24,6 +25,7 @@ export function authMiddleware(req: AuthenticatedRequest, res: Response, next: N
 
     req.userId = payload.userId;
     req.sessionId = payload.sessionId;
+    req.userRole = payload.role;
     return next();
   } catch {
     return res.status(401).json({ error: 'Invalid token' });
@@ -39,6 +41,7 @@ export function optionalAuth(req: AuthenticatedRequest, _res: Response, next: Ne
       const payload = authService.verifyToken(token);
       req.userId = payload.userId;
       req.sessionId = payload.sessionId;
+      req.userRole = payload.role;
     } catch {
       // Ignore invalid token for optional auth
     }

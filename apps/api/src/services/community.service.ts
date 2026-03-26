@@ -238,6 +238,36 @@ export class CommunityService {
     return item;
   }
 
+  async listPosts(options: { cursor?: string; limit?: number }) {
+    const { cursor, limit = 20 } = options;
+    const items = await prisma.publishedJourney.findMany({
+      take: limit + 1,
+      ...(cursor && { cursor: { id: cursor }, skip: 1 }),
+      where: {
+        contentStatus: 'LIVE',
+        visibility: 'PUBLIC',
+      },
+      orderBy: { createdAt: 'desc' },
+      select: {
+        id: true,
+        title: true,
+        summary: true,
+        tags: true,
+        publishedFormats: true,
+        publishedAt: true,
+        createdAt: true,
+        forkCount: true,
+        likeCount: true,
+        commentCount: true,
+        viewCount: true,
+        user: { select: { id: true, nickname: true, avatar: true } },
+        journey: { select: { id: true, status: true } },
+      },
+    });
+    const hasMore = items.length > limit;
+    return { items: items.slice(0, limit), hasMore };
+  }
+
   /** Invalidate all community list cache entries (call after like, unlike, fork, publish) */
   async invalidateCommunityListCache(): Promise<void> {
     await invalidateCommunityListCache();

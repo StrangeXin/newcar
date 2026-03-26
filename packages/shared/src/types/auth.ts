@@ -26,6 +26,7 @@ export interface AuthResult {
 export interface JwtPayload {
   userId: string;
   sessionId: string;
+  role?: string;
   iat?: number;
   exp?: number;
   type?: 'access' | 'refresh';
