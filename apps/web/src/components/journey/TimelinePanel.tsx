@@ -1,5 +1,6 @@
 'use client';
 
+import { memo, useMemo } from 'react';
 import Link from 'next/link';
 import { Brain, CarFront, CheckCircle2, DollarSign, Flag, Lightbulb, NotebookPen, Sparkles, User, XCircle } from 'lucide-react';
 import { JourneySnapshot, TimelineEvent } from '@/types/api';
@@ -107,7 +108,7 @@ function getStageSummary(event: TimelineEvent): string | null {
   return null;
 }
 
-function TimelineEventCard({ event }: { event: TimelineEvent }) {
+const TimelineEventCard = memo(function TimelineEventCard({ event }: { event: TimelineEvent }) {
   const meta = getMeta(event);
   const Icon = meta.icon;
   const tags = Array.isArray(event.metadata?.matchTags) ? event.metadata.matchTags.slice(0, 3).map(String) : [];
@@ -190,7 +191,7 @@ function TimelineEventCard({ event }: { event: TimelineEvent }) {
       ) : null}
     </article>
   );
-}
+});
 
 function DailySnapshotCard({ snapshot }: { snapshot: JourneySnapshot }) {
   return (
@@ -221,12 +222,16 @@ function DailySnapshotCard({ snapshot }: { snapshot: JourneySnapshot }) {
 }
 
 export function TimelinePanel({ events, snapshot, isLoading }: TimelinePanelProps) {
-  const grouped = events.reduce<Record<string, TimelineEvent[]>>((acc, event) => {
-    const key = formatDateLabel(event.createdAt);
-    acc[key] = acc[key] || [];
-    acc[key].push(event);
-    return acc;
-  }, {});
+  const grouped = useMemo(
+    () =>
+      events.reduce<Record<string, TimelineEvent[]>>((acc, event) => {
+        const key = formatDateLabel(event.createdAt);
+        acc[key] = acc[key] || [];
+        acc[key].push(event);
+        return acc;
+      }, {}),
+    [events]
+  );
 
   const days = Object.entries(grouped);
 

@@ -1,5 +1,6 @@
 'use client';
 
+import { memo } from 'react';
 import Link from 'next/link';
 import { CircleDollarSign, Clock3, GitFork, Heart, MessageCircle, Route } from 'lucide-react';
 import { CommunityJourney } from '@/types/api';
@@ -9,7 +10,7 @@ interface JourneyFeedCardProps {
   item: CommunityJourney;
 }
 
-export function JourneyFeedCard({ item }: JourneyFeedCardProps) {
+export const JourneyFeedCard = memo(function JourneyFeedCard({ item }: JourneyFeedCardProps) {
   const tags = (item.tags || {}) as Record<string, unknown>;
   const useCases = Array.isArray(tags.useCases) ? tags.useCases.map(String) : [];
   const candidateNames = Array.isArray(tags.candidateNames) ? tags.candidateNames.map(String).slice(0, 3) : [];
@@ -74,4 +75,4 @@ export function JourneyFeedCard({ item }: JourneyFeedCardProps) {
       </div>
     </article>
   );
-}
+});

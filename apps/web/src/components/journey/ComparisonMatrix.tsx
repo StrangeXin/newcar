@@ -9,13 +9,17 @@ interface ComparisonMatrixProps {
 }
 
 export function ComparisonMatrix({ candidates }: ComparisonMatrixProps) {
-  const active = candidates.filter((item) => item.status === 'ACTIVE');
+  const active = useMemo(() => candidates.filter((item) => item.status === 'ACTIVE'), [candidates]);
   const journeyId = active[0]?.journeyId;
-  const dimensions = Array.from(
-    new Set(
-      active.flatMap((item) => (item.relevantDimensions || []).map((dimension) => String(dimension)))
-    )
-  ).slice(0, 4);
+  const dimensions = useMemo(
+    () =>
+      Array.from(
+        new Set(
+          active.flatMap((item) => (item.relevantDimensions || []).map((dimension) => String(dimension)))
+        )
+      ).slice(0, 4),
+    [active]
+  );
 
   useEffect(() => {
     if (!journeyId || active.length < 2) {

@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState, memo } from 'react';
 import { Check, Quote, Star } from 'lucide-react';
 import { patch, post } from '@/lib/api';
 import { trackEvent } from '@/lib/behavior';
@@ -12,7 +12,7 @@ interface CandidateCardProps {
   emphasizeTags?: boolean;
 }
 
-export function CandidateCard({ candidate, onUpdated, emphasizeTags }: CandidateCardProps) {
+export const CandidateCard = memo(function CandidateCard({ candidate, onUpdated, emphasizeTags }: CandidateCardProps) {
   const [busy, setBusy] = useState(false);
   const [showNotes, setShowNotes] = useState(false);
   const [notes, setNotes] = useState(candidate.userNotes || '');
@@ -94,36 +94,43 @@ export function CandidateCard({ candidate, onUpdated, emphasizeTags }: Candidate
   const priceLabel = isEliminated ? '超出预算' : '起售价';
   const matchTags = candidate.matchTags || [];
   const relevantDimensions = (candidate.relevantDimensions || []).slice(0, 3);
-  const specs =
-    candidate.car.baseSpecs && typeof candidate.car.baseSpecs === 'object' && !Array.isArray(candidate.car.baseSpecs)
-      ? (candidate.car.baseSpecs as Record<string, unknown>)
-      : {};
-  const dimensionValues = relevantDimensions
-    .map((dimension) => {
-      const value = specs[dimension];
-      if (typeof value === 'number') {
-        return { label: dimension, value: `${value}` };
-      }
-      const alias = dimension.toLowerCase();
-      const fallback =
-        alias.includes('续航')
-          ? typeof specs.range === 'number'
-            ? `${specs.range} km`
-            : null
-          : alias.includes('空间')
-            ? `${seatLabel} ${candidate.car.type}`
-            : alias.includes('价格')
-              ? candidate.car.msrp
-                ? `${(candidate.car.msrp / 10000).toFixed(2)}万`
-                : '暂无'
-              : alias.includes('能耗')
-                ? typeof specs.efficiency === 'number'
-                  ? `${specs.efficiency}`
-                  : '待补充'
-                : null;
-      return { label: dimension, value: fallback || '待补充' };
-    })
-    .filter((item) => item.value);
+  const specs = useMemo(
+    () =>
+      candidate.car.baseSpecs && typeof candidate.car.baseSpecs === 'object' && !Array.isArray(candidate.car.baseSpecs)
+        ? (candidate.car.baseSpecs as Record<string, unknown>)
+        : {},
+    [candidate.car.baseSpecs]
+  );
+  const dimensionValues = useMemo(
+    () =>
+      relevantDimensions
+        .map((dimension) => {
+          const value = specs[dimension];
+          if (typeof value === 'number') {
+            return { label: dimension, value: `${value}` };
+          }
+          const alias = dimension.toLowerCase();
+          const fallback =
+            alias.includes('续航')
+              ? typeof specs.range === 'number'
+                ? `${specs.range} km`
+                : null
+              : alias.includes('空间')
+                ? `${seatLabel} ${candidate.car.type}`
+                : alias.includes('价格')
+                  ? candidate.car.msrp
+                    ? `${(candidate.car.msrp / 10000).toFixed(2)}万`
+                    : '暂无'
+                  : alias.includes('能耗')
+                    ? typeof specs.efficiency === 'number'
+                      ? `${specs.efficiency}`
+                      : '待补充'
+                    : null;
+          return { label: dimension, value: fallback || '待补充' };
+        })
+        .filter((item) => item.value),
+    [relevantDimensions, specs, seatLabel, candidate.car.type, candidate.car.msrp]
+  );
 
   useEffect(() => {
     if (isMock) {
@@ -313,4 +320,4 @@ export function CandidateCard({ candidate, onUpdated, emphasizeTags }: Candidate
       ) : null}
     </div>
   );
-}
+});
