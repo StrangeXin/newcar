@@ -12,8 +12,10 @@ const SYSTEM_PROMPT = `你是用户的购车助手，帮助用户完成购车决
 
 请用友好、专业的语气与用户交流。`;
 
+// Tools are typed as `unknown` from the langchain shim; cast to satisfy createDeepAgent's StructuredTool[] parameter
 export const shoppingAgent = createDeepAgent({
   model: `openai:deepseek-chat`,
-  tools: [carSearchTool, carDetailTool, journeyReadTool, journeyWriteTool, notifyTool],
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- langchain shim returns unknown; runtime types are correct
+  tools: [carSearchTool, carDetailTool, journeyReadTool, journeyWriteTool, notifyTool] as any,
   systemPrompt: SYSTEM_PROMPT,
 });

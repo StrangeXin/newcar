@@ -91,7 +91,7 @@ export class JourneyDeepAgentService {
 
   private getModel() {
     const model = new ChatAnthropic({
-      model: config.ai.model as any,
+      model: config.ai.model as string,
       apiKey: config.ai.apiKey,
       anthropicApiUrl: config.ai.baseURL,
       maxTokens: config.ai.maxTokens,
@@ -99,7 +99,7 @@ export class JourneyDeepAgentService {
       maxRetries: 2,
       clientOptions: {
         timeout: config.ai.roundTimeoutMs,
-      } as any,
+      } as Record<string, unknown>,
     });
 
     return model.withRetry({
@@ -109,6 +109,7 @@ export class JourneyDeepAgentService {
           error: error instanceof Error ? error.message : String(error),
         });
       },
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- withRetry returns RunnableRetry which is structurally compatible but not assignable to BaseLanguageModel
     }) as any;
   }
 
@@ -360,11 +361,11 @@ export class JourneyDeepAgentService {
       if (!message || typeof message !== 'object') {
         return false;
       }
-      const getType = (message as any)._getType;
+      const getType = (message as Record<string, unknown>)._getType;
       if (typeof getType === 'function') {
         return getType.call(message) === 'ai';
       }
-      return (message as any).type === 'ai';
+      return (message as Record<string, unknown>).type === 'ai';
     });
 
     const last = assistantMessages.at(-1) as { content?: unknown } | undefined;
@@ -376,7 +377,7 @@ export class JourneyDeepAgentService {
       return false;
     }
 
-    if (ToolMessage.isInstance(message as any)) {
+    if (ToolMessage.isInstance(message as Record<string, unknown>)) {
       return true;
     }
 
@@ -497,7 +498,7 @@ export class JourneyDeepAgentService {
       while (true) {
         const nextEvent = await Promise.race([
           iterator.next(),
-          new Promise<IteratorResult<any>>((_, reject) =>
+          new Promise<IteratorResult<unknown>>((_, reject) =>
             setTimeout(() => reject(new Error(`deep_agent_stream_idle_timeout:${config.ai.roundTimeoutMs}`)), config.ai.roundTimeoutMs)
           ),
         ]);
@@ -529,7 +530,7 @@ export class JourneyDeepAgentService {
 
           if (
             isMainNamespace &&
-            AIMessageChunk.isInstance(messageChunk as any) &&
+            AIMessageChunk.isInstance(messageChunk as Record<string, unknown>) &&
             (metadata as Record<string, unknown> | null)?.langgraph_node === 'model_request'
           ) {
             const delta = this.extractText((messageChunk as { text?: unknown }).text);

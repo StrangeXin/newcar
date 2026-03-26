@@ -128,10 +128,11 @@ export class SnapshotService {
 
       const block = response.content[0];
       aiResponse = block.type === 'text' ? (JSON.parse(block.text) as SnapshotAiResponse) : this.generateFallbackSnapshot(inputs);
-    } catch (err: any) {
-      console.error('Snapshot AI error:', err?.message || err);
+    } catch (err: unknown) {
+      const errMsg = err instanceof Error ? err.message : String(err);
+      console.error('Snapshot AI error:', errMsg);
       aiResponse = this.generateFallbackSnapshot(inputs, locale);
-      modelUsed = err?.message?.includes('timeout') ? 'fallback-timeout' : modelUsed;
+      modelUsed = errMsg.includes('timeout') ? 'fallback-timeout' : modelUsed;
     }
 
     const snapshot = await prisma.journeySnapshot.create({
@@ -165,8 +166,9 @@ export class SnapshotService {
       );
 
       for (const notification of notifications) {
-        void pushService.sendNotification(notification.id).catch((error: any) => {
-          console.error(`Push trigger failed for notification ${notification.id}:`, error?.message || error);
+        void pushService.sendNotification(notification.id).catch((error: unknown) => {
+          const errMsg = error instanceof Error ? error.message : String(error);
+          console.error(`Push trigger failed for notification ${notification.id}:`, errMsg);
         });
       }
     }

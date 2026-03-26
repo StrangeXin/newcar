@@ -1,5 +1,17 @@
 import { prisma } from '../lib/prisma';
 
+// TimelineEvent model exists in schema but may not be in generated client yet.
+// Use a typed accessor to avoid `any` while preserving runtime behavior.
+const timelineEventDelegate = (prisma as unknown as {
+  timelineEvent: {
+    create: (args: { data: Record<string, unknown> }) => Promise<TimelineEventRecord>;
+    findMany: (args: Record<string, unknown>) => Promise<TimelineEventRecord[]>;
+    findFirst: (args: Record<string, unknown>) => Promise<TimelineEventRecord | null>;
+    update: (args: Record<string, unknown>) => Promise<TimelineEventRecord>;
+    delete: (args: Record<string, unknown>) => Promise<TimelineEventRecord>;
+  };
+}).timelineEvent;
+
 export const TIMELINE_EVENT_TYPES = {
   CANDIDATE_ADDED: 'CANDIDATE_ADDED',
   CANDIDATE_ELIMINATED: 'CANDIDATE_ELIMINATED',
@@ -40,19 +52,14 @@ function normalizeMetadata(metadata?: Record<string, unknown>) {
   return (metadata || {}) as Record<string, unknown>;
 }
 
-function getCandidateLabel(candidate: {
-  car?: { brand?: string; model?: string; variant?: string | null } | null;
-  carName?: string;
-  brand?: string;
-  model?: string;
-  variant?: string | null;
-}) {
-  if (candidate.car) {
-    return [candidate.car.brand, candidate.car.model, candidate.car.variant].filter(Boolean).join(' ').trim();
+function getCandidateLabel(candidate: Record<string, unknown>) {
+  const car = candidate.car as Record<string, unknown> | null | undefined;
+  if (car) {
+    return [car.brand, car.model, car.variant].filter(Boolean).join(' ').trim();
   }
 
   if (candidate.carName) {
-    return candidate.carName;
+    return String(candidate.carName);
   }
 
   return [candidate.brand, candidate.model, candidate.variant].filter(Boolean).join(' ').trim();
@@ -81,11 +88,11 @@ export function buildTimelineEventContent(
 ) {
   switch (type) {
     case TIMELINE_EVENT_TYPES.CANDIDATE_ADDED:
-      return `AI 推荐了 ${getCandidateLabel(payload as Record<string, any>) || '一款车型'}`;
+      return `AI 推荐了 ${getCandidateLabel(payload as Record<string, unknown>) || '一款车型'}`;
     case TIMELINE_EVENT_TYPES.CANDIDATE_ELIMINATED:
-      return `候选车 ${getCandidateLabel(payload as Record<string, any>) || '已淘汰车型'} 已被淘汰`;
+      return `候选车 ${getCandidateLabel(payload as Record<string, unknown>) || '已淘汰车型'} 已被淘汰`;
     case TIMELINE_EVENT_TYPES.CANDIDATE_WINNER:
-      return `候选车 ${getCandidateLabel(payload as Record<string, any>) || '已选定车型'} 已被选定`;
+      return `候选车 ${getCandidateLabel(payload as Record<string, unknown>) || '已选定车型'} 已被选定`;
     case TIMELINE_EVENT_TYPES.STAGE_CHANGED:
       return `旅程阶段推进至 ${getStageLabel(String(payload.stage || ''))}`;
     case TIMELINE_EVENT_TYPES.REQUIREMENT_UPDATED:
@@ -93,7 +100,7 @@ export function buildTimelineEventContent(
     case TIMELINE_EVENT_TYPES.AI_INSIGHT:
       return String(payload.content || payload.insight || 'AI 生成了一条洞察');
     case TIMELINE_EVENT_TYPES.PRICE_CHANGE:
-      return `${getCandidateLabel(payload as Record<string, any>) || '车型'} 价格有变化`;
+      return `${getCandidateLabel(payload as Record<string, unknown>) || '车型'} 价格有变化`;
     case TIMELINE_EVENT_TYPES.USER_ACTION:
       return String(payload.content || '用户执行了一个操作');
     case TIMELINE_EVENT_TYPES.PUBLISH_SUGGESTION:
@@ -107,7 +114,7 @@ export function buildTimelineEventContent(
 
 export class TimelineService {
   async createEvent(input: CreateTimelineEventInput): Promise<TimelineEventRecord> {
-    return (prisma as any).timelineEvent.create({
+    return timelineEventDelegate.create({
       data: {
         journeyId: input.journeyId,
         type: input.type,
@@ -120,7 +127,7 @@ export class TimelineService {
   async listEvents(journeyId: string, options: ListTimelineEventsOptions = {}): Promise<TimelineEventRecord[]> {
     const limit = Math.max(1, Math.min(options.limit ?? 50, 100));
 
-    return (prisma as any).timelineEvent.findMany({
+    return timelineEventDelegate.findMany({
       where: { journeyId },
       orderBy: { createdAt: 'desc' },
       take: limit,
@@ -134,7 +141,7 @@ export class TimelineService {
   }
 
   async getEvent(journeyId: string, eventId: string): Promise<TimelineEventRecord | null> {
-    return (prisma as any).timelineEvent.findFirst({
+    return timelineEventDelegate.findFirst({
       where: {
         id: eventId,
         journeyId,
@@ -146,7 +153,7 @@ export class TimelineService {
     eventId: string,
     input: Partial<Pick<CreateTimelineEventInput, 'type' | 'content' | 'metadata'>>
   ): Promise<TimelineEventRecord> {
-    return (prisma as any).timelineEvent.update({
+    return timelineEventDelegate.update({
       where: { id: eventId },
       data: {
         ...(input.type ? { type: input.type } : {}),
@@ -157,7 +164,7 @@ export class TimelineService {
   }
 
   async deleteEvent(eventId: string): Promise<TimelineEventRecord> {
-    return (prisma as any).timelineEvent.delete({
+    return timelineEventDelegate.delete({
       where: { id: eventId },
     });
   }

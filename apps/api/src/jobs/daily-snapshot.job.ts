@@ -30,9 +30,10 @@ export async function runDailySnapshotJob(): Promise<void> {
         try {
           const snapshot = await snapshotService.generateSnapshot(journey.id, SnapshotTrigger.DAILY);
           return { journeyId: journey.id, success: snapshot !== null, snapshotId: snapshot?.id };
-        } catch (err: any) {
-          console.error(`Snapshot failed for journey ${journey.id}:`, err?.message || err);
-          return { journeyId: journey.id, success: false, error: err?.message || 'unknown_error' };
+        } catch (err: unknown) {
+          const errMsg = err instanceof Error ? err.message : String(err);
+          console.error(`Snapshot failed for journey ${journey.id}:`, errMsg);
+          return { journeyId: journey.id, success: false, error: errMsg };
         }
       })
     );

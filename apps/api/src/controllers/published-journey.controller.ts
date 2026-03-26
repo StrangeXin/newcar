@@ -112,7 +112,7 @@ export class PublishedJourneyController {
         return res.status(403).json({ error: 'Forbidden' });
       }
 
-      const updateData: Record<string, any> = {};
+      const updateData: Record<string, unknown> = {};
 
       if (visibility !== undefined) {
         updateData.visibility = visibility;
@@ -159,7 +159,7 @@ export class PublishedJourneyController {
 
       const result = await prisma.publishedJourney.update({
         where: { id },
-        data: updateData as any,
+        data: updateData as Parameters<typeof prisma.publishedJourney.update>[0]['data'],
       });
 
       void communityService.invalidateCommunityListCache();

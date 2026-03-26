@@ -14,8 +14,9 @@ export class NotificationController {
       );
 
       return res.json(notifications);
-    } catch (error: any) {
-      return res.status(500).json({ error: error.message });
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : String(error);
+      return res.status(500).json({ error: message });
     }
   }
 
@@ -26,8 +27,9 @@ export class NotificationController {
 
       await notificationService.markAsRead(notificationId, userId);
       return res.json({ success: true });
-    } catch (error: any) {
-      return res.status(500).json({ error: error.message });
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : String(error);
+      return res.status(500).json({ error: message });
     }
   }
 }

@@ -72,8 +72,9 @@ export class PushService {
           body: notification.body,
           metadata: notification.metadata,
         });
-      } catch (error: any) {
-        console.error(`Push send failed notification=${notification.id} device=${device.id}:`, error?.message || error);
+      } catch (error: unknown) {
+        const errMsg = error instanceof Error ? error.message : String(error);
+        console.error(`Push send failed notification=${notification.id} device=${device.id}:`, errMsg);
       }
     }
 

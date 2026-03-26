@@ -45,8 +45,9 @@ export class CommunityController {
       );
 
       return res.json(data);
-    } catch (error: any) {
-      return res.status(500).json({ error: error.message });
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : String(error);
+      return res.status(500).json({ error: message });
     }
   }
 
@@ -57,8 +58,9 @@ export class CommunityController {
         return res.status(404).json({ error: 'Published journey not found' });
       }
       return res.json(item);
-    } catch (error: any) {
-      return res.status(500).json({ error: error.message });
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : String(error);
+      return res.status(500).json({ error: message });
     }
   }
 
@@ -100,8 +102,9 @@ export class CommunityController {
       void communityService.invalidateCommunityListCache();
 
       return res.json({ liked: true });
-    } catch (error: any) {
-      return res.status(500).json({ error: error.message });
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : String(error);
+      return res.status(500).json({ error: message });
     }
   }
 
@@ -143,8 +146,9 @@ export class CommunityController {
       void communityService.invalidateCommunityListCache();
 
       return res.json({ liked: false, removed: true });
-    } catch (error: any) {
-      return res.status(500).json({ error: error.message });
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : String(error);
+      return res.status(500).json({ error: message });
     }
   }
 
@@ -153,8 +157,9 @@ export class CommunityController {
       const result = await forkService.forkJourney(req.params.id, req.userId!);
       void communityService.invalidateCommunityListCache();
       return res.status(201).json(result);
-    } catch (error: any) {
-      return res.status(400).json({ error: error.message });
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : String(error);
+      return res.status(400).json({ error: message });
     }
   }
 
@@ -175,8 +180,9 @@ export class CommunityController {
       });
 
       return res.json(comments);
-    } catch (error: any) {
-      return res.status(500).json({ error: error.message });
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : String(error);
+      return res.status(500).json({ error: message });
     }
   }
 
@@ -211,8 +217,9 @@ export class CommunityController {
       void communityService.invalidateCommunityListCache();
 
       return res.status(201).json(comment);
-    } catch (error: any) {
-      return res.status(500).json({ error: error.message });
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : String(error);
+      return res.status(500).json({ error: message });
     }
   }
 
@@ -240,8 +247,9 @@ export class CommunityController {
       });
 
       return res.status(201).json({ success: true });
-    } catch (error: any) {
-      return res.status(500).json({ error: error.message });
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : String(error);
+      return res.status(500).json({ error: message });
     }
   }
 }

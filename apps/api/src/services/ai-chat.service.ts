@@ -259,7 +259,7 @@ export class AiChatService {
       sessionId,
       userId: data.userId,
       limit: 20,
-    });
+    }) as Array<{ role: string; content: string; timestamp?: string }>;
 
     this.logChat(data.traceId, 'history_loaded', {
       conversationId: conversation.id,

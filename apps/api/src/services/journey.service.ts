@@ -1,3 +1,4 @@
+import { Prisma } from '@prisma/client';
 import { JourneyStage, JourneyStatus } from '@newcar/shared';
 import { prisma } from '../lib/prisma';
 
@@ -126,7 +127,7 @@ export class JourneyService {
         type: data.type,
         targetType: data.targetType,
         targetId: data.targetId,
-        metadata: data.metadata as any,
+        metadata: data.metadata as Prisma.InputJsonValue,
         aiWeight,
       },
     });
@@ -205,7 +206,7 @@ export class JourneyService {
       throw new Error('Journey not found');
     }
 
-    const currentRequirements = (journey.requirements as any) || {};
+    const currentRequirements = (journey.requirements as Record<string, unknown>) || {};
 
     return prisma.journey.update({
       where: { id: journeyId },

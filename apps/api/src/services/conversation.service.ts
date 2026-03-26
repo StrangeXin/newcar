@@ -1,5 +1,8 @@
+import { Prisma } from '@prisma/client';
 import { prisma } from '../lib/prisma';
 import { MessageRole } from '@newcar/shared';
+
+type JsonArray = Prisma.JsonArray;
 
 export class ConversationService {
   async createConversation(data: {
@@ -72,7 +75,7 @@ export class ConversationService {
       sessionId: data.sessionId,
     });
 
-    const messages = (conversation.messages as any[]) || [];
+    const messages = (conversation.messages as JsonArray) || [];
     const newMessage = {
       role: data.role,
       content: data.content,
@@ -88,7 +91,7 @@ export class ConversationService {
     return newMessage;
   }
 
-  async extractSignals(conversationId: string, signals: any[]) {
+  async extractSignals(conversationId: string, signals: Prisma.InputJsonValue[]) {
     return prisma.conversation.update({
       where: { id: conversationId },
       data: { extractedSignals: signals },
@@ -111,11 +114,12 @@ export class ConversationService {
       throw new Error('Conversation not found');
     }
 
-    const toolCalls = (conversation.toolCalls as any[]) || [];
+    const toolCalls = (conversation.toolCalls as JsonArray) || [];
     toolCalls.push({
       ...data.toolCall,
+      result: data.toolCall.result as Prisma.JsonValue,
       timestamp: new Date().toISOString(),
-    });
+    } as Prisma.JsonValue);
 
     return prisma.conversation.update({
       where: { id: data.conversationId },
@@ -147,7 +151,7 @@ export class ConversationService {
       return [];
     }
 
-    const messages = (conversation.messages as any[]) || [];
+    const messages = (conversation.messages as JsonArray) || [];
     const limit = data.limit ?? 10;
     return messages.slice(-limit);
   }
@@ -175,7 +179,7 @@ export class ConversationService {
       return [];
     }
 
-    return conversation.extractedSignals as any[];
+    return conversation.extractedSignals as JsonArray;
   }
 }
 

@@ -21,10 +21,16 @@ export interface WeaviateCarResult {
   score?: number;
 }
 
+interface WeaviateGraphqlResult {
+  data?: {
+    Get?: Record<string, Array<Record<string, unknown> & { _additional?: { certainty?: number } }>>;
+  };
+}
+
 export class WeaviateService {
   async ensureSchema() {
     const schema = await weaviateClient.schema.getter().do();
-    const classes = (schema.classes || []).map((klass: any) => klass.class);
+    const classes = (schema.classes || []).map((klass: { class?: string }) => klass.class);
 
     if (!classes.includes(CAR_CLASS)) {
       await weaviateClient.schema
@@ -85,7 +91,7 @@ export class WeaviateService {
       .withNearText({ concepts: [query] })
       .withLimit(10);
 
-    const whereOperands: any[] = [];
+    const whereOperands: Array<Record<string, unknown>> = [];
     if (filters?.fuelType) {
       whereOperands.push({ path: ['fuelType'], operator: 'Equal', valueText: filters.fuelType });
     }
@@ -103,7 +109,8 @@ export class WeaviateService {
     }
 
     const result = await getter.do();
-    const rows = (((result as any)?.data?.Get?.[CAR_CLASS] || []) as any[]).map((row) => ({
+    const gqlResult = result as WeaviateGraphqlResult;
+    const rows = (gqlResult?.data?.Get?.[CAR_CLASS] || []).map((row) => ({
       ...row,
       score: row?._additional?.certainty,
     }));
@@ -124,7 +131,8 @@ export class WeaviateService {
       .withLimit(1)
       .do();
 
-    const row = (result as any)?.data?.Get?.[CAR_CLASS]?.[0];
+    const gqlResult = result as WeaviateGraphqlResult;
+    const row = gqlResult?.data?.Get?.[CAR_CLASS]?.[0];
     if (!row) {
       return null;
     }

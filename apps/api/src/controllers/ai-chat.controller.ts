@@ -29,8 +29,9 @@ export class AiChatController {
       });
 
       res.json(response);
-    } catch (error: any) {
-      res.status(500).json({ error: error.message });
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : String(error);
+      res.status(500).json({ error: message });
     }
   }
 }

@@ -37,8 +37,9 @@ router.get('/users/me', authMiddleware, async (req: AuthenticatedRequest, res) =
     }
 
     return res.json(user);
-  } catch (error: any) {
-    return res.status(500).json({ error: error.message });
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : String(error);
+    return res.status(500).json({ error: message });
   }
 });
 
@@ -70,8 +71,9 @@ router.patch('/users/me/notification-settings', authMiddleware, async (req: Auth
     });
 
     return res.json(updated);
-  } catch (error: any) {
-    return res.status(500).json({ error: error.message });
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : String(error);
+    return res.status(500).json({ error: message });
   }
 });
 

@@ -7,7 +7,7 @@ type WebSocketLike = {
   readyState: number;
   send: (data: string) => void;
   close: (code?: number, reason?: string) => void;
-  on: (event: string, listener: (...args: any[]) => void) => void;
+  on: (event: string, listener: (...args: unknown[]) => void) => void;
 };
 
 type AuthState = 'PENDING' | 'AUTHENTICATED';
@@ -133,22 +133,23 @@ export class ChatWsController {
               traceId,
               journeyId,
               eventType: event.type,
-              eventName: 'name' in event ? (event as any).name : undefined,
-              sideEffect: 'event' in event ? (event as any).event : undefined,
+              eventName: 'name' in event ? (event as Record<string, unknown>).name : undefined,
+              sideEffect: 'event' in event ? (event as Record<string, unknown>).event : undefined,
             });
             this.send(ws, event);
           },
         });
-      } catch (error: any) {
+      } catch (error: unknown) {
+        const errMsg = error instanceof Error ? error.message : 'Chat failed';
         this.log('chat_failed', {
           traceId,
           journeyId,
-          message: error?.message || 'Chat failed',
+          message: errMsg,
         });
         this.send(ws, {
           type: 'error',
           code: 'CHAT_FAILED',
-          message: error?.message || 'Chat failed',
+          message: errMsg,
         });
       }
     });

@@ -68,7 +68,7 @@ export const journeyReadTool = tool(
     const journey = await journeyService.getJourneyDetail(journey_id);
     if (!journey) return `未找到 Journey: ${journey_id}`;
     const candidates = journey.candidates || [];
-    const requirements = journey.requirements as Record<string, any> || {};
+    const requirements = (journey.requirements as Record<string, unknown>) || {};
     return [
       `Journey: ${journey.title}`,
       `Stage: ${journey.stage}`,
@@ -91,7 +91,7 @@ export const journeyWriteTool = tool(
   async ({ journey_id, action, data }: {
     journey_id: string;
     action: 'update_stage' | 'update_requirements' | 'add_candidate' | 'remove_candidate';
-    data: any;
+    data: Record<string, unknown>;
   }) => {
     switch (action) {
       case 'update_stage':
@@ -103,19 +103,19 @@ export const journeyWriteTool = tool(
 
       case 'update_requirements':
         await journeyService.updateRequirements(journey_id, {
-          budgetMin: data.budget_min,
-          budgetMax: data.budget_max,
-          useCases: data.use_cases,
-          fuelTypePreference: data.fuel_type_preference,
-          dailyKm: data.daily_km,
-          stylePreference: data.style_preference,
+          budgetMin: data.budget_min as number | undefined,
+          budgetMax: data.budget_max as number | undefined,
+          useCases: data.use_cases as string[] | undefined,
+          fuelTypePreference: data.fuel_type_preference as string[] | undefined,
+          dailyKm: data.daily_km as number | undefined,
+          stylePreference: data.style_preference as string | undefined,
         });
         return '已更新 Journey 需求';
 
       case 'add_candidate':
         await carCandidateService.addCandidate({
           journeyId: journey_id,
-          carId: data.car_id,
+          carId: data.car_id as string,
           addedReason: AddedReason.AI_RECOMMENDED,
         });
         return `已添加车型 ${data.car_id} 到候选列表`;
@@ -124,7 +124,7 @@ export const journeyWriteTool = tool(
         // carCandidateService.removeCandidate takes candidateId, not (journeyId, carId)
         // We need to find the candidate first
         const candidates = await carCandidateService.getCandidatesByJourney(journey_id);
-        const candidate = candidates.find(c => c.carId === data.car_id && c.status === CandidateStatus.ACTIVE);
+        const candidate = candidates.find(c => c.carId === (data.car_id as string) && c.status === CandidateStatus.ACTIVE);
         if (!candidate) {
           return `未找到车型 ${data.car_id} 在候选列表中`;
         }
@@ -142,7 +142,7 @@ export const journeyWriteTool = tool(
     schema: z.object({
       journey_id: z.string(),
       action: z.enum(['update_stage', 'update_requirements', 'add_candidate', 'remove_candidate']),
-      data: z.any(),
+      data: z.record(z.unknown()),
     }),
   }
 );
@@ -152,7 +152,7 @@ export const notifyTool = tool(
   async ({ user_id, template, data }: {
     user_id: string;
     template: string;
-    data: any;
+    data: Record<string, unknown>;
   }) => {
     return `通知功能暂未实现`;
   },
@@ -162,7 +162,7 @@ export const notifyTool = tool(
     schema: z.object({
       user_id: z.string(),
       template: z.string(),
-      data: z.any(),
+      data: z.record(z.unknown()),
     }),
   }
 );

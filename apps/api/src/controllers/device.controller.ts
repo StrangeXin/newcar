@@ -62,8 +62,9 @@ export class DeviceController {
       });
 
       return res.status(201).json(created);
-    } catch (error: any) {
-      return res.status(500).json({ error: error.message });
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : String(error);
+      return res.status(500).json({ error: message });
     }
   }
 
@@ -77,8 +78,9 @@ export class DeviceController {
       });
 
       return res.json({ success: true, deleted: result.count });
-    } catch (error: any) {
-      return res.status(500).json({ error: error.message });
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : String(error);
+      return res.status(500).json({ error: message });
     }
   }
 
@@ -90,8 +92,9 @@ export class DeviceController {
         orderBy: { lastSeenAt: 'desc' },
       });
       return res.json(devices);
-    } catch (error: any) {
-      return res.status(500).json({ error: error.message });
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : String(error);
+      return res.status(500).json({ error: message });
     }
   }
 }

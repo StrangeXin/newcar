@@ -26,8 +26,9 @@ export class SnapshotController {
       );
 
       return res.json(snapshot);
-    } catch (error: any) {
-      return res.status(500).json({ error: error.message });
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : String(error);
+      return res.status(500).json({ error: message });
     }
   }
 
@@ -53,8 +54,9 @@ export class SnapshotController {
       }
 
       return res.json(snapshot);
-    } catch (error: any) {
-      return res.status(500).json({ error: error.message });
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : String(error);
+      return res.status(500).json({ error: message });
     }
   }
 }

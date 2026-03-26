@@ -39,8 +39,9 @@ router.post(
 
       const expiredJourneys = await journeyService.checkExpiredJourneys();
       res.json({ count: expiredJourneys.length, journeys: expiredJourneys });
-    } catch (error: any) {
-      res.status(500).json({ error: error.message });
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : String(error);
+      res.status(500).json({ error: message });
     }
   }
 );
@@ -60,8 +61,9 @@ router.get(
         return res.status(403).json({ error: 'Forbidden' });
       }
       res.json(journey);
-    } catch (error: any) {
-      res.status(500).json({ error: error.message });
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : String(error);
+      res.status(500).json({ error: message });
     }
   }
 );

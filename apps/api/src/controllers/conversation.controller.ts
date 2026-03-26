@@ -21,8 +21,9 @@ export class ConversationController {
             sessionId: req.sessionId!,
           });
       return res.json(conversation);
-    } catch (error: any) {
-      return res.status(500).json({ error: error.message });
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : String(error);
+      return res.status(500).json({ error: message });
     }
   }
 
@@ -53,8 +54,9 @@ export class ConversationController {
       });
 
       return res.json(conversation);
-    } catch (error: any) {
-      return res.status(500).json({ error: error.message });
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : String(error);
+      return res.status(500).json({ error: message });
     }
   }
 
@@ -76,8 +78,9 @@ export class ConversationController {
       });
 
       return res.json({ messages });
-    } catch (error: any) {
-      return res.status(500).json({ error: error.message });
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : String(error);
+      return res.status(500).json({ error: message });
     }
   }
 
@@ -95,8 +98,9 @@ export class ConversationController {
         userId: req.userId,
       });
       return res.json({ signals });
-    } catch (error: any) {
-      return res.status(500).json({ error: error.message });
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : String(error);
+      return res.status(500).json({ error: message });
     }
   }
 }

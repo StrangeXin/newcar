@@ -246,8 +246,8 @@ describe('ConversationService', () => {
     });
 
     expect(result).toHaveLength(3);
-    expect(result[0].content).toBe('msg1');
-    expect(result[2].content).toBe('msg3');
+    expect((result[0] as Record<string, unknown>).content).toBe('msg1');
+    expect((result[2] as Record<string, unknown>).content).toBe('msg3');
   });
 
   it('getConversationHistory: returns empty array when no conversation', async () => {
@@ -283,8 +283,8 @@ describe('ConversationService', () => {
 
     expect(result).toHaveLength(2);
     // slice(-2) returns last 2 messages
-    expect(result[0].content).toBe('msg3');
-    expect(result[1].content).toBe('msg4');
+    expect((result[0] as Record<string, unknown>).content).toBe('msg3');
+    expect((result[1] as Record<string, unknown>).content).toBe('msg4');
   });
 
   it('getExtractedSignals: returns signals for conversation', async () => {

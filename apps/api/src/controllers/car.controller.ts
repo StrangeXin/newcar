@@ -28,8 +28,9 @@ export class CarController {
 
       const cars = await carService.searchCars(params);
       return res.json({ cars });
-    } catch (error: any) {
-      return res.status(500).json({ error: error.message });
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : String(error);
+      return res.status(500).json({ error: message });
     }
   }
 
@@ -40,8 +41,9 @@ export class CarController {
         return res.status(404).json({ error: 'Car not found' });
       }
       return res.json(car);
-    } catch (error: any) {
-      return res.status(500).json({ error: error.message });
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : String(error);
+      return res.status(500).json({ error: message });
     }
   }
 
@@ -53,8 +55,9 @@ export class CarController {
         return res.status(404).json({ error: 'Price snapshot not found' });
       }
       return res.json(snapshot);
-    } catch (error: any) {
-      return res.status(500).json({ error: error.message });
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : String(error);
+      return res.status(500).json({ error: message });
     }
   }
 
@@ -63,8 +66,9 @@ export class CarController {
       const limit = parseNumber(req.query.limit);
       const reviews = await carService.getCarReviews(req.params.id, limit);
       return res.json({ reviews });
-    } catch (error: any) {
-      return res.status(500).json({ error: error.message });
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : String(error);
+      return res.status(500).json({ error: message });
     }
   }
 
@@ -80,8 +84,9 @@ export class CarController {
 
       const policies = await carService.getPolicies(region, carId, activeOnly);
       return res.json({ policies });
-    } catch (error: any) {
-      return res.status(500).json({ error: error.message });
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : String(error);
+      return res.status(500).json({ error: message });
     }
   }
 
@@ -111,8 +116,9 @@ export class CarController {
         policyIds,
       });
       return res.status(201).json(snapshot);
-    } catch (error: any) {
-      return res.status(400).json({ error: error.message });
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : String(error);
+      return res.status(400).json({ error: message });
     }
   }
 
@@ -137,8 +143,9 @@ export class CarController {
         sourceUrl,
       });
       return res.status(201).json(policy);
-    } catch (error: any) {
-      return res.status(400).json({ error: error.message });
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : String(error);
+      return res.status(400).json({ error: message });
     }
   }
 }

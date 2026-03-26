@@ -11,8 +11,9 @@ export class ModerationController {
       const limit = req.query.limit ? Number(req.query.limit) : 20;
       const result = await moderationService.getReviewQueue(page, limit);
       return res.json(result);
-    } catch (error: any) {
-      return res.status(500).json({ error: error.message });
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : String(error);
+      return res.status(500).json({ error: message });
     }
   }
 
@@ -21,8 +22,9 @@ export class ModerationController {
       const result = await moderationService.approveContent(req.params.id);
       void communityService.invalidateCommunityListCache();
       return res.json(result);
-    } catch (error: any) {
-      return res.status(500).json({ error: error.message });
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : String(error);
+      return res.status(500).json({ error: message });
     }
   }
 
@@ -35,8 +37,9 @@ export class ModerationController {
       const result = await moderationService.rejectContent(req.params.id, reason);
       void communityService.invalidateCommunityListCache();
       return res.json(result);
-    } catch (error: any) {
-      return res.status(500).json({ error: error.message });
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : String(error);
+      return res.status(500).json({ error: message });
     }
   }
 
@@ -48,8 +51,9 @@ export class ModerationController {
       });
       void communityService.invalidateCommunityListCache();
       return res.json(result);
-    } catch (error: any) {
-      return res.status(500).json({ error: error.message });
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : String(error);
+      return res.status(500).json({ error: message });
     }
   }
 }
