@@ -1,11 +1,19 @@
 import { Router } from 'express';
+import { z } from 'zod';
 import { authMiddleware } from '../middleware/auth';
 import { publishedJourneyController } from '../controllers/published-journey.controller';
+import { validateBody } from '../lib/validate';
+
+const publishSchema = z.object({
+  title: z.string(),
+  publishedFormats: z.array(z.enum(['story', 'report', 'template'])).min(1),
+  visibility: z.enum(['PUBLIC', 'UNLISTED']),
+});
 
 // Routes under /journeys/:id/publish*
 export const journeyPublishRoutes = Router({ mergeParams: true });
 
-journeyPublishRoutes.post('/:id/publish', authMiddleware, (req, res) =>
+journeyPublishRoutes.post('/:id/publish', authMiddleware, validateBody(publishSchema), (req, res) =>
   publishedJourneyController.publish(req, res)
 );
 

@@ -1,4 +1,5 @@
 import { Router, Response } from 'express';
+import { z } from 'zod';
 import { journeyController } from '../controllers/journey.controller';
 import { authMiddleware, AuthenticatedRequest } from '../middleware/auth';
 import { sessionMiddleware } from '../middleware/session';
@@ -7,12 +8,18 @@ import { prisma } from '../lib/prisma';
 import conversationRoutes from './conversation';
 import carCandidateRoutes from './car-candidate';
 import aiChatRoutes from './ai-chat';
+import { validateBody } from '../lib/validate';
+
+const createJourneySchema = z.object({ title: z.string().min(1).max(100).optional() });
+const advanceStageSchema = z.object({
+  targetStage: z.enum(['AWARENESS', 'CONSIDERATION', 'COMPARISON', 'DECISION', 'PURCHASE']),
+});
 
 const router = Router();
 
-router.post('/', authMiddleware, (req, res) => journeyController.createJourney(req, res));
+router.post('/', authMiddleware, validateBody(createJourneySchema), (req, res) => journeyController.createJourney(req, res));
 router.get('/active', authMiddleware, (req, res) => journeyController.getActiveJourney(req, res));
-router.patch('/:journeyId/stage', authMiddleware, (req, res) => journeyController.advanceStage(req, res));
+router.patch('/:journeyId/stage', authMiddleware, validateBody(advanceStageSchema), (req, res) => journeyController.advanceStage(req, res));
 router.patch('/:journeyId/pause', authMiddleware, (req, res) => journeyController.pauseJourney(req, res));
 router.patch('/:journeyId/complete', authMiddleware, (req, res) => journeyController.completeJourney(req, res));
 router.post('/:journeyId/events', sessionMiddleware, (req, res) => journeyController.recordBehaviorEvent(req, res));
