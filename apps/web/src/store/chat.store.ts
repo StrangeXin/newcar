@@ -337,6 +337,10 @@ export const useChatStore = create<ChatState>((set, getState) => ({
       const token = getToken();
       if (token) {
         nextSocket.send(JSON.stringify({ type: 'auth', token }));
+      } else {
+        // No token available — close immediately to avoid server timeout loop
+        manualDisconnectRequested = true;
+        nextSocket.close();
       }
     });
 
@@ -393,6 +397,8 @@ export const useChatStore = create<ChatState>((set, getState) => ({
       }
 
       if (payload.type === 'auth_error') {
+        // Permanent failure — suppress reconnect
+        manualDisconnectRequested = true;
         nextSocket.close();
         return;
       }
@@ -402,6 +408,9 @@ export const useChatStore = create<ChatState>((set, getState) => ({
         const token = getToken();
         if (token) {
           nextSocket.send(JSON.stringify({ type: 'auth', token }));
+        } else {
+          manualDisconnectRequested = true;
+          nextSocket.close();
         }
         return;
       }

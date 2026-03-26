@@ -40,7 +40,6 @@ export class ChatWsController {
     ws: WebSocketLike,
     _req: IncomingMessage,
     journeyId: string,
-    auth?: { userId: string; sessionId?: string }
   ) {
     const traceId = this.buildTraceId(journeyId);
     const previous = this.sockets.get(journeyId);
@@ -49,30 +48,18 @@ export class ChatWsController {
     }
     this.sockets.set(journeyId, ws);
 
-    let authState: AuthState = auth ? 'AUTHENTICATED' : 'PENDING';
-    let resolvedAuth: { userId: string; sessionId?: string } | undefined = auth;
+    let authState: AuthState = 'PENDING';
+    let resolvedAuth: { userId: string; sessionId?: string } | undefined;
 
-    if (auth) {
-      this.log('connection_open', {
-        traceId,
-        journeyId,
-        userId: auth.userId,
-        hasSessionId: Boolean(auth.sessionId),
-      });
-    } else {
-      this.log('connection_open_pending_auth', { traceId, journeyId });
-    }
+    this.log('connection_open_pending_auth', { traceId, journeyId });
 
     // Auth timeout: close if not authenticated within AUTH_TIMEOUT_MS
-    let authTimer: ReturnType<typeof setTimeout> | undefined;
-    if (authState === 'PENDING') {
-      authTimer = setTimeout(() => {
-        if (authState === 'PENDING') {
-          this.log('auth_timeout', { traceId, journeyId });
-          ws.close(4001, 'Authentication timeout');
-        }
-      }, AUTH_TIMEOUT_MS);
-    }
+    let authTimer: ReturnType<typeof setTimeout> | undefined = setTimeout(() => {
+      if (authState === 'PENDING') {
+        this.log('auth_timeout', { traceId, journeyId });
+        ws.close(4001, 'Authentication timeout');
+      }
+    }, AUTH_TIMEOUT_MS);
 
     ws.on('message', async (raw: unknown) => {
       try {

@@ -217,28 +217,6 @@ describe('ChatWsController auth state machine', () => {
     );
   });
 
-  it('still works with pre-authenticated connection (backward compat)', async () => {
-    mockStreamChat.mockResolvedValue(undefined);
-
-    const { ws, emit } = createMockWs();
-    controller.handleConnection(ws, {} as any, JOURNEY_ID, {
-      userId: USER_ID,
-      sessionId: 'sess-1',
-    });
-
-    // No auth needed, send message directly
-    await emit('message', JSON.stringify({ type: 'message', content: 'hello' }));
-    await vi.runAllTimersAsync();
-
-    expect(mockStreamChat).toHaveBeenCalledWith(
-      expect.objectContaining({
-        journeyId: JOURNEY_ID,
-        userId: USER_ID,
-        message: 'hello',
-      })
-    );
-  });
-
   it('clears auth timer on close', async () => {
     const { ws, emit } = createMockWs();
     controller.handleConnection(ws, {} as any, JOURNEY_ID);
