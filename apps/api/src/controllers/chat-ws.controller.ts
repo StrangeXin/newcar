@@ -1,5 +1,7 @@
 import { IncomingMessage } from 'http';
 import { aiChatService } from '../services/ai-chat.service';
+import { authService } from '../services/auth.service';
+import { journeyService } from '../services/journey.service';
 
 type WebSocketLike = {
   readyState: number;
@@ -7,6 +9,10 @@ type WebSocketLike = {
   close: (code?: number, reason?: string) => void;
   on: (event: string, listener: (...args: any[]) => void) => void;
 };
+
+type AuthState = 'PENDING' | 'AUTHENTICATED';
+
+const AUTH_TIMEOUT_MS = 5000;
 
 export class ChatWsController {
   private sockets = new Map<string, WebSocketLike>();
@@ -34,7 +40,7 @@ export class ChatWsController {
     ws: WebSocketLike,
     _req: IncomingMessage,
     journeyId: string,
-    auth: { userId: string; sessionId?: string }
+    auth?: { userId: string; sessionId?: string }
   ) {
     const traceId = this.buildTraceId(journeyId);
     const previous = this.sockets.get(journeyId);
@@ -42,17 +48,77 @@ export class ChatWsController {
       previous.close(4000, 'Replaced by a newer connection');
     }
     this.sockets.set(journeyId, ws);
-    this.log('connection_open', {
-      traceId,
-      journeyId,
-      userId: auth.userId,
-      hasSessionId: Boolean(auth.sessionId),
-    });
+
+    let authState: AuthState = auth ? 'AUTHENTICATED' : 'PENDING';
+    let resolvedAuth: { userId: string; sessionId?: string } | undefined = auth;
+
+    if (auth) {
+      this.log('connection_open', {
+        traceId,
+        journeyId,
+        userId: auth.userId,
+        hasSessionId: Boolean(auth.sessionId),
+      });
+    } else {
+      this.log('connection_open_pending_auth', { traceId, journeyId });
+    }
+
+    // Auth timeout: close if not authenticated within AUTH_TIMEOUT_MS
+    let authTimer: ReturnType<typeof setTimeout> | undefined;
+    if (authState === 'PENDING') {
+      authTimer = setTimeout(() => {
+        if (authState === 'PENDING') {
+          this.log('auth_timeout', { traceId, journeyId });
+          ws.close(4001, 'Authentication timeout');
+        }
+      }, AUTH_TIMEOUT_MS);
+    }
 
     ws.on('message', async (raw: unknown) => {
       try {
         const text = typeof raw === 'string' ? raw : raw instanceof Buffer ? raw.toString('utf-8') : '';
-        const message = JSON.parse(text) as { type?: string; content?: string };
+        const message = JSON.parse(text) as { type?: string; content?: string; token?: string };
+
+        // Handle auth message when in PENDING state
+        if (authState === 'PENDING') {
+          if (message.type === 'auth' && message.token) {
+            try {
+              const payload = authService.verifyToken(message.token);
+              if (payload.type !== 'access') {
+                this.send(ws, { type: 'auth_error', message: 'Invalid token type' });
+                ws.close(4002, 'Invalid token type');
+                return;
+              }
+
+              const journey = await journeyService.getJourneyDetail(journeyId);
+              if (!journey || journey.userId !== payload.userId) {
+                this.send(ws, { type: 'auth_error', message: 'Journey access denied' });
+                ws.close(4003, 'Journey access denied');
+                return;
+              }
+
+              // Auth succeeded
+              authState = 'AUTHENTICATED';
+              resolvedAuth = { userId: payload.userId, sessionId: payload.sessionId };
+              if (authTimer) {
+                clearTimeout(authTimer);
+                authTimer = undefined;
+              }
+              this.log('auth_ok', { traceId, journeyId, userId: payload.userId });
+              this.send(ws, { type: 'auth_ok', userId: payload.userId });
+            } catch {
+              this.send(ws, { type: 'auth_error', message: 'Token verification failed' });
+              ws.close(4002, 'Token verification failed');
+            }
+            return;
+          }
+
+          // Non-auth message before authentication
+          this.send(ws, { type: 'auth_required' });
+          return;
+        }
+
+        // --- Authenticated message handling (existing logic) ---
         this.log('message_received', {
           traceId,
           journeyId,
@@ -71,8 +137,8 @@ export class ChatWsController {
 
         await aiChatService.streamChat({
           journeyId,
-          userId: auth.userId,
-          sessionId: auth.sessionId,
+          userId: resolvedAuth!.userId,
+          sessionId: resolvedAuth!.sessionId,
           traceId,
           message: message.content.trim(),
           onEvent: (event) => {
@@ -101,6 +167,10 @@ export class ChatWsController {
     });
 
     ws.on('close', () => {
+      if (authTimer) {
+        clearTimeout(authTimer);
+        authTimer = undefined;
+      }
       this.log('connection_close', {
         traceId,
         journeyId,

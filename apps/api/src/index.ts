@@ -4,8 +4,6 @@ import { config } from './config';
 import { chatWsController } from './controllers/chat-ws.controller';
 import { runDailySnapshotJob } from './jobs/daily-snapshot.job';
 import { scheduler } from './lib/scheduler';
-import { authService } from './services/auth.service';
-import { journeyService } from './services/journey.service';
 
 const app = createApp();
 const server = http.createServer(app);
@@ -15,7 +13,7 @@ const wss = new WebSocket.Server({ noServer: true });
 scheduler.add('daily-snapshot', '0 8 * * *', runDailySnapshotJob);
 scheduler.start();
 
-server.on('upgrade', async (req: any, socket: any, head: any) => {
+server.on('upgrade', (req: any, socket: any, head: any) => {
   const pathname = new URL(req.url || '', 'http://localhost').pathname;
   const match = pathname.match(/^\/ws\/journeys\/([^/]+)\/chat$/);
 
@@ -25,36 +23,10 @@ server.on('upgrade', async (req: any, socket: any, head: any) => {
   }
 
   const journeyId = match[1];
-  const url = new URL(req.url || '', 'http://localhost');
-  const token = url.searchParams.get('token');
 
-  if (!token) {
-    socket.destroy();
-    return;
-  }
-
-  try {
-    const payload = authService.verifyToken(token);
-    if (payload.type !== 'access') {
-      socket.destroy();
-      return;
-    }
-
-    const journey = await journeyService.getJourneyDetail(journeyId);
-    if (!journey || journey.userId !== payload.userId) {
-      socket.destroy();
-      return;
-    }
-
-    wss.handleUpgrade(req, socket, head, (ws: any) => {
-      chatWsController.handleConnection(ws, req, journeyId, {
-        userId: payload.userId,
-        sessionId: payload.sessionId,
-      });
-    });
-  } catch {
-    socket.destroy();
-  }
+  wss.handleUpgrade(req, socket, head, (ws: any) => {
+    chatWsController.handleConnection(ws, req, journeyId);
+  });
 });
 
 server.listen(config.port, () => {

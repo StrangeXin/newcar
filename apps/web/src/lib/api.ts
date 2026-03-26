@@ -150,11 +150,7 @@ export async function del<T>(path: string): Promise<T> {
 }
 
 export function buildJourneyChatWsUrl(journeyId: string) {
-  const token = typeof window !== 'undefined' ? getToken() : undefined;
   const url = new URL(`/ws/journeys/${journeyId}/chat`, BASE_URL);
   url.protocol = url.protocol === 'https:' ? 'wss:' : 'ws:';
-  if (token) {
-    url.searchParams.set('token', token);
-  }
   return url.toString();
 }

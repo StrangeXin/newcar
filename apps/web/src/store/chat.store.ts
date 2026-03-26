@@ -3,6 +3,7 @@
 import { create } from 'zustand';
 import { Candidate, CarInfo, TimelineEvent, TimelineEventType } from '@/types/api';
 import { buildJourneyChatWsUrl, get, MOCK_MODE } from '@/lib/api';
+import { getToken } from '@/lib/auth';
 import { dispatchJourneySideEffect } from '@/lib/journey-workspace-events';
 import { mockChatMessages } from '@/lib/mock-data';
 
@@ -331,11 +332,11 @@ export const useChatStore = create<ChatState>((set, getState) => ({
         window.clearTimeout(reconnectTimer);
         reconnectTimer = undefined;
       }
-      set({ isConnected: true, activeJourneyId: journeyId });
 
-      if (reconnectSyncPending && socketToken === connectionToken) {
-        reconnectSyncPending = false;
-        void refreshWorkspaceAfterReconnect(journeyId);
+      // Send auth as first message instead of setting isConnected immediately
+      const token = getToken();
+      if (token) {
+        nextSocket.send(JSON.stringify({ type: 'auth', token }));
       }
     });
 
@@ -371,12 +372,39 @@ export const useChatStore = create<ChatState>((set, getState) => ({
 
     nextSocket.addEventListener('message', (event) => {
       const payload = JSON.parse(String(event.data)) as
+        | { type: 'auth_ok'; userId: string }
+        | { type: 'auth_error'; message: string }
+        | { type: 'auth_required' }
         | { type: 'token'; delta: string }
         | { type: 'tool_start'; name: ToolName; input: Record<string, unknown> }
         | { type: 'tool_done'; name: ToolName; result: unknown }
         | SideEffectPayload
         | { type: 'done'; conversationId: string; fullContent: string }
         | { type: 'error'; code: string; message: string };
+
+      if (payload.type === 'auth_ok') {
+        set({ isConnected: true, activeJourneyId: journeyId });
+
+        if (reconnectSyncPending && socketToken === connectionToken) {
+          reconnectSyncPending = false;
+          void refreshWorkspaceAfterReconnect(journeyId);
+        }
+        return;
+      }
+
+      if (payload.type === 'auth_error') {
+        nextSocket.close();
+        return;
+      }
+
+      if (payload.type === 'auth_required') {
+        // Server says we need to authenticate first — resend auth
+        const token = getToken();
+        if (token) {
+          nextSocket.send(JSON.stringify({ type: 'auth', token }));
+        }
+        return;
+      }
 
       if (payload.type === 'token') {
         set((state) => {
