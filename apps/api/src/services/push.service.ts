@@ -1,5 +1,6 @@
 import { Platform } from '@newcar/shared';
 import { prisma } from '../lib/prisma';
+import { logger } from '../lib/logger';
 import { incrWithTTL, redis } from '../lib/redis';
 import { wechatPushService } from './wechat-push.service';
 
@@ -59,7 +60,7 @@ export class PushService {
     );
 
     if (wechatDevices.length === 0) {
-      console.log(`Push skipped: no WECHAT_MINIAPP device for user=${notification.userId}`);
+      logger.warn({ userId: notification.userId }, 'Push skipped: no WECHAT_MINIAPP device');
       return;
     }
 
@@ -74,7 +75,7 @@ export class PushService {
         });
       } catch (error: unknown) {
         const errMsg = error instanceof Error ? error.message : String(error);
-        console.error(`Push send failed notification=${notification.id} device=${device.id}:`, errMsg);
+        logger.error({ notificationId: notification.id, deviceId: device.id, err: errMsg }, 'Push send failed');
       }
     }
 

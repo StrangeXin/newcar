@@ -1,4 +1,5 @@
 import { IncomingMessage } from 'http';
+import { logger } from '../lib/logger';
 import { aiChatService } from '../services/ai-chat.service';
 import { authService } from '../services/auth.service';
 import { journeyService } from '../services/journey.service';
@@ -26,14 +27,7 @@ export class ChatWsController {
       return;
     }
 
-    console.log(
-      '[chat-ws]',
-      JSON.stringify({
-        ts: new Date().toISOString(),
-        event,
-        ...(details || {}),
-      })
-    );
+    logger.info({ event, ...(details || {}) }, '[chat-ws]');
   }
 
   handleConnection(

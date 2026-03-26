@@ -1,3 +1,5 @@
+import { logger } from './logger';
+
 type Job = () => Promise<void>;
 
 interface ScheduledJob {
@@ -19,7 +21,7 @@ export class Scheduler {
     this.intervalId = setInterval(() => {
       void this.tick();
     }, 60 * 1000);
-    console.log('Scheduler started');
+    logger.info('Scheduler started');
   }
 
   stop() {
@@ -37,12 +39,12 @@ export class Scheduler {
         continue;
       }
 
-      console.log(`Running job: ${scheduledJob.name}`);
+      logger.info({ job: scheduledJob.name }, 'Running job');
       try {
         await scheduledJob.job();
         scheduledJob.lastRun = now;
       } catch (err) {
-        console.error(`Job ${scheduledJob.name} failed:`, err);
+        logger.error({ job: scheduledJob.name, err }, 'Job failed');
       }
     }
   }

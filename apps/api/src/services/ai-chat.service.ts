@@ -1,5 +1,6 @@
 import { AddedReason, JourneyStage, MessageRole } from '@newcar/shared';
 import { config } from '../config';
+import { logger } from '../lib/logger';
 import { carCandidateService } from './car-candidate.service';
 import { carService } from './car.service';
 import { conversationService } from './conversation.service';
@@ -42,15 +43,7 @@ export class AiChatService {
       return;
     }
 
-    console.log(
-      '[ai-chat]',
-      JSON.stringify({
-        ts: new Date().toISOString(),
-        traceId,
-        event,
-        ...(details || {}),
-      })
-    );
+    logger.info({ traceId, event, ...(details || {}) }, '[ai-chat]');
   }
 
   async chat(data: {

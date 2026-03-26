@@ -1,7 +1,9 @@
 import cors from 'cors';
 import express, { Express, Request, Response } from 'express';
+import pinoHttp from 'pino-http';
 import { errorHandler } from './middleware/error';
 import { rateLimitMiddleware } from './middleware/rateLimit';
+import { logger } from './lib/logger';
 import authRoutes from './routes/auth';
 import { carRoutes, policyRoutes } from './routes/cars';
 import communityRoutes from './routes/community';
@@ -21,6 +23,7 @@ export function createApp(): Express {
     ? process.env.CORS_ORIGIN.split(',').map((o) => o.trim())
     : ['http://localhost:3000'];
   app.use(cors({ origin: allowedOrigins, credentials: true }));
+  app.use(pinoHttp({ logger }));
   app.use(express.json());
 
   app.use(rateLimitMiddleware);

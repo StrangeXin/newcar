@@ -1,5 +1,6 @@
 import { JourneyStatus, SnapshotTrigger } from '@newcar/shared';
 import { prisma } from '../lib/prisma';
+import { logger } from '../lib/logger';
 import { snapshotService } from '../services/snapshot.service';
 
 const DAY_MS = 24 * 60 * 60 * 1000;
@@ -17,7 +18,7 @@ export async function runDailySnapshotJob(): Promise<void> {
     select: { id: true, userId: true },
   });
 
-  console.log(`Daily snapshot job: found ${activeJourneys.length} active journeys`);
+  logger.info({ count: activeJourneys.length }, 'Daily snapshot job: found active journeys');
 
   const results: Array<{ journeyId: string; success: boolean; snapshotId?: string; error?: string }> = [];
 
@@ -32,7 +33,7 @@ export async function runDailySnapshotJob(): Promise<void> {
           return { journeyId: journey.id, success: snapshot !== null, snapshotId: snapshot?.id };
         } catch (err: unknown) {
           const errMsg = err instanceof Error ? err.message : String(err);
-          console.error(`Snapshot failed for journey ${journey.id}:`, errMsg);
+          logger.error({ journeyId: journey.id, err: errMsg }, 'Snapshot failed for journey');
           return { journeyId: journey.id, success: false, error: errMsg };
         }
       })
@@ -47,5 +48,8 @@ export async function runDailySnapshotJob(): Promise<void> {
     }
   }
 
-  console.log(`Daily snapshot job completed: ${results.filter((item) => item.success).length}/${results.length} succeeded`);
+  logger.info(
+    { succeeded: results.filter((item) => item.success).length, total: results.length },
+    'Daily snapshot job completed'
+  );
 }

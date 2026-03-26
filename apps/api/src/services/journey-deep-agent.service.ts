@@ -1,5 +1,6 @@
 import path from 'path';
 import { promises as fs } from 'fs';
+import { logger } from '../lib/logger';
 import { createDeepAgent, FilesystemBackend } from 'deepagents';
 import { ChatAnthropic } from '@langchain/anthropic';
 import { AIMessageChunk, ToolMessage, tool } from 'langchain';
@@ -61,13 +62,7 @@ export class JourneyDeepAgentService {
       return;
     }
 
-    console.log(
-      `[deep-agent] ${JSON.stringify({
-        ts: new Date().toISOString(),
-        event,
-        ...details,
-      })}`
-    );
+    logger.info({ event, ...details }, '[deep-agent]');
   }
 
   private async trace(event: string, details?: Record<string, unknown>) {
@@ -81,7 +76,7 @@ export class JourneyDeepAgentService {
       ...details,
     };
 
-    console.log(`[deep-agent-trace] ${JSON.stringify(payload)}`);
+    logger.info({ event, ...details }, '[deep-agent-trace]');
     await fs.appendFile(config.ai.traceFile, `${JSON.stringify(payload)}\n`, 'utf-8');
   }
 

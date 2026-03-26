@@ -5,6 +5,7 @@ import { config } from './config';
 import { chatWsController } from './controllers/chat-ws.controller';
 import { runDailySnapshotJob } from './jobs/daily-snapshot.job';
 import { scheduler } from './lib/scheduler';
+import { logger } from './lib/logger';
 
 const app = createApp();
 const server = http.createServer(app);
@@ -31,5 +32,5 @@ server.on('upgrade', (req: IncomingMessage, socket: Duplex, head: Buffer) => {
 });
 
 server.listen(config.port, () => {
-  console.log(`API server running on port ${config.port}`);
+  logger.info({ port: config.port }, 'API server running');
 });
