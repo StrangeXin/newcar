@@ -1,6 +1,7 @@
 'use client';
 
 import { create } from 'zustand';
+import type { WsServerMessage } from '@newcar/shared';
 import { Candidate, TimelineEvent } from '@/types/api';
 import { buildJourneyChatWsUrl, get, MOCK_MODE } from '@/lib/api';
 import { dispatchJourneySideEffect } from '@/lib/journey-workspace-events';
@@ -11,7 +12,6 @@ import {
   HistoryResponse,
   SideEffectChatMessage,
   SideEffectEvent,
-  SideEffectPayload,
   ToolChatMessage,
   ToolName,
   makeId,
@@ -166,16 +166,7 @@ export const useChatStore = create<ChatState>((set, getState) => ({
     });
 
     nextSocket.addEventListener('message', (event) => {
-      const payload = JSON.parse(String(event.data)) as
-        | { type: 'auth_ok'; userId: string }
-        | { type: 'auth_error'; message: string }
-        | { type: 'auth_required' }
-        | { type: 'token'; delta: string }
-        | { type: 'tool_start'; name: ToolName; input: Record<string, unknown> }
-        | { type: 'tool_done'; name: ToolName; result: unknown }
-        | SideEffectPayload
-        | { type: 'done'; conversationId: string; fullContent: string }
-        | { type: 'error'; code: string; message: string };
+      const payload = JSON.parse(String(event.data)) as WsServerMessage;
 
       if (payload.type === 'auth_ok') {
         set({ isConnected: true, activeJourneyId: journeyId });
@@ -237,7 +228,7 @@ export const useChatStore = create<ChatState>((set, getState) => ({
             {
               id: makeId('tool'),
               kind: 'tool_status',
-              name: payload.name,
+              name: payload.name as ToolName,
               input: parseToolInput(payload.input),
               status: 'running',
               timestamp: new Date().toISOString(),
@@ -297,7 +288,7 @@ export const useChatStore = create<ChatState>((set, getState) => ({
           ...(timelineEvent ? { timelineEvent } : {}),
         };
         const workspaceEvent: Exclude<SideEffectEvent, 'timeline_event'> =
-          payload.event === 'timeline_event' ? 'journey_updated' : payload.event;
+          payload.event === 'timeline_event' ? 'journey_updated' : (payload.event as Exclude<SideEffectEvent, 'timeline_event'>);
 
         const sideEffectMessage: SideEffectChatMessage = {
           id: makeId('effect'),

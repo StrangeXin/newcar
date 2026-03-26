@@ -1,4 +1,5 @@
 import { IncomingMessage } from 'http';
+import { WsClientMessage, WsServerMessage } from '@newcar/shared';
 import { logger } from '../lib/logger';
 import { aiChatService } from '../services/ai-chat.service';
 import { authService } from '../services/auth.service';
@@ -71,11 +72,11 @@ export class ChatWsController {
     ws.on('message', async (raw: unknown) => {
       try {
         const text = typeof raw === 'string' ? raw : raw instanceof Buffer ? raw.toString('utf-8') : '';
-        const message = JSON.parse(text) as { type?: string; content?: string; token?: string };
+        const message = JSON.parse(text) as WsClientMessage;
 
         // Handle auth message when in PENDING state
         if (authState === 'PENDING') {
-          if (message.type === 'auth' && message.token) {
+          if (message.type === 'auth') {
             try {
               const payload = authService.verifyToken(message.token);
               if (payload.type !== 'access') {
@@ -117,7 +118,7 @@ export class ChatWsController {
           traceId,
           journeyId,
           type: message.type,
-          contentLength: message.content?.length || 0,
+          contentLength: message.type === 'message' ? message.content?.length || 0 : 0,
         });
 
         if (message.type !== 'message' || !message.content?.trim()) {
@@ -152,7 +153,7 @@ export class ChatWsController {
               eventName: 'name' in event ? (event as Record<string, unknown>).name : undefined,
               sideEffect: 'event' in event ? (event as Record<string, unknown>).event : undefined,
             });
-            this.send(ws, event);
+            this.send(ws, event as WsServerMessage);
           },
         });
       } catch (error: unknown) {
@@ -185,7 +186,7 @@ export class ChatWsController {
     });
   }
 
-  private send(ws: WebSocketLike, payload: unknown) {
+  private send(ws: WebSocketLike, payload: WsServerMessage) {
     if (ws.readyState === 1) {
       ws.send(JSON.stringify(payload));
     }
