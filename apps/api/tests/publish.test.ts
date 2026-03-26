@@ -29,7 +29,7 @@ vi.mock('../src/config', () => ({
 
 import { prisma } from '../src/lib/prisma';
 import { moderationService } from '../src/services/moderation.service';
-import { PublishService, publishService } from '../src/services/publish.service';
+import { PublishService, publishService, contentGenerator } from '../src/services/publish.service';
 
 const mockedPrisma = prisma as any;
 
@@ -72,10 +72,10 @@ describe('PublishService', () => {
     mockedPrisma.publishedJourney.create.mockReset();
     mockedPrisma.publishedJourney.update.mockReset();
 
-    vi.spyOn(publishService, 'generateStory').mockResolvedValue({ stages: [{ stage: 'AWARENESS', headline: '明确需求', narrative: '故事内容' }] });
-    vi.spyOn(publishService, 'generateReport').mockResolvedValue({ userProfile: { budget: '20-30万', fuelPreference: '纯电', useCases: ['family'], coreDimensions: ['空间'] }, comparison: [], recommendation: { carName: '测试车', reasoning: '测试理由' } });
-    vi.spyOn(publishService, 'generateTemplate').mockResolvedValue({ dimensions: [], weights: {}, keyQuestions: [], candidateCarIds: ['car-1'], candidateNames: ['测试车'] });
-    vi.spyOn(publishService, 'generatePublishSummary').mockResolvedValue('测试摘要');
+    vi.spyOn(contentGenerator, 'generateStory').mockResolvedValue({ stages: [{ stage: 'AWARENESS', headline: '明确需求', narrative: '故事内容' }] });
+    vi.spyOn(contentGenerator, 'generateReport').mockResolvedValue({ userProfile: { budget: '20-30万', fuelPreference: '纯电', useCases: ['family'], coreDimensions: ['空间'] }, comparison: [], recommendation: { carName: '测试车', reasoning: '测试理由' } });
+    vi.spyOn(contentGenerator, 'generateTemplate').mockResolvedValue({ dimensions: [], weights: {}, keyQuestions: [], candidateCarIds: ['car-1'], candidateNames: ['测试车'] });
+    vi.spyOn(contentGenerator, 'generatePublishSummary').mockResolvedValue('测试摘要');
 
     mockedPrisma.journey.findUnique.mockResolvedValue(buildJourney() as any);
     mockedPrisma.publishedJourney.findUnique.mockResolvedValue(null);
@@ -249,11 +249,11 @@ describe('PublishService.generatePublishSummary', () => {
     const mockCreate = vi.fn().mockResolvedValue({
       content: [{ type: 'text', text: '从对比中选择了理想L6' }],
     });
-    vi.spyOn(publishService as any, 'getClient').mockReturnValue({
+    vi.spyOn(contentGenerator as any, 'getClient').mockReturnValue({
       messages: { create: mockCreate },
     });
 
-    const result = await publishService.generatePublishSummary(journey, [winner], snapshot);
+    const result = await contentGenerator.generatePublishSummary(journey, [winner], snapshot);
     expect(result).toBe('从对比中选择了理想L6');
   });
 
@@ -269,11 +269,11 @@ describe('PublishService.generatePublishSummary', () => {
       candidates: [winner],
     } as any;
 
-    vi.spyOn(publishService as any, 'getClient').mockReturnValue({
+    vi.spyOn(contentGenerator as any, 'getClient').mockReturnValue({
       messages: { create: vi.fn().mockRejectedValue(new Error('API error')) },
     });
 
-    const result = await publishService.generatePublishSummary(journey, [winner], null);
+    const result = await contentGenerator.generatePublishSummary(journey, [winner], null);
     expect(result).toContain('比亚迪 海豹');
     expect(result).toContain('性价比高');
   });
@@ -286,11 +286,11 @@ describe('PublishService.generatePublishSummary', () => {
     } as any;
     const snapshot = { narrativeSummary: '探索阶段' } as any;
 
-    vi.spyOn(publishService as any, 'getClient').mockReturnValue({
+    vi.spyOn(contentGenerator as any, 'getClient').mockReturnValue({
       messages: { create: vi.fn().mockRejectedValue(new Error('API error')) },
     });
 
-    const result = await publishService.generatePublishSummary(journey, [], snapshot);
+    const result = await contentGenerator.generatePublishSummary(journey, [], snapshot);
     // With no candidates and no winner, fallback uses snapshot summary
     expect(result).toBe('探索阶段');
   });
@@ -303,7 +303,7 @@ describe('PublishService.withSingleRetry', () => {
 
   it('first attempt succeeds, no retry', async () => {
     const task = vi.fn().mockResolvedValue('success');
-    const result = await (publishService as any).withSingleRetry('test', task);
+    const result = await (contentGenerator as any).withSingleRetry('test', task);
     expect(result).toBe('success');
     expect(task).toHaveBeenCalledTimes(1);
   });
@@ -312,7 +312,7 @@ describe('PublishService.withSingleRetry', () => {
     const task = vi.fn()
       .mockRejectedValueOnce(new Error('first fail'))
       .mockResolvedValueOnce('retry-success');
-    const result = await (publishService as any).withSingleRetry('test', task);
+    const result = await (contentGenerator as any).withSingleRetry('test', task);
     expect(result).toBe('retry-success');
     expect(task).toHaveBeenCalledTimes(2);
   });
@@ -322,7 +322,7 @@ describe('PublishService.withSingleRetry', () => {
       .mockRejectedValueOnce(new Error('fail-1'))
       .mockRejectedValueOnce(new Error('fail-2'));
     await expect(
-      (publishService as any).withSingleRetry('test', task)
+      (contentGenerator as any).withSingleRetry('test', task)
     ).rejects.toThrow('fail-2');
     expect(task).toHaveBeenCalledTimes(2);
   });
@@ -335,31 +335,31 @@ describe('PublishService.parseJsonBlock', () => {
 
   it('extracts JSON from markdown code block', () => {
     const input = '```json\n{"key": "value"}\n```';
-    const result = (publishService as any).parseJsonBlock(input, {});
+    const result = (contentGenerator as any).parseJsonBlock(input, {});
     expect(result).toEqual({ key: 'value' });
   });
 
   it('handles raw JSON string', () => {
     const input = '{"name": "test", "count": 42}';
-    const result = (publishService as any).parseJsonBlock(input, {});
+    const result = (contentGenerator as any).parseJsonBlock(input, {});
     expect(result).toEqual({ name: 'test', count: 42 });
   });
 
   it('returns fallback on invalid JSON', () => {
     const fallback = { default: true };
-    const result = (publishService as any).parseJsonBlock('not json at all', fallback);
+    const result = (contentGenerator as any).parseJsonBlock('not json at all', fallback);
     expect(result).toEqual(fallback);
   });
 
   it('returns fallback when no JSON object found', () => {
     const fallback = { empty: true };
-    const result = (publishService as any).parseJsonBlock('just plain text', fallback);
+    const result = (contentGenerator as any).parseJsonBlock('just plain text', fallback);
     expect(result).toEqual(fallback);
   });
 
   it('extracts JSON embedded in surrounding text', () => {
     const input = 'Here is the result:\n{"stages": [{"stage": "AWARENESS"}]}\nDone.';
-    const result = (publishService as any).parseJsonBlock(input, {});
+    const result = (contentGenerator as any).parseJsonBlock(input, {});
     expect(result).toEqual({ stages: [{ stage: 'AWARENESS' }] });
   });
 });
@@ -383,7 +383,7 @@ describe('PublishService.regeneratePublishedContent', () => {
       },
     });
 
-    vi.spyOn(publishService, 'generateStory').mockResolvedValue({
+    vi.spyOn(contentGenerator, 'generateStory').mockResolvedValue({
       stages: [{ stage: 'AWARENESS', headline: '新故事', narrative: '新内容' }],
     });
 
@@ -401,7 +401,7 @@ describe('PublishService.regeneratePublishedContent', () => {
         }),
       })
     );
-    expect(publishService.generateStory).toHaveBeenCalled();
+    expect(contentGenerator.generateStory).toHaveBeenCalled();
   });
 
   it('throws error when published journey not found', async () => {
@@ -423,7 +423,7 @@ describe('PublishService.regeneratePublishedContent', () => {
       },
     });
 
-    vi.spyOn(publishService, 'generateReport').mockResolvedValue({
+    vi.spyOn(contentGenerator, 'generateReport').mockResolvedValue({
       userProfile: { budget: '20-30万', fuelPreference: '纯电', useCases: [], coreDimensions: [] },
       comparison: [],
       recommendation: { carName: '测试', reasoning: '理由' },
@@ -435,7 +435,7 @@ describe('PublishService.regeneratePublishedContent', () => {
     }));
 
     await publishService.regeneratePublishedContent('pub-1', 'report');
-    expect(publishService.generateReport).toHaveBeenCalled();
+    expect(contentGenerator.generateReport).toHaveBeenCalled();
     expect(mockedPrisma.publishedJourney.update).toHaveBeenCalledWith(
       expect.objectContaining({
         data: expect.objectContaining({
@@ -457,7 +457,7 @@ describe('PublishService.regeneratePublishedContent', () => {
       },
     });
 
-    vi.spyOn(publishService, 'generatePublishSummary').mockResolvedValue('新摘要');
+    vi.spyOn(contentGenerator, 'generatePublishSummary').mockResolvedValue('新摘要');
 
     mockedPrisma.publishedJourney.update.mockImplementation(async ({ data }: any) => ({
       id: 'pub-1',
@@ -465,7 +465,7 @@ describe('PublishService.regeneratePublishedContent', () => {
     }));
 
     await publishService.regeneratePublishedContent('pub-1', 'summary');
-    expect(publishService.generatePublishSummary).toHaveBeenCalled();
+    expect(contentGenerator.generatePublishSummary).toHaveBeenCalled();
     expect(mockedPrisma.publishedJourney.update).toHaveBeenCalledWith(
       expect.objectContaining({
         data: expect.objectContaining({
