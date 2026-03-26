@@ -4,41 +4,35 @@ import { config } from '../config';
 
 const redis = new Redis(config.redis.url);
 
-interface RateLimitEntry {
-  count: number;
-  resetAt: number;
-}
+export function createRateLimit(options: {
+  windowMs: number;
+  max: number;
+  keyGenerator?: (req: Request) => string;
+}) {
+  const { windowMs, max, keyGenerator } = options;
 
-const WINDOW_MS = 60 * 1000;
-const MAX_REQUESTS = 100;
+  return async function rateLimitMiddleware(req: Request, res: Response, next: NextFunction) {
+    const keyBase = keyGenerator ? keyGenerator(req) : req.ip || 'unknown';
+    const window = Math.floor(Date.now() / windowMs);
+    const key = `ratelimit:${keyBase}:${window}`;
 
-export async function rateLimitMiddleware(req: Request, res: Response, next: NextFunction) {
-  const key = `ratelimit:${req.ip}:${Math.floor(Date.now() / WINDOW_MS)}`;
+    try {
+      const count = await redis.incr(key);
+      if (count === 1) {
+        await redis.pexpire(key, windowMs);
+      }
 
-  try {
-    const entry = await redis.get(key);
-    const now = Date.now();
+      if (count > max) {
+        res.setHeader('Retry-After', Math.ceil(windowMs / 1000));
+        return res.status(429).json({ error: 'Too many requests' });
+      }
 
-    if (!entry) {
-      await redis.setex(key, Math.ceil(WINDOW_MS / 1000), JSON.stringify({ count: 1, resetAt: now + WINDOW_MS }));
+      return next();
+    } catch {
       return next();
     }
-
-    const { count, resetAt }: RateLimitEntry = JSON.parse(entry);
-
-    if (now > resetAt) {
-      await redis.setex(key, Math.ceil(WINDOW_MS / 1000), JSON.stringify({ count: 1, resetAt: now + WINDOW_MS }));
-      return next();
-    }
-
-    if (count >= MAX_REQUESTS) {
-      res.setHeader('Retry-After', Math.ceil((resetAt - now) / 1000));
-      return res.status(429).json({ error: 'Too many requests' });
-    }
-
-    await redis.setex(key, Math.ceil(WINDOW_MS / 1000), JSON.stringify({ count: count + 1, resetAt }));
-    return next();
-  } catch {
-    return next();
-  }
+  };
 }
+
+// Default global limiter (backwards compatible)
+export const rateLimitMiddleware = createRateLimit({ windowMs: 60000, max: 100 });

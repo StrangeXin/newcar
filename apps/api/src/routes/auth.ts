@@ -5,6 +5,9 @@ import { authController } from '../controllers/auth.controller';
 import { prisma } from '../lib/prisma';
 import { authMiddleware, AuthenticatedRequest } from '../middleware/auth';
 import { validateBody } from '../lib/validate';
+import { createRateLimit } from '../middleware/rateLimit';
+
+const authRateLimit = createRateLimit({ windowMs: 60000, max: 10 });
 
 const sendOtpSchema = z.object({ phone: z.string().regex(/^1[3-9]\d{9}$/) });
 const phoneLoginSchema = z.object({ phone: z.string(), otp: z.string().length(6) });
@@ -12,9 +15,9 @@ const phoneLoginSchema = z.object({ phone: z.string(), otp: z.string().length(6)
 const router = Router();
 
 router.get('/wechat/callback', (req, res) => authController.wechatCallback(req, res));
-router.post('/phone/send-otp', validateBody(sendOtpSchema), (req, res) => authController.sendOtp(req, res));
-router.post('/phone/login', validateBody(phoneLoginSchema), (req, res) => authController.phoneLogin(req, res));
-router.post('/refresh', (req, res) => authController.refreshToken(req, res));
+router.post('/phone/send-otp', authRateLimit, validateBody(sendOtpSchema), (req, res) => authController.sendOtp(req, res));
+router.post('/phone/login', authRateLimit, validateBody(phoneLoginSchema), (req, res) => authController.phoneLogin(req, res));
+router.post('/refresh', authRateLimit, (req, res) => authController.refreshToken(req, res));
 router.get('/users/me', authMiddleware, async (req: AuthenticatedRequest, res) => {
   try {
     const user = await prisma.user.findUnique({

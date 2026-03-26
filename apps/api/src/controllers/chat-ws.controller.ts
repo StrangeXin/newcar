@@ -17,6 +17,19 @@ const AUTH_TIMEOUT_MS = 5000;
 
 export class ChatWsController {
   private sockets = new Map<string, WebSocketLike>();
+  private msgCounts = new Map<string, { count: number; resetAt: number }>();
+
+  private checkWsRateLimit(userId: string): boolean {
+    const now = Date.now();
+    const entry = this.msgCounts.get(userId);
+    if (!entry || now > entry.resetAt) {
+      this.msgCounts.set(userId, { count: 1, resetAt: now + 60000 });
+      return true;
+    }
+    if (entry.count >= 10) return false;
+    entry.count++;
+    return true;
+  }
 
   private buildTraceId(journeyId: string) {
     return `chat_${journeyId}_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`;
@@ -112,6 +125,15 @@ export class ChatWsController {
             type: 'error',
             code: 'INVALID_MESSAGE',
             message: 'Only non-empty message events are supported',
+          });
+          return;
+        }
+
+        if (!this.checkWsRateLimit(resolvedAuth!.userId)) {
+          this.send(ws, {
+            type: 'error',
+            code: 'RATE_LIMIT_EXCEEDED',
+            message: 'Too many messages. Please wait before sending more.',
           });
           return;
         }

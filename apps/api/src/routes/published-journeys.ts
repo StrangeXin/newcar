@@ -1,8 +1,15 @@
 import { Router } from 'express';
 import { z } from 'zod';
-import { authMiddleware } from '../middleware/auth';
+import { authMiddleware, AuthenticatedRequest } from '../middleware/auth';
 import { publishedJourneyController } from '../controllers/published-journey.controller';
 import { validateBody } from '../lib/validate';
+import { createRateLimit } from '../middleware/rateLimit';
+
+const publishRateLimit = createRateLimit({
+  windowMs: 60000,
+  max: 5,
+  keyGenerator: (req) => (req as AuthenticatedRequest).userId || req.ip || 'unknown',
+});
 
 const publishSchema = z.object({
   title: z.string(),
@@ -13,7 +20,7 @@ const publishSchema = z.object({
 // Routes under /journeys/:id/publish*
 export const journeyPublishRoutes = Router({ mergeParams: true });
 
-journeyPublishRoutes.post('/:id/publish', authMiddleware, validateBody(publishSchema), (req, res) =>
+journeyPublishRoutes.post('/:id/publish', authMiddleware, publishRateLimit, validateBody(publishSchema), (req, res) =>
   publishedJourneyController.publish(req, res)
 );
 
