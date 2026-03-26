@@ -5,7 +5,6 @@ import { Candidate, CarInfo, TimelineEvent, TimelineEventType } from '@/types/ap
 import { buildJourneyChatWsUrl, get, MOCK_MODE } from '@/lib/api';
 import { getToken } from '@/lib/auth';
 import { dispatchJourneySideEffect } from '@/lib/journey-workspace-events';
-import { mockChatMessages } from '@/lib/mock-data';
 
 export type ChatRole = 'USER' | 'ASSISTANT';
 export type ToolName = 'car_search' | 'car_detail' | 'journey_update' | 'add_candidate';
@@ -281,6 +280,7 @@ export const useChatStore = create<ChatState>((set, getState) => ({
 
   loadHistory: async (journeyId) => {
     if (MOCK_MODE) {
+      const { mockChatMessages } = await import('@/lib/mock-data');
       set({ messages: mockChatMessages });
       return;
     }
