@@ -1,0 +1,6 @@
+{"type":"server-started","port":57864,"host":"127.0.0.1","url_host":"localhost","url":"http://localhost:57864","screen_dir":"/Users/hexin/code/test/newcar/.superpowers/brainstorm/45154-1774509130/content","state_dir":"/Users/hexin/code/test/newcar/.superpowers/brainstorm/45154-1774509130/state"}
+{"type":"screen-added","file":"/Users/hexin/code/test/newcar/.superpowers/brainstorm/45154-1774509130/content/data-model.html"}
+{"type":"screen-added","file":"/Users/hexin/code/test/newcar/.superpowers/brainstorm/45154-1774509130/content/frontend-ui.html"}
+{"type":"screen-added","file":"/Users/hexin/code/test/newcar/.superpowers/brainstorm/45154-1774509130/content/frontend-ui-v2.html"}
+{"type":"screen-added","file":"/Users/hexin/code/test/newcar/.superpowers/brainstorm/45154-1774509130/content/waiting.html"}
+{"type":"server-stopped","reason":"owner process exited"}

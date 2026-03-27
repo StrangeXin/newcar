@@ -1,0 +1,123 @@
+<h2>前端界面设计（修订版）</h2>
+<p class="subtitle">每日对话 → 每月累计对话，新增报告份数额度</p>
+
+<div class="section">
+  <h3>套餐信息卡片</h3>
+  <div class="mockup">
+    <div class="mockup-header">我的套餐 — /settings/subscription</div>
+    <div class="mockup-body" style="padding: 24px;">
+      <!-- Current Plan Card -->
+      <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 12px; padding: 24px; color: white; margin-bottom: 24px;">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+          <div>
+            <div style="font-size: 12px; opacity: 0.8; text-transform: uppercase; letter-spacing: 1px;">当前套餐</div>
+            <div style="font-size: 28px; font-weight: bold; margin: 4px 0;">Pro</div>
+            <div style="font-size: 14px; opacity: 0.9;">有效期至 2026-04-25</div>
+          </div>
+          <div style="text-align: right;">
+            <div style="font-size: 12px; opacity: 0.8;">状态</div>
+            <div style="background: rgba(255,255,255,0.2); padding: 4px 12px; border-radius: 12px; font-size: 13px; margin-top: 4px;">生效中</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Usage Stats -->
+      <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; margin-bottom: 24px;">
+        <div style="background: #f8f9fa; border-radius: 10px; padding: 18px;">
+          <div style="font-size: 12px; color: #888; margin-bottom: 8px;">本月对话</div>
+          <div style="display: flex; align-items: baseline; gap: 4px;">
+            <span style="font-size: 28px; font-weight: bold; color: #333;">58</span>
+            <span style="font-size: 14px; color: #888;">/ 200 次</span>
+          </div>
+          <div style="background: #e0e0e0; border-radius: 4px; height: 6px; margin-top: 10px;">
+            <div style="background: #667eea; border-radius: 4px; height: 6px; width: 29%;"></div>
+          </div>
+        </div>
+        <div style="background: #f8f9fa; border-radius: 10px; padding: 18px;">
+          <div style="font-size: 12px; color: #888; margin-bottom: 8px;">本月报告</div>
+          <div style="display: flex; align-items: baseline; gap: 4px;">
+            <span style="font-size: 28px; font-weight: bold; color: #333;">3</span>
+            <span style="font-size: 14px; color: #888;">/ 10 份</span>
+          </div>
+          <div style="background: #e0e0e0; border-radius: 4px; height: 6px; margin-top: 10px;">
+            <div style="background: #ff9800; border-radius: 4px; height: 6px; width: 30%;"></div>
+          </div>
+        </div>
+        <div style="background: #f8f9fa; border-radius: 10px; padding: 18px;">
+          <div style="font-size: 12px; color: #888; margin-bottom: 8px;">本月 Token</div>
+          <div style="display: flex; align-items: baseline; gap: 4px;">
+            <span style="font-size: 28px; font-weight: bold; color: #333;">45K</span>
+            <span style="font-size: 14px; color: #888;">/ 500K</span>
+          </div>
+          <div style="background: #e0e0e0; border-radius: 4px; height: 6px; margin-top: 10px;">
+            <div style="background: #4caf50; border-radius: 4px; height: 6px; width: 9%;"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Upgrade Button -->
+      <div style="text-align: center;">
+        <button class="mock-button" style="background: linear-gradient(135deg, #667eea, #764ba2); color: white; border: none; padding: 12px 32px; border-radius: 8px; font-size: 15px; cursor: pointer;">
+          升级到 Premium
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>套餐对比（升级时展示）</h3>
+  <div class="mockup">
+    <div class="mockup-header">选择套餐</div>
+    <div class="mockup-body" style="padding: 24px;">
+      <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px;">
+        <!-- Free -->
+        <div style="border: 2px solid #e0e0e0; border-radius: 12px; padding: 20px; text-align: center;">
+          <div style="font-size: 13px; color: #888; text-transform: uppercase;">免费版</div>
+          <div style="font-size: 32px; font-weight: bold; margin: 8px 0;">¥0</div>
+          <div style="font-size: 13px; color: #888; margin-bottom: 16px;">永久免费</div>
+          <hr style="border: none; border-top: 1px solid #eee; margin: 16px 0;">
+          <div style="font-size: 13px; line-height: 2.2; text-align: left; color: #555;">
+            <div>✓ 每月 20 次对话</div>
+            <div>✓ 基础 AI 模型</div>
+            <div>✓ 购车旅程功能</div>
+            <div style="color: #ccc;">✗ 分析报告</div>
+            <div style="color: #ccc;">✗ 优先响应</div>
+          </div>
+          <button class="mock-button" style="margin-top: 16px; width: 100%; background: #f5f5f5; color: #888; border: 1px solid #ddd; padding: 10px; border-radius: 6px;">当前套餐</button>
+        </div>
+        <!-- Pro -->
+        <div style="border: 2px solid #667eea; border-radius: 12px; padding: 20px; text-align: center; position: relative; box-shadow: 0 4px 12px rgba(102,126,234,0.2);">
+          <div style="position: absolute; top: -12px; left: 50%; transform: translateX(-50%); background: #667eea; color: white; padding: 2px 14px; border-radius: 10px; font-size: 12px;">推荐</div>
+          <div style="font-size: 13px; color: #667eea; text-transform: uppercase; font-weight: 600;">Pro</div>
+          <div style="font-size: 32px; font-weight: bold; margin: 8px 0;">¥29</div>
+          <div style="font-size: 13px; color: #888; margin-bottom: 16px;">每月</div>
+          <hr style="border: none; border-top: 1px solid #eee; margin: 16px 0;">
+          <div style="font-size: 13px; line-height: 2.2; text-align: left; color: #555;">
+            <div>✓ 每月 <strong>200</strong> 次对话</div>
+            <div>✓ 高级 AI 模型</div>
+            <div>✓ 购车旅程功能</div>
+            <div>✓ 分析报告 <strong>10 份/月</strong></div>
+            <div style="color: #ccc;">✗ 优先响应</div>
+          </div>
+          <button class="mock-button" style="margin-top: 16px; width: 100%; background: #667eea; color: white; border: none; padding: 10px; border-radius: 6px;">升级</button>
+        </div>
+        <!-- Premium -->
+        <div style="border: 2px solid #e0e0e0; border-radius: 12px; padding: 20px; text-align: center;">
+          <div style="font-size: 13px; color: #888; text-transform: uppercase;">Premium</div>
+          <div style="font-size: 32px; font-weight: bold; margin: 8px 0;">¥79</div>
+          <div style="font-size: 13px; color: #888; margin-bottom: 16px;">每月</div>
+          <hr style="border: none; border-top: 1px solid #eee; margin: 16px 0;">
+          <div style="font-size: 13px; line-height: 2.2; text-align: left; color: #555;">
+            <div>✓ 每月 <strong>1000</strong> 次对话</div>
+            <div>✓ 最强 AI 模型</div>
+            <div>✓ 购车旅程功能</div>
+            <div>✓ 分析报告 <strong>30 份/月</strong></div>
+            <div>✓ 优先响应</div>
+          </div>
+          <button class="mock-button" style="margin-top: 16px; width: 100%; background: #764ba2; color: white; border: none; padding: 10px; border-radius: 6px;">升级</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

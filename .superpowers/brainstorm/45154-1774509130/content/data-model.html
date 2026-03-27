@@ -1,0 +1,112 @@
+<h2>数据模型设计</h2>
+<p class="subtitle">套餐订阅 + AI 用量追踪的核心表结构</p>
+
+<div class="section">
+  <h3>1. 套餐订阅层（面向用户）</h3>
+  <div class="split">
+    <div class="mockup">
+      <div class="mockup-header">SubscriptionPlan（套餐定义）</div>
+      <div class="mockup-body" style="font-family: monospace; font-size: 13px; line-height: 1.8;">
+        <div><strong>id</strong> — String @id</div>
+        <div><strong>name</strong> — String (FREE / PRO / PREMIUM)</div>
+        <div><strong>displayName</strong> — String ("免费版" / "Pro" / "Premium")</div>
+        <div><strong>price</strong> — Int (分，0 = 免费)</div>
+        <div><strong>billingCycle</strong> — String (MONTHLY / YEARLY)</div>
+        <div><strong>dailyConversationLimit</strong> — Int (每日对话数上限)</div>
+        <div><strong>monthlyTokenLimit</strong> — Int (每月 token 上限)</div>
+        <div><strong>features</strong> — Json (功能开关列表)</div>
+        <div><strong>modelAccess</strong> — String[] (可用 AI 模型)</div>
+        <div><strong>sortOrder</strong> — Int</div>
+        <div><strong>isActive</strong> — Boolean</div>
+        <div style="margin-top: 8px; color: #888;">📌 运营可配置，不硬编码</div>
+      </div>
+    </div>
+    <div class="mockup">
+      <div class="mockup-header">UserSubscription（用户订阅状态）</div>
+      <div class="mockup-body" style="font-family: monospace; font-size: 13px; line-height: 1.8;">
+        <div><strong>id</strong> — String @id</div>
+        <div><strong>userId</strong> — String (→ User)</div>
+        <div><strong>planId</strong> — String (→ SubscriptionPlan)</div>
+        <div><strong>status</strong> — String (ACTIVE / EXPIRED / CANCELLED)</div>
+        <div><strong>startedAt</strong> — DateTime</div>
+        <div><strong>expiresAt</strong> — DateTime?</div>
+        <div><strong>dailyConversationsUsed</strong> — Int</div>
+        <div><strong>dailyResetAt</strong> — DateTime</div>
+        <div><strong>monthlyTokensUsed</strong> — Int</div>
+        <div><strong>monthlyResetAt</strong> — DateTime</div>
+        <div><strong>source</strong> — String (SYSTEM / ADMIN / PAYMENT)</div>
+        <div style="margin-top: 8px; color: #888;">📌 每用户一条 ACTIVE 记录</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>2. AI 用量追踪层（面向运营）</h3>
+  <div class="split">
+    <div class="mockup">
+      <div class="mockup-header">AiUsageLog（请求级日志）</div>
+      <div class="mockup-body" style="font-family: monospace; font-size: 13px; line-height: 1.8;">
+        <div><strong>id</strong> — String @id</div>
+        <div><strong>userId</strong> — String (→ User)</div>
+        <div><strong>conversationId</strong> — String (→ Conversation)</div>
+        <div><strong>model</strong> — String ("claude-sonnet-4-6")</div>
+        <div><strong>inputTokens</strong> — Int</div>
+        <div><strong>outputTokens</strong> — Int</div>
+        <div><strong>cacheReadTokens</strong> — Int?</div>
+        <div><strong>cacheWriteTokens</strong> — Int?</div>
+        <div><strong>estimatedCostUsd</strong> — Float</div>
+        <div><strong>requestType</strong> — String (CHAT / TOOL_CALL / SNAPSHOT)</div>
+        <div><strong>durationMs</strong> — Int?</div>
+        <div><strong>createdAt</strong> — DateTime</div>
+        <div style="margin-top: 8px; color: #888;">📌 每次 API 请求一条记录</div>
+      </div>
+    </div>
+    <div class="mockup">
+      <div class="mockup-header">AiConversationUsage（对话级汇总）</div>
+      <div class="mockup-body" style="font-family: monospace; font-size: 13px; line-height: 1.8;">
+        <div><strong>id</strong> — String @id</div>
+        <div><strong>conversationId</strong> — String @unique (→ Conversation)</div>
+        <div><strong>userId</strong> — String (→ User)</div>
+        <div><strong>totalInputTokens</strong> — Int</div>
+        <div><strong>totalOutputTokens</strong> — Int</div>
+        <div><strong>totalCostUsd</strong> — Float</div>
+        <div><strong>requestCount</strong> — Int</div>
+        <div><strong>primaryModel</strong> — String</div>
+        <div><strong>createdAt</strong> — DateTime</div>
+        <div><strong>updatedAt</strong> — DateTime</div>
+        <div style="margin-top: 8px; color: #888;">📌 每次对话结束/更新时聚合写入</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>3. 关系概览</h3>
+  <div class="mockup">
+    <div class="mockup-header">Entity Relationship</div>
+    <div class="mockup-body" style="font-family: monospace; font-size: 14px; line-height: 2; text-align: center;">
+      <div style="display: flex; justify-content: center; align-items: center; gap: 12px; flex-wrap: wrap;">
+        <span style="background: #e3f2fd; padding: 6px 14px; border-radius: 6px; border: 1px solid #90caf9;">User</span>
+        <span>1 ← →  1</span>
+        <span style="background: #e8f5e9; padding: 6px 14px; border-radius: 6px; border: 1px solid #a5d6a7;">UserSubscription</span>
+        <span>N ← →  1</span>
+        <span style="background: #fff3e0; padding: 6px 14px; border-radius: 6px; border: 1px solid #ffcc80;">SubscriptionPlan</span>
+      </div>
+      <div style="margin: 16px 0; color: #888;">│</div>
+      <div style="display: flex; justify-content: center; align-items: center; gap: 12px; flex-wrap: wrap;">
+        <span style="background: #e3f2fd; padding: 6px 14px; border-radius: 6px; border: 1px solid #90caf9;">User</span>
+        <span>1 ← →  N</span>
+        <span style="background: #fce4ec; padding: 6px 14px; border-radius: 6px; border: 1px solid #ef9a9a;">AiUsageLog</span>
+        <span>N ← →  1</span>
+        <span style="background: #f3e5f5; padding: 6px 14px; border-radius: 6px; border: 1px solid #ce93d8;">Conversation</span>
+      </div>
+      <div style="margin: 16px 0; color: #888;">│</div>
+      <div style="display: flex; justify-content: center; align-items: center; gap: 12px; flex-wrap: wrap;">
+        <span style="background: #f3e5f5; padding: 6px 14px; border-radius: 6px; border: 1px solid #ce93d8;">Conversation</span>
+        <span>1 ← →  1</span>
+        <span style="background: #fce4ec; padding: 6px 14px; border-radius: 6px; border: 1px solid #ef9a9a;">AiConversationUsage</span>
+      </div>
+    </div>
+  </div>
+</div>

@@ -50,3 +50,15 @@ export enum PublishedFormat {
 }
 
 export type { WsClientMessage, WsServerMessage } from './ws-messages';
+
+export type {
+  SubscriptionPlanInfo,
+  UserSubscriptionInfo,
+  QuotaStatus,
+} from './subscription';
+export {
+  SubscriptionPlanName,
+  SubscriptionStatus,
+  SubscriptionSource,
+  AiRequestType,
+} from './subscription';
