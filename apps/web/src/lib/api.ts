@@ -26,6 +26,7 @@ function getMockResponse<T>(path: string, method: HttpMethod = 'GET'): T | null 
     if (path.match(/\/journeys\/[^/]+\/candidates\/[^/]+\/winner/)) return { success: true } as T;
     if (path.match(/\/journeys\/[^/]+\/publish$/)) return { ...mockCommunityJourneys[0], id: 'mock-published-1' } as T;
     if (path.match(/\/published-journeys\/[^/]+\/regenerate$/)) return mockCommunityJourneys[0] as T;
+    if (path === '/subscription/upgrade') return { subscription: {}, quota: {} } as T;
     return {} as T;
   }
 
@@ -84,6 +85,29 @@ function getMockResponse<T>(path: string, method: HttpMethod = 'GET'): T | null 
     const item = mockCommunityJourneys.find((j) => j.id === id);
     return (item || mockCommunityJourneys[0]) as T;
   }
+  if (path === '/subscription/current') return {
+    subscription: {
+      id: 'mock-sub-1',
+      plan: { id: 'mock-plan-free', name: 'FREE', displayName: '免费版', price: 0, monthlyConversationLimit: 20, monthlyReportLimit: 0, monthlyTokenLimit: 100000, sortOrder: 0 },
+      status: 'ACTIVE',
+      monthlyConversationsUsed: 12,
+      monthlyReportsUsed: 0,
+      monthlyTokensUsed: 45000,
+      monthlyResetAt: new Date(Date.now() + 15 * 86400000).toISOString(),
+    },
+    quota: {
+      conversations: { used: 12, limit: 20, remaining: 8 },
+      reports: { used: 0, limit: 0, remaining: 0 },
+      tokens: { used: 45000, limit: 100000, remaining: 55000 },
+    },
+  } as T;
+  if (path === '/subscription/plans') return {
+    plans: [
+      { id: 'p1', name: 'FREE', displayName: '免费版', price: 0, monthlyConversationLimit: 20, monthlyReportLimit: 0, monthlyTokenLimit: 100000, features: { basicChat: true }, modelAccess: ['basic'], sortOrder: 0 },
+      { id: 'p2', name: 'PRO', displayName: 'Pro', price: 2900, monthlyConversationLimit: 200, monthlyReportLimit: 10, monthlyTokenLimit: 1000000, features: { basicChat: true, advancedChat: true, reports: true }, modelAccess: ['basic', 'advanced'], sortOrder: 1 },
+      { id: 'p3', name: 'PREMIUM', displayName: 'Premium', price: 7900, monthlyConversationLimit: 1000, monthlyReportLimit: 30, monthlyTokenLimit: 5000000, features: { basicChat: true, advancedChat: true, reports: true, priorityResponse: true }, modelAccess: ['basic', 'advanced', 'best'], sortOrder: 2 },
+    ],
+  } as T;
 
   return null;
 }
