@@ -16,6 +16,7 @@ import timelineRoutes from './routes/timeline';
 import sessionRoutes from './routes/session';
 import snapshotRoutes from './routes/snapshot';
 import subscriptionRoutes from './routes/subscription';
+import adminUsageRoutes from './routes/admin-usage';
 
 export function createApp(): Express {
   const app = express();
@@ -47,6 +48,7 @@ export function createApp(): Express {
   app.use('/devices', deviceRoutes);
   app.use('/admin/moderation', moderationRoutes);
   app.use('/subscription', subscriptionRoutes);
+  app.use('/admin/usage', adminUsageRoutes);
 
   app.use(errorHandler);
 
