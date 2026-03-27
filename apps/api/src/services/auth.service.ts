@@ -6,6 +6,7 @@ import { prisma } from '../lib/prisma';
 import { redis } from '../lib/redis';
 import { generateSessionId } from '../lib/utils';
 import { otpService } from './otp.service';
+import { subscriptionService } from './subscription.service';
 
 export class AuthService {
   async wechatLogin(code: string) {
@@ -34,6 +35,7 @@ export class AuthService {
           avatar: wechatUser.headimgurl,
         },
       });
+      await subscriptionService.createFreeSubscription(user.id);
     }
 
     const sessionId = generateSessionId();
@@ -59,6 +61,7 @@ export class AuthService {
       user = await prisma.user.create({
         data: { phone },
       });
+      await subscriptionService.createFreeSubscription(user.id);
     }
 
     const sessionId = generateSessionId();
