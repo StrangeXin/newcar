@@ -6,11 +6,6 @@ import { prisma } from '../lib/prisma';
 export class AdminUsageController {
   async getUsageSummary(req: AuthenticatedRequest, res: Response) {
     try {
-      const user = await prisma.user.findUnique({ where: { id: req.userId } });
-      if (user?.role !== 'ADMIN') {
-        return res.status(403).json({ error: 'Admin only' });
-      }
-
       const { userId, startDate, endDate } = req.query;
       const summary = await aiUsageService.getUsageSummary({
         userId: userId as string | undefined,
@@ -27,11 +22,6 @@ export class AdminUsageController {
 
   async getUsageDetails(req: AuthenticatedRequest, res: Response) {
     try {
-      const user = await prisma.user.findUnique({ where: { id: req.userId } });
-      if (user?.role !== 'ADMIN') {
-        return res.status(403).json({ error: 'Admin only' });
-      }
-
       const { userId, conversationId, cursor, limit } = req.query;
       const logs = await aiUsageService.getUsageDetails({
         userId: userId as string | undefined,
@@ -47,13 +37,8 @@ export class AdminUsageController {
     }
   }
 
-  async getSubscriptionDistribution(req: AuthenticatedRequest, res: Response) {
+  async getSubscriptionDistribution(_req: AuthenticatedRequest, res: Response) {
     try {
-      const user = await prisma.user.findUnique({ where: { id: req.userId } });
-      if (user?.role !== 'ADMIN') {
-        return res.status(403).json({ error: 'Admin only' });
-      }
-
       const distribution = await prisma.userSubscription.groupBy({
         by: ['planId'],
         where: { status: 'ACTIVE' },

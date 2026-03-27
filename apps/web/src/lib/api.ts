@@ -26,7 +26,22 @@ function getMockResponse<T>(path: string, method: HttpMethod = 'GET'): T | null 
     if (path.match(/\/journeys\/[^/]+\/candidates\/[^/]+\/winner/)) return { success: true } as T;
     if (path.match(/\/journeys\/[^/]+\/publish$/)) return { ...mockCommunityJourneys[0], id: 'mock-published-1' } as T;
     if (path.match(/\/published-journeys\/[^/]+\/regenerate$/)) return mockCommunityJourneys[0] as T;
-    if (path === '/subscription/upgrade') return { subscription: {}, quota: {} } as T;
+    if (path === '/subscription/upgrade') return {
+      subscription: {
+        id: 'mock-sub-2',
+        plan: { id: 'mock-plan-pro', name: 'PRO', displayName: 'Pro', price: 2900, monthlyConversationLimit: 200, monthlyReportLimit: 10, monthlyTokenLimit: 1000000, sortOrder: 1 },
+        status: 'ACTIVE',
+        monthlyConversationsUsed: 12,
+        monthlyReportsUsed: 0,
+        monthlyTokensUsed: 45000,
+        monthlyResetAt: new Date(Date.now() + 15 * 86400000).toISOString(),
+      },
+      quota: {
+        conversations: { used: 12, limit: 200, remaining: 188 },
+        reports: { used: 0, limit: 10, remaining: 10 },
+        tokens: { used: 45000, limit: 1000000, remaining: 955000 },
+      },
+    } as T;
     return {} as T;
   }
 

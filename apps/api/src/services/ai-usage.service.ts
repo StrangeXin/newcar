@@ -101,16 +101,17 @@ export class AiUsageService {
       };
     }
 
-    const logs = await prisma.aiUsageLog.findMany({ where });
-    const totalCost = logs.reduce((sum, l) => sum + l.estimatedCostUsd, 0);
-    const totalInputTokens = logs.reduce((sum, l) => sum + l.inputTokens, 0);
-    const totalOutputTokens = logs.reduce((sum, l) => sum + l.outputTokens, 0);
+    const result = await prisma.aiUsageLog.aggregate({
+      where,
+      _sum: { inputTokens: true, outputTokens: true, estimatedCostUsd: true },
+      _count: { id: true },
+    });
 
     return {
-      totalRequests: logs.length,
-      totalInputTokens,
-      totalOutputTokens,
-      totalCostUsd: Math.round(totalCost * 100) / 100,
+      totalRequests: result._count.id,
+      totalInputTokens: result._sum.inputTokens ?? 0,
+      totalOutputTokens: result._sum.outputTokens ?? 0,
+      totalCostUsd: Math.round((result._sum.estimatedCostUsd ?? 0) * 100) / 100,
     };
   }
 

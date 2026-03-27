@@ -74,25 +74,27 @@ export class SubscriptionService {
       throw new Error('Cannot downgrade or switch to same plan via upgrade endpoint');
     }
 
-    if (currentSub) {
-      await prisma.userSubscription.update({
-        where: { id: currentSub.id },
-        data: { status: SubscriptionStatus.EXPIRED },
-      });
-    }
+    return prisma.$transaction(async (tx) => {
+      if (currentSub) {
+        await tx.userSubscription.update({
+          where: { id: currentSub.id },
+          data: { status: SubscriptionStatus.EXPIRED },
+        });
+      }
 
-    return prisma.userSubscription.create({
-      data: {
-        userId,
-        planId: targetPlan.id,
-        status: SubscriptionStatus.ACTIVE,
-        monthlyConversationsUsed: currentSub?.monthlyConversationsUsed ?? 0,
-        monthlyReportsUsed: currentSub?.monthlyReportsUsed ?? 0,
-        monthlyTokensUsed: currentSub?.monthlyTokensUsed ?? 0,
-        monthlyResetAt: currentSub?.monthlyResetAt ?? getNextResetDate(new Date()),
-        source: SubscriptionSource.SYSTEM,
-      },
-      include: { plan: true },
+      return tx.userSubscription.create({
+        data: {
+          userId,
+          planId: targetPlan.id,
+          status: SubscriptionStatus.ACTIVE,
+          monthlyConversationsUsed: currentSub?.monthlyConversationsUsed ?? 0,
+          monthlyReportsUsed: currentSub?.monthlyReportsUsed ?? 0,
+          monthlyTokensUsed: currentSub?.monthlyTokensUsed ?? 0,
+          monthlyResetAt: currentSub?.monthlyResetAt ?? getNextResetDate(new Date()),
+          source: SubscriptionSource.SYSTEM,
+        },
+        include: { plan: true },
+      });
     });
   }
 
@@ -122,31 +124,22 @@ export class SubscriptionService {
   }
 
   async incrementConversationUsage(userId: string) {
-    const sub = await this.getUserSubscription(userId);
-    if (!sub) return;
-
-    await prisma.userSubscription.update({
-      where: { id: sub.id },
+    await prisma.userSubscription.updateMany({
+      where: { userId, status: SubscriptionStatus.ACTIVE },
       data: { monthlyConversationsUsed: { increment: 1 } },
     });
   }
 
   async incrementReportUsage(userId: string) {
-    const sub = await this.getUserSubscription(userId);
-    if (!sub) return;
-
-    await prisma.userSubscription.update({
-      where: { id: sub.id },
+    await prisma.userSubscription.updateMany({
+      where: { userId, status: SubscriptionStatus.ACTIVE },
       data: { monthlyReportsUsed: { increment: 1 } },
     });
   }
 
   async incrementTokenUsage(userId: string, tokens: number) {
-    const sub = await this.getUserSubscription(userId);
-    if (!sub) return;
-
-    await prisma.userSubscription.update({
-      where: { id: sub.id },
+    await prisma.userSubscription.updateMany({
+      where: { userId, status: SubscriptionStatus.ACTIVE },
       data: { monthlyTokensUsed: { increment: tokens } },
     });
   }
