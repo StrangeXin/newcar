@@ -30,6 +30,9 @@ model User {
   publishedJourneys PublishedJourney[]
   journeyForks      JourneyFork[]
   notifications     NotificationFeed[]
+  subscription        UserSubscription[]
+  aiUsageLogs         AiUsageLog[]
+  aiConversationUsage AiConversationUsage[]
 
   @@map("users")
 }
@@ -108,6 +111,8 @@ model Conversation {
 
   journey Journey @relation(fields: [journeyId], references: [id], onDelete: Cascade)
   user    User?   @relation(fields: [userId], references: [id])
+  aiUsageLogs         AiUsageLog[]
+  aiConversationUsage AiConversationUsage?
 
   @@map("conversations")
 }
@@ -305,4 +310,88 @@ model NotificationFeed {
   @@index([userId, isRead, createdAt])
   @@index([journeyId, createdAt])
   @@map("notification_feeds")
+}
+
+model SubscriptionPlan {
+  id                       String   @id @default(cuid())
+  name                     String   @unique
+  displayName              String
+  price                    Int      @default(0)
+  billingCycle             String   @default("MONTHLY")
+  monthlyConversationLimit Int
+  monthlyReportLimit       Int      @default(0)
+  monthlyTokenLimit        Int
+  features                 Json     @default("{}")
+  modelAccess              String[] @default([])
+  sortOrder                Int      @default(0)
+  isActive                 Boolean  @default(true)
+  createdAt                DateTime @default(now())
+  updatedAt                DateTime @updatedAt
+
+  subscriptions UserSubscription[]
+
+  @@map("subscription_plans")
+}
+
+model UserSubscription {
+  id                       String    @id @default(cuid())
+  userId                   String
+  planId                   String
+  status                   String    @default("ACTIVE")
+  startedAt                DateTime  @default(now())
+  expiresAt                DateTime?
+  monthlyConversationsUsed Int       @default(0)
+  monthlyReportsUsed       Int       @default(0)
+  monthlyTokensUsed        Int       @default(0)
+  monthlyResetAt           DateTime
+  source                   String    @default("SYSTEM")
+  createdAt                DateTime  @default(now())
+  updatedAt                DateTime  @updatedAt
+
+  user User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  plan SubscriptionPlan @relation(fields: [planId], references: [id])
+
+  @@index([userId, status])
+  @@map("user_subscriptions")
+}
+
+model AiUsageLog {
+  id               String   @id @default(cuid())
+  userId           String
+  conversationId   String
+  model            String
+  inputTokens      Int      @default(0)
+  outputTokens     Int      @default(0)
+  cacheReadTokens  Int?
+  cacheWriteTokens Int?
+  estimatedCostUsd Float    @default(0)
+  requestType      String   @default("CHAT")
+  durationMs       Int?
+  createdAt        DateTime @default(now())
+
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+  @@index([conversationId])
+  @@map("ai_usage_logs")
+}
+
+model AiConversationUsage {
+  id                String   @id @default(cuid())
+  conversationId    String   @unique
+  userId            String
+  totalInputTokens  Int      @default(0)
+  totalOutputTokens Int      @default(0)
+  totalCostUsd      Float    @default(0)
+  requestCount      Int      @default(0)
+  primaryModel      String
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+  @@map("ai_conversation_usages")
 }
