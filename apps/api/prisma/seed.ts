@@ -64,6 +64,66 @@ async function upsertCars() {
   }
 }
 
+const SUBSCRIPTION_PLANS = [
+  {
+    name: 'FREE',
+    displayName: '免费版',
+    price: 0,
+    billingCycle: 'MONTHLY',
+    monthlyConversationLimit: 20,
+    monthlyReportLimit: 0,
+    monthlyTokenLimit: 100000,
+    features: { basicChat: true },
+    modelAccess: ['basic'],
+    sortOrder: 0,
+  },
+  {
+    name: 'PRO',
+    displayName: 'Pro',
+    price: 2900,
+    billingCycle: 'MONTHLY',
+    monthlyConversationLimit: 200,
+    monthlyReportLimit: 10,
+    monthlyTokenLimit: 1000000,
+    features: { basicChat: true, advancedChat: true, reports: true },
+    modelAccess: ['basic', 'advanced'],
+    sortOrder: 1,
+  },
+  {
+    name: 'PREMIUM',
+    displayName: 'Premium',
+    price: 7900,
+    billingCycle: 'MONTHLY',
+    monthlyConversationLimit: 1000,
+    monthlyReportLimit: 30,
+    monthlyTokenLimit: 5000000,
+    features: { basicChat: true, advancedChat: true, reports: true, priorityResponse: true },
+    modelAccess: ['basic', 'advanced', 'best'],
+    sortOrder: 2,
+  },
+];
+
+async function upsertSubscriptionPlans() {
+  for (const plan of SUBSCRIPTION_PLANS) {
+    await prisma.subscriptionPlan.upsert({
+      where: { name: plan.name },
+      update: {
+        displayName: plan.displayName,
+        price: plan.price,
+        billingCycle: plan.billingCycle,
+        monthlyConversationLimit: plan.monthlyConversationLimit,
+        monthlyReportLimit: plan.monthlyReportLimit,
+        monthlyTokenLimit: plan.monthlyTokenLimit,
+        features: plan.features,
+        modelAccess: plan.modelAccess,
+        sortOrder: plan.sortOrder,
+      },
+      create: plan,
+    });
+  }
+  console.log(`Upserted ${SUBSCRIPTION_PLANS.length} subscription plans`);
+}
+
 async function seedPolicyAndPriceSnapshots() {
   const beijingPolicy = await prisma.carPolicy.findFirst({
     where: {
@@ -132,6 +192,7 @@ async function seedPolicyAndPriceSnapshots() {
 
 async function main() {
   await upsertCars();
+  await upsertSubscriptionPlans();
   await seedPolicyAndPriceSnapshots();
   const count = await prisma.car.count();
   console.log(`Seeded cars. Total records in cars table: ${count}`);
