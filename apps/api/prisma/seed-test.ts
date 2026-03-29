@@ -12,6 +12,11 @@ export const TEST_IDS = {
   carBevId: 'test-car-bev',
   carPhevId: 'test-car-phev',
   carIceId: 'test-car-ice',
+  freePlanId: 'test-plan-free',
+  proPlanId: 'test-plan-pro',
+  premiumPlanId: 'test-plan-premium',
+  memberSubscriptionId: 'test-sub-member',
+  adminSubscriptionId: 'test-sub-admin',
 } as const;
 
 export async function seedTestData(prisma: PrismaClient) {
@@ -19,7 +24,8 @@ export async function seedTestData(prisma: PrismaClient) {
   await prisma.$executeRawUnsafe(`
     TRUNCATE TABLE notification_feeds, journey_forks, published_journeys,
     car_candidates, behavior_events, conversations, journey_snapshots,
-    journeys, user_devices, users, cars
+    journeys, user_devices, ai_usage_logs, ai_conversation_usages,
+    user_subscriptions, subscription_plans, users, cars
     RESTART IDENTITY CASCADE
   `);
 
@@ -144,6 +150,59 @@ export async function seedTestData(prisma: PrismaClient) {
       create: { id: 'test-device-member', userId: TEST_IDS.memberUserId, platform: 'WECHAT_MINIAPP', pushToken: 'openid-member-test' },
       update: { pushToken: 'openid-member-test' },
     }),
+  ]);
+
+  // Seed subscription plans and user subscriptions
+  const futureReset = new Date();
+  futureReset.setDate(futureReset.getDate() + 30);
+
+  await prisma.$transaction([
+    prisma.subscriptionPlan.upsert({
+      where: { name: 'FREE' },
+      create: {
+        id: TEST_IDS.freePlanId, name: 'FREE', displayName: '免费版', price: 0, billingCycle: 'MONTHLY',
+        monthlyConversationLimit: 20, monthlyReportLimit: 0, monthlyTokenLimit: 100000,
+        features: { basicChat: true }, modelAccess: ['basic'], sortOrder: 0, isActive: true,
+      },
+      update: { id: TEST_IDS.freePlanId },
+    }),
+    prisma.subscriptionPlan.upsert({
+      where: { name: 'PRO' },
+      create: {
+        id: TEST_IDS.proPlanId, name: 'PRO', displayName: 'Pro', price: 2900, billingCycle: 'MONTHLY',
+        monthlyConversationLimit: 200, monthlyReportLimit: 10, monthlyTokenLimit: 1000000,
+        features: { basicChat: true, advancedChat: true, reports: true }, modelAccess: ['basic', 'advanced'], sortOrder: 1, isActive: true,
+      },
+      update: { id: TEST_IDS.proPlanId },
+    }),
+    prisma.subscriptionPlan.upsert({
+      where: { name: 'PREMIUM' },
+      create: {
+        id: TEST_IDS.premiumPlanId, name: 'PREMIUM', displayName: 'Premium', price: 7900, billingCycle: 'MONTHLY',
+        monthlyConversationLimit: 1000, monthlyReportLimit: 30, monthlyTokenLimit: 5000000,
+        features: { basicChat: true, advancedChat: true, reports: true, priorityResponse: true }, modelAccess: ['basic', 'advanced', 'best'], sortOrder: 2, isActive: true,
+      },
+      update: { id: TEST_IDS.premiumPlanId },
+    }),
+    // member gets FREE subscription
+    prisma.userSubscription.upsert({
+      where: { id: TEST_IDS.memberSubscriptionId },
+      create: {
+        id: TEST_IDS.memberSubscriptionId, userId: TEST_IDS.memberUserId, planId: TEST_IDS.freePlanId,
+        status: 'ACTIVE', monthlyResetAt: futureReset, source: 'SYSTEM',
+      },
+      update: { status: 'ACTIVE', monthlyResetAt: futureReset },
+    }),
+    // admin gets PRO subscription
+    prisma.userSubscription.upsert({
+      where: { id: TEST_IDS.adminSubscriptionId },
+      create: {
+        id: TEST_IDS.adminSubscriptionId, userId: TEST_IDS.adminUserId, planId: TEST_IDS.proPlanId,
+        status: 'ACTIVE', monthlyResetAt: futureReset, source: 'SYSTEM',
+      },
+      update: { status: 'ACTIVE', monthlyResetAt: futureReset },
+    }),
+    // memberNoActive gets NO subscription
   ]);
 }
 
