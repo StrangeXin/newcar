@@ -58,7 +58,7 @@ describe('Moderation Flow Integration', () => {
       .post(`/community/${TEST_IDS.publishedJourneyId}/report`)
       .set(authHeader(getMemberToken()))
       .send({ reason: '广告内容' });
-    expect([200, 201]).toContain(reportRes.status);
+    expect(reportRes.status).toBe(201);
 
     const reportUnauthorizedRes = await app
       .post(`/community/${TEST_IDS.publishedJourneyId}/report`)

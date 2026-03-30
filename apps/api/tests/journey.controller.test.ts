@@ -125,7 +125,7 @@ describe('JourneyController', () => {
 
       const req = mockReq({
         params: { journeyId: 'j1' } as any,
-        body: { stage: 'CONSIDERATION' },
+        body: { targetStage: 'CONSIDERATION' },
       });
       const res = mockRes();
 
@@ -138,7 +138,7 @@ describe('JourneyController', () => {
     it('returns 400 for invalid stage', async () => {
       const req = mockReq({
         params: { journeyId: 'j1' } as any,
-        body: { stage: 'INVALID_STAGE' },
+        body: { targetStage: 'INVALID_STAGE' },
       });
       const res = mockRes();
 

@@ -47,13 +47,13 @@ export class JourneyController {
   async advanceStage(req: AuthenticatedRequest, res: Response) {
     try {
       const { journeyId } = req.params;
-      const { stage } = req.body;
+      const { targetStage } = req.body;
 
-      if (!Object.values(JourneyStage).includes(stage)) {
+      if (!Object.values(JourneyStage).includes(targetStage)) {
         return res.status(400).json({ error: 'Invalid stage' });
       }
 
-      const journey = await journeyService.advanceStage(journeyId, stage);
+      const journey = await journeyService.advanceStage(journeyId, targetStage);
       return res.json(journey);
     } catch (error) {
       return res.status(400).json({ error: (error as Error).message });
