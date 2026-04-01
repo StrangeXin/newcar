@@ -6,3 +6,5 @@ export * from './types/ai-chat';
 export * from './types/timeline';
 
 export * from './types/snapshot';
+
+export * from './types/journey-completeness';
