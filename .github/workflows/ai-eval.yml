@@ -1,0 +1,89 @@
+name: AI Evaluation
+
+on:
+  pull_request:
+    paths:
+      - 'apps/api/src/services/chat/**'
+      - 'apps/api/src/tools/**'
+      - 'apps/api/promptfoo/**'
+
+jobs:
+  l1-mock-test:
+    name: L1 Mock Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - name: Run L1 Mock Tests
+        run: cd apps/api && npm run test:e2e
+        env:
+          AI_E2E_MOCK: "1"
+          NODE_ENV: test
+
+  l2-real-ai-test:
+    name: L2 Real AI Tests
+    runs-on: ubuntu-latest
+    if: contains(github.event.pull_request.labels.*.name, 'ai-eval')
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - name: Cache Promptfoo
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/promptfoo
+          key: promptfoo-${{ hashFiles('apps/api/promptfoo/**') }}
+          restore-keys: promptfoo-
+
+      - name: Run L2 Real AI Tests
+        run: cd apps/api && npm run test:real-ai
+        env:
+          AI_API_KEY: ${{ secrets.AI_API_KEY }}
+          AI_BASE_URL: ${{ secrets.AI_BASE_URL }}
+          NODE_ENV: test
+
+  l4-regression:
+    name: L4 Regression Detection
+    runs-on: ubuntu-latest
+    if: contains(github.event.pull_request.labels.*.name, 'ai-eval')
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - name: Cache Promptfoo
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/promptfoo
+          key: promptfoo-${{ hashFiles('apps/api/promptfoo/**') }}
+          restore-keys: promptfoo-
+
+      - uses: promptfoo/promptfoo-action@v1
+        with:
+          config: apps/api/promptfoo/promptfooconfig.real-ai.yaml
+          cache-path: ~/.cache/promptfoo
+          compare-baseline: true
+          fail-on-regression: true
+        env:
+          AI_API_KEY: ${{ secrets.AI_API_KEY }}
+          AI_BASE_URL: ${{ secrets.AI_BASE_URL }}

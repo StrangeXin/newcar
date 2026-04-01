@@ -1,0 +1,47 @@
+{
+  "scenarioId": "explorer-buyer",
+  "description": "预算模糊探索型 — 6 轮，AI 主动引导",
+  "rounds": [
+    {
+      "round": 1,
+      "response": "没问题！买车确实需要好好想想。先聊聊你的用车场景吧——主要是上下班通勤还是经常跑长途？大概预算在什么范围？",
+      "tools": []
+    },
+    {
+      "round": 2,
+      "response": "上下班通勤为主，15万以内，我帮你看看合适的车型。",
+      "tools": [
+        { "name": "journey_update", "input": { "requirements": { "budgetMax": 15, "useCases": ["commute"] }, "stage": "CONSIDERATION" } },
+        { "name": "car_search", "input": { "query": "通勤轿车", "budgetMax": 15, "limit": 5 } }
+      ]
+    },
+    {
+      "round": 3,
+      "response": "纯电车的续航现在已经很成熟了。15万内的纯电车普遍续航在400-500公里，日常通勤30公里以内完全够用，一周充一次电就行。",
+      "tools": [
+        { "name": "journey_update", "input": { "requirements": { "fuelTypePreference": ["BEV"] } } }
+      ]
+    },
+    {
+      "round": 4,
+      "response": "比亚迪秦PLUS EV是这个价位的热门选择，续航和性价比都不错。已加入候选。",
+      "tools": [
+        { "name": "add_candidate", "input": { "carId": "auto", "userNotes": "用户主动选择" } }
+      ]
+    },
+    {
+      "round": 5,
+      "response": "当然，我再帮你搜搜其他同价位的纯电轿车，看看有没有更好的选择。",
+      "tools": [
+        { "name": "car_search", "input": { "query": "纯电轿车", "budgetMax": 15, "fuelType": "BEV", "limit": 5 } }
+      ]
+    },
+    {
+      "round": 6,
+      "response": "好的！比亚迪秦PLUS EV确认为你的最终选择。性价比之选，通勤利器！",
+      "tools": [
+        { "name": "journey_update", "input": { "stage": "DECISION", "winner": "比亚迪秦PLUS EV" } }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,75 @@
+{
+  "scenarioId": "indecisive-buyer",
+  "description": "反复横跳型 — 10 轮，DECISION 阶段反悔换车",
+  "rounds": [
+    {
+      "round": 1,
+      "response": "了解！25-30万的SUV，家用为主。帮你搜索这个价位的热门SUV。",
+      "tools": [
+        { "name": "journey_update", "input": { "requirements": { "budgetMin": 25, "budgetMax": 30, "useCases": ["family"], "stylePreference": "SUV" }, "stage": "CONSIDERATION" } },
+        { "name": "car_search", "input": { "query": "SUV", "budgetMin": 25, "budgetMax": 30, "limit": 5 } }
+      ]
+    },
+    {
+      "round": 2,
+      "response": "理想L6是一款不错的增程SUV，已加入候选列表。",
+      "tools": [
+        { "name": "add_candidate", "input": { "carId": "auto", "userNotes": "家用SUV候选" } }
+      ]
+    },
+    {
+      "round": 3,
+      "response": "问界M7也加入了，现在有两款候选。",
+      "tools": [
+        { "name": "add_candidate", "input": { "carId": "auto", "userNotes": "对比用" } }
+      ]
+    },
+    {
+      "round": 4,
+      "response": "理想L6空间更大适合家用，问界M7智能化更强。进入对比阶段。",
+      "tools": [
+        { "name": "journey_update", "input": { "stage": "COMPARISON" } }
+      ]
+    },
+    {
+      "round": 5,
+      "response": "好的，问界M7空间确实偏小，已标记淘汰。",
+      "tools": [
+        { "name": "journey_update", "input": { "eliminateCandidate": "问界M7" } }
+      ]
+    },
+    {
+      "round": 6,
+      "response": "好的！理想L6确认为你的最终选择！",
+      "tools": [
+        { "name": "journey_update", "input": { "stage": "DECISION", "winner": "理想L6" } }
+      ]
+    },
+    {
+      "round": 7,
+      "response": "没问题！小鹏G6也是不错的选择，我帮你加入候选重新对比。",
+      "tools": [
+        { "name": "add_candidate", "input": { "carId": "auto", "userNotes": "朋友推荐，重新对比" } }
+      ]
+    },
+    {
+      "round": 8,
+      "response": "理想L6增程续航无忧，空间大；小鹏G6智能驾驶领先，纯电动力强。价格上小鹏G6略低。",
+      "tools": []
+    },
+    {
+      "round": 9,
+      "response": "好的！最终还是选择理想L6，空间和家用需求更匹配。确认为最终选择。",
+      "tools": [
+        { "name": "journey_update", "input": { "stage": "DECISION", "winner": "理想L6" } }
+      ]
+    },
+    {
+      "round": 10,
+      "response": "旅程完成！虽然中间考虑过小鹏G6，但理想L6的大空间更适合你的家庭需求。这段旅程可以发布分享了！",
+      "tools": [
+        { "name": "journey_update", "input": { "stage": "PURCHASE" } }
+      ]
+    }
+  ]
+}

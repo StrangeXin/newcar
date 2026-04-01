@@ -1,0 +1,63 @@
+{
+  "scenarioId": "family-buyer",
+  "description": "家庭刚需型 — 8 轮走完 AWARENESS → PURCHASE",
+  "rounds": [
+    {
+      "round": 1,
+      "response": "了解！25-30万的SUV，家用接送孩子为主。我帮你搜索一下这个价位段的热门SUV车型。",
+      "tools": [
+        { "name": "journey_update", "input": { "requirements": { "budgetMin": 25, "budgetMax": 30, "useCases": ["family"], "stylePreference": "SUV" }, "stage": "CONSIDERATION" } },
+        { "name": "car_search", "input": { "query": "SUV", "budgetMin": 25, "budgetMax": 30, "limit": 5 } }
+      ]
+    },
+    {
+      "round": 2,
+      "response": "理想L6是一款不错的增程SUV，空间表现优秀。我把它加入你的候选列表。",
+      "tools": [
+        { "name": "add_candidate", "input": { "carId": "auto", "userNotes": "用户主动提及，家用SUV候选" } }
+      ]
+    },
+    {
+      "round": 3,
+      "response": "好的，问界M7也加入候选了。现在你有两款候选车，我们可以开始对比了。",
+      "tools": [
+        { "name": "add_candidate", "input": { "carId": "auto", "userNotes": "用户主动提及对比" } }
+      ]
+    },
+    {
+      "round": 4,
+      "response": "来看看这两款车的对比：理想L6在空间和舒适性上更突出，增程续航无忧；问界M7智能化程度高，华为生态体验好。价格方面两者相近。",
+      "tools": [
+        { "name": "journey_update", "input": { "stage": "COMPARISON" } }
+      ]
+    },
+    {
+      "round": 5,
+      "response": "理解，空间确实是家用SUV的关键指标。我把问界M7标记为淘汰。",
+      "tools": [
+        { "name": "journey_update", "input": { "eliminateCandidate": "问界M7" } }
+      ]
+    },
+    {
+      "round": 6,
+      "response": "深蓝S7也是不错的选择，性价比很高。加入候选帮你和理想L6对比。",
+      "tools": [
+        { "name": "add_candidate", "input": { "carId": "auto", "userNotes": "对比用" } }
+      ]
+    },
+    {
+      "round": 7,
+      "response": "好的！理想L6确认为你的最终选择。恭喜做出决定！",
+      "tools": [
+        { "name": "journey_update", "input": { "stage": "DECISION", "winner": "理想L6" } }
+      ]
+    },
+    {
+      "round": 8,
+      "response": "恭喜完成购车旅程！你的旅程总结：从25-30万家用SUV需求出发，经过理想L6、问界M7、深蓝S7的对比，最终选择了理想L6。这段旅程可以发布分享给其他用户参考。",
+      "tools": [
+        { "name": "journey_update", "input": { "stage": "PURCHASE" } }
+      ]
+    }
+  ]
+}

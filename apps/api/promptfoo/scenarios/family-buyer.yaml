@@ -1,0 +1,63 @@
+# 场景 1：家庭刚需型 — 8 轮走完全旅程
+tests:
+  - vars:
+      message: "我想买一辆25-30万的SUV，家用为主，接送孩子"
+    assert:
+      - type: icontains-any
+        value: ["SUV", "推荐", "预算", "搜索"]
+      - type: javascript
+        value: "output.metadata.toolsCalled.includes('car_search')"
+
+  - vars:
+      message: "理想L6怎么样？帮我加入候选"
+    assert:
+      - type: icontains-any
+        value: ["理想", "L6"]
+      - type: javascript
+        value: "output.metadata.toolsCalled.includes('add_candidate')"
+      - type: javascript
+        value: "output.metadata.journeyState.candidateCount >= 1"
+
+  - vars:
+      message: "再看看问界M7"
+    assert:
+      - type: javascript
+        value: "output.metadata.toolsCalled.includes('add_candidate')"
+      - type: javascript
+        value: "output.metadata.journeyState.candidateCount >= 2"
+
+  - vars:
+      message: "这两款帮我对比一下优缺点"
+    assert:
+      - type: icontains-any
+        value: ["对比", "优", "缺", "空间", "价格"]
+      - type: javascript
+        value: "output.metadata.journeyState.stage === 'COMPARISON'"
+
+  - vars:
+      message: "问界空间小了点，不考虑了"
+    assert:
+      - type: javascript
+        value: "output.metadata.toolsCalled.some(t => t === 'journey_update') || output.metadata.journeyState.eliminatedCount >= 1"
+
+  - vars:
+      message: "深蓝S7加入候选对比一下"
+    assert:
+      - type: javascript
+        value: "output.metadata.journeyState.candidateCount >= 2"
+
+  - vars:
+      message: "还是理想L6吧，就选它了"
+    assert:
+      - type: javascript
+        value: "output.metadata.journeyState.hasWinner === true"
+      - type: javascript
+        value: "output.metadata.journeyState.stage === 'DECISION'"
+
+  - vars:
+      message: "确认购买，帮我总结一下这段旅程"
+    assert:
+      - type: javascript
+        value: "output.metadata.journeyState.stage === 'PURCHASE'"
+      - type: javascript
+        value: "output.metadata.completeness.score >= 80"
