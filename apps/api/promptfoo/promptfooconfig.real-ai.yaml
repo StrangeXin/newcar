@@ -3,7 +3,7 @@
 description: "Newcar AI 购车助手 L2 Real AI 测试"
 
 providers:
-  - id: "./providers/newcar-chat-provider.ts"
+  - id: "file://providers/newcar-chat-provider.js"
     config:
       mode: real-ai
 

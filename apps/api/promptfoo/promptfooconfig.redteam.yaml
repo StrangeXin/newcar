@@ -3,7 +3,7 @@
 description: "Newcar AI 购车助手 L3 Red Team 安全测试"
 
 providers:
-  - id: "./providers/newcar-chat-provider.ts"
+  - id: "file://providers/newcar-chat-provider.js"
     config:
       mode: real-ai
 

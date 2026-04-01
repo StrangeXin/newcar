@@ -3,31 +3,60 @@
 description: "Newcar AI 购车助手 L1 Mock 测试"
 
 providers:
-  - id: "./providers/newcar-chat-provider.ts"
+  - id: "file://providers/newcar-chat-provider.js"
     config:
       mode: mock
-
-extensions:
-  - "./hooks/lifecycle.ts"
-
-scenarios:
-  - id: family-buyer
-    config:
       scenarioId: family-buyer
-    tests: "./scenarios/family-buyer.yaml"
 
-  - id: explorer-buyer
-    config:
-      scenarioId: explorer-buyer
-    tests: "./scenarios/explorer-buyer.yaml"
+prompts:
+  - "{{message}}"
 
-  - id: indecisive-buyer
-    config:
-      scenarioId: indecisive-buyer
-    tests: "./scenarios/indecisive-buyer.yaml"
+tests:
+  # ─── 场景 1：家庭刚需型 ───
+  - vars:
+      message: "我想买一辆25-30万的SUV，家用为主，接送孩子"
+    assert:
+      - type: icontains-any
+        value: ["SUV", "推荐", "预算", "搜索"]
 
-defaultTest:
-  options:
-    provider:
-      config:
-        mode: mock
+  - vars:
+      message: "理想L6怎么样？帮我加入候选"
+    assert:
+      - type: icontains-any
+        value: ["理想", "L6"]
+
+  - vars:
+      message: "再看看问界M7"
+    assert:
+      - type: icontains-any
+        value: ["问界", "M7", "加入", "候选"]
+
+  - vars:
+      message: "这两款帮我对比一下优缺点"
+    assert:
+      - type: icontains-any
+        value: ["对比", "优", "缺", "空间", "价格"]
+
+  - vars:
+      message: "问界空间小了点，不考虑了"
+    assert:
+      - type: icontains-any
+        value: ["淘汰", "空间", "标记"]
+
+  - vars:
+      message: "深蓝S7加入候选对比一下"
+    assert:
+      - type: icontains-any
+        value: ["深蓝", "S7", "加入", "对比"]
+
+  - vars:
+      message: "还是理想L6吧，就选它了"
+    assert:
+      - type: icontains-any
+        value: ["理想", "L6", "选择", "决定", "确认"]
+
+  - vars:
+      message: "确认购买，帮我总结一下这段旅程"
+    assert:
+      - type: icontains-any
+        value: ["旅程", "总结", "恭喜", "发布"]
