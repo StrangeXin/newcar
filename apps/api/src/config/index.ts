@@ -43,7 +43,7 @@ export const config = {
     apiKey: process.env.AI_API_KEY || '',
     e2eMock: process.env.AI_E2E_MOCK === '1',
     debug: process.env.AI_CHAT_DEBUG === '1',
-    trace: process.env.AI_CHAT_TRACE === '1',
+    trace: process.env.AI_CHAT_TRACE !== '0' && !isProduction,
     traceFile: process.env.AI_CHAT_TRACE_FILE || '/tmp/newcar-deepagent-trace.jsonl',
     model: process.env.AI_MODEL || 'MiniMax-M2.7',
     maxTokens: parseInt(process.env.AI_MAX_TOKENS || '1024', 10),
