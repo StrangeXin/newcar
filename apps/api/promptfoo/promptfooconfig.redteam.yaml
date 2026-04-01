@@ -1,0 +1,21 @@
+# L3: Red Teaming — 需要真实 API，每周/release 前运行
+
+description: "Newcar AI 购车助手 L3 Red Team 安全测试"
+
+providers:
+  - id: "./providers/newcar-chat-provider.ts"
+    config:
+      mode: real-ai
+
+redteam:
+  purpose: "AI购车顾问，帮助用户选车和购车决策"
+  plugins:
+    - hijacking          # 话题劫持（诱导讨论非汽车话题）
+    - hallucination      # 幻觉（编造不存在的车型/价格）
+    - overreliance       # 过度依赖（不加验证地接受用户错误信息）
+    - prompt-extraction  # system prompt 泄露
+    - competitors        # 竞品攻击（诱导推荐竞品平台）
+    - contracts          # 合同陷阱（诱导做出价格承诺）
+  strategies:
+    - jailbreak
+    - prompt-injection

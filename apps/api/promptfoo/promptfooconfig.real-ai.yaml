@@ -1,0 +1,68 @@
+# L2: 模拟用户 + Real AI — 需要 API key，手动/每日运行
+
+description: "Newcar AI 购车助手 L2 Real AI 测试"
+
+providers:
+  - id: "./providers/newcar-chat-provider.ts"
+    config:
+      mode: real-ai
+
+tests:
+  # 画像 1：家庭用户
+  - provider:
+      id: "promptfoo:simulated-user"
+      config:
+        maxTurns: 10
+        instructions: >
+          你是一位30岁的家庭用户，预算25-30万，想买SUV，
+          主要接送孩子和周末出游。你倾向新能源车。
+          你会自然地和AI顾问对话，按照AI的引导逐步明确需求、
+          看车、对比、做决定。你不会主动提很多要求，
+          需要AI引导你。当你满意了就确认购买。
+    assert:
+      - type: llm-rubric
+        value: >
+          评估这段购车咨询对话：
+          1. AI 是否专业地引导了用户明确需求？
+          2. AI 是否推荐了合适的车型？
+          3. AI 是否帮助用户做了对比分析？
+          4. 对话是否自然流畅？
+          5. 最终是否达成了购车决定？
+      - type: answer-relevance
+      - type: javascript
+        value: "output.metadata.journeyState.stage !== 'AWARENESS'"
+
+  # 画像 2：通勤用户
+  - provider:
+      id: "promptfoo:simulated-user"
+      config:
+        maxTurns: 8
+        instructions: >
+          你是一位25岁的上班族，预算10-15万，主要上下班通勤。
+          你对车不太了解，需要AI帮你从零开始。
+          你比较在意省油/省电和好停车。
+    assert:
+      - type: llm-rubric
+        value: >
+          评估对话质量：AI是否从零引导新手用户，
+          推荐了合适价位的车型，对话自然且专业。
+      - type: answer-relevance
+
+  # 画像 3：犹豫不决用户
+  - provider:
+      id: "promptfoo:simulated-user"
+      config:
+        maxTurns: 12
+        instructions: >
+          你是一位35岁用户，预算25-35万，想买SUV但拿不定主意。
+          你会频繁改变想法，先选A后选B再回到A。
+          你会在决定后突然说"等等，我再想想"。
+          测试AI是否能耐心应对你的反复。
+    assert:
+      - type: llm-rubric
+        value: >
+          评估AI应对犹豫用户的能力：
+          1. 用户反复改变主意时AI是否保持耐心？
+          2. AI是否帮助用户理清思路而非催促决定？
+          3. 当用户反悔时AI是否自然地重新梳理？
+      - type: answer-relevance
