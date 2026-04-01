@@ -1,0 +1,33 @@
+# L1: 脚本化 Mock 测试 — 零 API 成本，每次提交运行
+
+description: "Newcar AI 购车助手 L1 Mock 测试"
+
+providers:
+  - id: "./providers/newcar-chat-provider.ts"
+    config:
+      mode: mock
+
+extensions:
+  - "./hooks/lifecycle.ts"
+
+scenarios:
+  - id: family-buyer
+    config:
+      scenarioId: family-buyer
+    tests: "./scenarios/family-buyer.yaml"
+
+  - id: explorer-buyer
+    config:
+      scenarioId: explorer-buyer
+    tests: "./scenarios/explorer-buyer.yaml"
+
+  - id: indecisive-buyer
+    config:
+      scenarioId: indecisive-buyer
+    tests: "./scenarios/indecisive-buyer.yaml"
+
+defaultTest:
+  options:
+    provider:
+      config:
+        mode: mock

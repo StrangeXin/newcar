@@ -1,0 +1,41 @@
+# 场景 2：预算模糊探索型 — 6 轮，AI 主动引导
+tests:
+  - vars:
+      message: "我想买车，不知道买什么好"
+    assert:
+      - type: icontains-any
+        value: ["预算", "用途", "场景", "需求"]
+
+  - vars:
+      message: "上下班用，预算不超过15万"
+    assert:
+      - type: javascript
+        value: "output.metadata.toolsCalled.includes('car_search')"
+
+  - vars:
+      message: "纯电的续航够吗？"
+    assert:
+      - type: icontains-any
+        value: ["续航", "公里", "充电"]
+
+  - vars:
+      message: "比亚迪秦不错，加入候选"
+    assert:
+      - type: javascript
+        value: "output.metadata.toolsCalled.includes('add_candidate')"
+      - type: javascript
+        value: "output.metadata.journeyState.candidateCount >= 1"
+
+  - vars:
+      message: "还有别的推荐吗"
+    assert:
+      - type: javascript
+        value: "output.metadata.toolsCalled.includes('car_search')"
+
+  - vars:
+      message: "就比亚迪秦吧，确认了"
+    assert:
+      - type: javascript
+        value: "output.metadata.journeyState.hasWinner === true"
+      - type: javascript
+        value: "output.metadata.journeyState.stage === 'DECISION'"

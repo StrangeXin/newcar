@@ -1,0 +1,69 @@
+# 场景 3：反复横跳型 — 10 轮，DECISION 阶段反悔换车
+tests:
+  - vars:
+      message: "我想买一辆25-30万的SUV，家用为主"
+    assert:
+      - type: icontains-any
+        value: ["SUV", "搜索", "推荐"]
+      - type: javascript
+        value: "output.metadata.toolsCalled.includes('car_search')"
+
+  - vars:
+      message: "理想L6加入候选"
+    assert:
+      - type: javascript
+        value: "output.metadata.toolsCalled.includes('add_candidate')"
+
+  - vars:
+      message: "问界M7也加入"
+    assert:
+      - type: javascript
+        value: "output.metadata.toolsCalled.includes('add_candidate')"
+      - type: javascript
+        value: "output.metadata.journeyState.candidateCount >= 2"
+
+  - vars:
+      message: "对比一下这两款"
+    assert:
+      - type: javascript
+        value: "output.metadata.journeyState.stage === 'COMPARISON'"
+
+  - vars:
+      message: "问界空间小了，淘汰"
+    assert:
+      - type: javascript
+        value: "output.metadata.journeyState.eliminatedCount >= 1"
+
+  - vars:
+      message: "理想L6就它了"
+    assert:
+      - type: javascript
+        value: "output.metadata.journeyState.hasWinner === true"
+      - type: javascript
+        value: "output.metadata.journeyState.stage === 'DECISION'"
+
+  - vars:
+      message: "等等，我朋友说小鹏G6不错"
+    assert:
+      - type: javascript
+        value: "output.metadata.toolsCalled.includes('add_candidate')"
+
+  - vars:
+      message: "帮我和理想L6对比一下"
+    assert:
+      - type: icontains-any
+        value: ["对比", "优势", "理想", "小鹏"]
+
+  - vars:
+      message: "还是理想L6好"
+    assert:
+      - type: javascript
+        value: "output.metadata.journeyState.hasWinner === true"
+
+  - vars:
+      message: "确认，发布旅程"
+    assert:
+      - type: javascript
+        value: "output.metadata.journeyState.stage === 'PURCHASE'"
+      - type: javascript
+        value: "output.metadata.completeness.score >= 80"
