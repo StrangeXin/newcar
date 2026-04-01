@@ -45,6 +45,7 @@ export interface ChatOptions {
   sessionId?: string;
   message: string;
   traceId?: string;
+  scenarioId?: string;
   onEvent?: (event: StreamEvent) => void;
 }
 
@@ -420,6 +421,11 @@ export class AiChatService {
   }
 
   private async runMockChat(data: ChatOptions, existingRequirements: Record<string, unknown>) {
+    // 场景驱动 mock：当有 scenarioId 时，使用预定义回复
+    if (data.scenarioId) {
+      return this.runScenarioMock(data);
+    }
+
     const lowerMessage = data.message.toLowerCase();
     const budgetMatch = data.message.match(/(\d+(?:\.\d+)?)\s*万/);
     const requirements: Record<string, unknown> = {};
@@ -544,6 +550,58 @@ export class AiChatService {
         data: sideEffect.data,
       });
     }
+  }
+
+  private scenarioRoundCounters = new Map<string, number>();
+
+  private async runScenarioMock(data: ChatOptions): Promise<string> {
+    const scenarioId = data.scenarioId!;
+    const counterKey = `${data.journeyId}:${scenarioId}`;
+    const round = (this.scenarioRoundCounters.get(counterKey) || 0) + 1;
+    this.scenarioRoundCounters.set(counterKey, round);
+
+    let scenarioData: {
+      rounds: Array<{
+        round: number;
+        response: string;
+        tools: Array<{ name: string; input: Record<string, unknown> }>;
+      }>;
+    };
+    try {
+      const fs = await import('fs');
+      const path = await import('path');
+      const filePath = path.join(
+        __dirname,
+        '../../promptfoo/mock-responses',
+        `${scenarioId}.json`,
+      );
+      scenarioData = JSON.parse(fs.readFileSync(filePath, 'utf-8'));
+    } catch {
+      const fallback = `[Mock] 场景 ${scenarioId} 未找到，轮次 ${round}`;
+      data.onEvent?.({ type: 'token', delta: fallback });
+      return fallback;
+    }
+
+    const roundData = scenarioData.rounds.find((r) => r.round === round);
+    if (!roundData) {
+      const fallback = `[Mock] 场景 ${scenarioId} 无第 ${round} 轮数据`;
+      data.onEvent?.({ type: 'token', delta: fallback });
+      return fallback;
+    }
+
+    // 执行工具调用
+    for (const tool of roundData.tools) {
+      if (this.isChatToolName(tool.name)) {
+        await this.emitMockTool(data, tool.name as ChatToolName, tool.input);
+      }
+    }
+
+    // 流式输出回复
+    for (const chunk of roundData.response.match(/.{1,12}/g) || [roundData.response]) {
+      data.onEvent?.({ type: 'token', delta: chunk });
+    }
+
+    return roundData.response;
   }
 
   private isChatToolName(name: string): name is ChatToolName {
