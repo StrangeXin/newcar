@@ -26,6 +26,7 @@ export class AiChatController {
         userId: req.userId,
         sessionId: req.sessionId!,
         message,
+        scenarioId: req.headers['x-scenario-id'] as string | undefined,
       });
 
       res.json(response);
