@@ -262,11 +262,17 @@ export async function processStream(
 
   try {
     while (true) {
+      let timeoutHandle: ReturnType<typeof setTimeout> | undefined;
       const nextEvent = await Promise.race([
-        iterator.next(),
-        new Promise<IteratorResult<unknown>>((_, reject) =>
-          setTimeout(() => reject(new Error(`deep_agent_stream_idle_timeout:${config.ai.roundTimeoutMs}`)), config.ai.roundTimeoutMs)
-        ),
+        iterator.next().finally(() => {
+          if (timeoutHandle) clearTimeout(timeoutHandle);
+        }),
+        new Promise<IteratorResult<unknown>>((_, reject) => {
+          timeoutHandle = setTimeout(
+            () => reject(new Error(`deep_agent_stream_idle_timeout:${config.ai.roundTimeoutMs}`)),
+            config.ai.roundTimeoutMs,
+          );
+        }),
       ]);
 
       if (nextEvent.done) {
