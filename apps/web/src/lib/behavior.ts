@@ -27,7 +27,7 @@ export async function trackEvent(
   targetId?: string,
   metadata?: Record<string, unknown>
 ): Promise<void> {
-  if (typeof window === 'undefined') {
+  if (typeof window === 'undefined' || journeyId === 'mock-journey') {
     return;
   }
 

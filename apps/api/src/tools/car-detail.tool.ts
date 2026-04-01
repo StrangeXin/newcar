@@ -57,7 +57,10 @@ export async function runCarDetail(input: Record<string, unknown>) {
   }
 
   if (!car) {
-    throw new Error('Car not found');
+    return {
+      error: true,
+      message: `未找到车型「${fallbackQuery}」的详细信息，请确认车型名称是否正确`,
+    };
   }
 
   const price = await carService.getCarPrice(car.id);

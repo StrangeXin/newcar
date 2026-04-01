@@ -114,11 +114,13 @@ describe('runAddCandidate', () => {
     expect(result.output).toEqual(expect.objectContaining({ id: 'candidate-3' }));
   });
 
-  it('car not found throws error with clear message', async () => {
+  it('car not found returns error object instead of throwing', async () => {
     mocks.getCarById.mockResolvedValueOnce(null);
     mocks.searchCars.mockResolvedValue([]);
 
-    await expect(runAddCandidate('journey-1', { carId: 'nonexistent' })).rejects.toThrow('Car not found');
+    const result = await runAddCandidate('journey-1', { carId: 'nonexistent' });
+    expect(result.output).toHaveProperty('error', true);
+    expect(result.sideEffects).toHaveLength(0);
   });
 
   it('compact brand+model search: "深蓝S7" splits Chinese brand + alphanumeric model', async () => {

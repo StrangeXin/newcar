@@ -89,6 +89,11 @@ export class JourneyController {
         return res.status(400).json({ error: 'Missing session' });
       }
 
+      const journey = await journeyService.getJourneyDetail(journeyId);
+      if (!journey) {
+        return res.status(404).json({ error: 'Journey not found' });
+      }
+
       const event = await journeyService.recordBehaviorEvent({
         journeyId,
         userId: req.userId,
