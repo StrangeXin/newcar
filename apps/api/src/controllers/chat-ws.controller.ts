@@ -52,6 +52,7 @@ export class ChatWsController {
     const traceId = this.buildTraceId(journeyId);
     const previous = this.sockets.get(journeyId);
     if (previous && previous !== ws) {
+      logger.info({ journeyId }, '[chat-ws] replacing previous connection');
       previous.close(4000, 'Replaced by a newer connection');
     }
     this.sockets.set(journeyId, ws);
@@ -130,7 +131,12 @@ export class ChatWsController {
           return;
         }
 
-        if (!this.checkWsRateLimit(resolvedAuth!.userId)) {
+        if (!resolvedAuth) {
+          this.send(ws, { type: 'error', code: 'AUTH_LOST', message: 'Authentication state lost' });
+          return;
+        }
+
+        if (!this.checkWsRateLimit(resolvedAuth.userId)) {
           this.send(ws, {
             type: 'error',
             code: 'RATE_LIMIT_EXCEEDED',
@@ -141,8 +147,8 @@ export class ChatWsController {
 
         await aiChatService.streamChat({
           journeyId,
-          userId: resolvedAuth!.userId,
-          sessionId: resolvedAuth!.sessionId,
+          userId: resolvedAuth.userId,
+          sessionId: resolvedAuth.sessionId,
           traceId,
           message: message.content.trim(),
           onEvent: (event) => {
@@ -189,6 +195,11 @@ export class ChatWsController {
   private send(ws: WebSocketLike, payload: WsServerMessage) {
     if (ws.readyState === 1) {
       ws.send(JSON.stringify(payload));
+    } else {
+      logger.warn(
+        { readyState: ws.readyState, payloadType: payload.type },
+        '[chat-ws] message dropped: socket not open',
+      );
     }
   }
 }

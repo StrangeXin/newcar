@@ -256,7 +256,10 @@ export class AiChatService {
       args: Record<string, unknown>;
       result: unknown;
     }> = [];
-    const fullContentResult = await journeyDeepAgentService.streamJourneyChat(
+
+    let fullContentResult: { fullContent: string; finalAssistantText: string };
+    try {
+    fullContentResult = await journeyDeepAgentService.streamJourneyChat(
       {
         journey: {
           id: journey.id,
@@ -354,6 +357,11 @@ export class AiChatService {
                       timelineEvent: suggestionPayload.timelineEvent,
                       patch: suggestionPayload.patch,
                     });
+                  }).catch((err) => {
+                    this.logChat(data.traceId, 'publish_suggestion_error', {
+                      journeyId: data.journeyId,
+                      error: err instanceof Error ? err.message : String(err),
+                    });
                   });
                 }
               }
@@ -377,16 +385,37 @@ export class AiChatService {
         return;
       },
     );
+    } catch (agentError) {
+      const errMsg = agentError instanceof Error ? agentError.message : String(agentError);
+      logger.error({ traceId: data.traceId, journeyId: data.journeyId, error: errMsg }, '[ai-chat] agent stream failed');
+      data.onEvent?.({ type: 'error', code: 'AGENT_ERROR', message: errMsg });
 
-    for (const toolCall of toolCallsToPersist) {
-      await conversationService.addToolCall({
-        conversationId: conversation.id,
-        toolCall,
-      });
+      fullContentResult = {
+        fullContent: '抱歉，AI 服务暂时出现问题，请稍后再试。你可以继续告诉我你的需求，我会尽快恢复。',
+        finalAssistantText: '',
+      };
     }
 
+    for (const toolCall of toolCallsToPersist) {
+      try {
+        await conversationService.addToolCall({
+          conversationId: conversation.id,
+          toolCall,
+        });
+      } catch (err) {
+        logger.error(
+          { traceId: data.traceId, conversationId: conversation.id, toolName: toolCall.name, error: err instanceof Error ? err.message : String(err) },
+          '[ai-chat] failed to persist tool call',
+        );
+      }
+    }
+
+    const rawContent = fullContentResult.fullContent.trim();
+    if (!rawContent) {
+      logger.warn({ traceId: data.traceId, journeyId: data.journeyId }, '[ai-chat] agent returned empty content, using fallback');
+    }
     const fullContent =
-      fullContentResult.fullContent.trim() ||
+      rawContent ||
       '我已经更新了旅程信息。接下来我们可以继续缩小车型范围，或者开始做深度对比。';
 
     await conversationService.addMessage({
