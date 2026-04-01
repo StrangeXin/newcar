@@ -18,6 +18,8 @@ import type { ChatSideEffect, ChatToolName } from '../../tools/chat-tools';
 
 import { buildSignals, estimateConfidenceScore } from './signal-extraction';
 import { createTimelineEventForSideEffect, shouldSuggestPublish } from './chat-side-effects';
+import { calculateCompleteness } from '../journey-completeness.service';
+import { buildCompletenessBlock } from './completeness-prompt';
 
 export type StreamEvent =
   | { type: 'token'; delta: string }
@@ -162,6 +164,30 @@ export class AiChatService {
       await conversationService.extractSignals(conversation.id, extractedSignals);
     }
 
+    // 计算旅程完整度
+    const completeness = calculateCompleteness(
+      {
+        id: journey.id,
+        stage: journey.stage,
+        requirements: existingRequirements,
+      },
+      ((journey.candidates as Array<Record<string, unknown>>) || []).map((c) => ({
+        id: c.id as string,
+        status: c.status as string,
+        userNotes: c.userNotes as string | null,
+        car: c.car as { id: string; brand: string; model: string },
+      })),
+      extractedSignals.map((s) => ({
+        type: s.type,
+        value: s.value,
+        confidence: s.confidence,
+      })),
+      ((journey.snapshots as Array<Record<string, unknown>>) || []).map((s) => ({
+        id: s.id as string,
+      })),
+    );
+    const completenessBlock = buildCompletenessBlock(completeness);
+
     if (config.ai.e2eMock) {
       this.logChat(data.traceId, 'mock_chat_start', { conversationId: conversation.id });
       const fullContent = await this.runMockChat(data, existingRequirements);
@@ -237,6 +263,7 @@ export class AiChatService {
           stage: journey.stage as JourneyStage,
           status: journey.status,
           requirements: existingRequirements,
+          completenessContext: completenessBlock,
           candidates: journey.candidates?.map((c) => ({
             id: c.id,
             status: c.status,
