@@ -7,6 +7,7 @@ vi.mock('../src/services/journey.service', () => ({
   journeyService: {
     createJourney: vi.fn(),
     getActiveJourney: vi.fn(),
+    getJourneyDetail: vi.fn(),
     advanceStage: vi.fn(),
     pauseJourney: vi.fn(),
     completeJourney: vi.fn(),
@@ -152,6 +153,7 @@ describe('JourneyController', () => {
   describe('recordBehaviorEvent', () => {
     it('calls journeyService.recordBehaviorEvent and returns 201', async () => {
       const event = { id: 'ev1', type: 'VIEW' };
+      vi.mocked(journeyService.getJourneyDetail).mockResolvedValue({ id: 'j1', userId: 'user-1' } as any);
       vi.mocked(journeyService.recordBehaviorEvent).mockResolvedValue(event as any);
 
       const req = mockReq({

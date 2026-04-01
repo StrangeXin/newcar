@@ -68,7 +68,10 @@ export async function runAddCandidate(journeyId: string, input: Record<string, u
   }
 
   if (!car) {
-    throw new Error('Car not found');
+    return {
+      output: { error: true, message: `未找到匹配的车型「${fallbackQuery || input.carId}」，请尝试更具体的名称（如"理想L6"而非"理想"）` },
+      sideEffects: [],
+    };
   }
 
   const candidate = await carCandidateService.addCandidate({
