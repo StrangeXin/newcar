@@ -1,6 +1,7 @@
 import { Prisma } from '@prisma/client';
 import { prisma } from '../lib/prisma';
 import { buildCarSearchWhere, CarSearchParams, toYuanFromWan } from './car-query';
+import { rankByRelevance, UserPreferences } from './car-ranking.service';
 
 interface CreatePriceSnapshotInput {
   region?: string;
@@ -25,17 +26,22 @@ interface CreatePolicyInput {
 export { CarSearchParams, toYuanFromWan, buildCarSearchWhere } from './car-query';
 
 export class CarService {
-  async searchCars(params: CarSearchParams) {
+  async searchCars(params: CarSearchParams, preferences?: UserPreferences) {
     const where = buildCarSearchWhere(params);
     const take = Math.max(1, Math.min(params.limit ?? 20, 100));
     const skip = Math.max(0, params.offset ?? 0);
 
-    return prisma.car.findMany({
+    const cars = await prisma.car.findMany({
       where,
       take,
       skip,
       orderBy: [{ updatedAt: 'desc' }],
     });
+
+    if (preferences && Object.keys(preferences).length > 0) {
+      return rankByRelevance(cars, preferences);
+    }
+    return cars;
   }
 
   async getCarById(id: string) {
