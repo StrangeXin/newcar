@@ -123,11 +123,11 @@ describe('runAddCandidate', () => {
     expect(result.sideEffects).toHaveLength(0);
   });
 
-  it('compact brand+model search: "深蓝S7" splits Chinese brand + alphanumeric model', async () => {
+  it('compact brand+model search: "深蓝S7" finds car via fuzzy normalization', async () => {
     mocks.getCarById.mockResolvedValueOnce(null);
-    // First searchCars (full query "深蓝S7") returns empty
+    // normalizeCarQuery("深蓝S7") → ["深蓝S7", "深蓝 S7"]
+    // First expanded query returns empty, second ("深蓝 S7") returns result
     mocks.searchCars.mockResolvedValueOnce([]);
-    // Second searchCars (compact split: brand='深蓝', q='S7') returns result
     mocks.searchCars.mockResolvedValueOnce([
       { id: 'car-deepal-s7', brand: '深蓝', model: 'S7' },
     ]);
@@ -138,20 +138,15 @@ describe('runAddCandidate', () => {
 
     await runAddCandidate('journey-1', { carId: '深蓝S7' });
 
-    // First call is the full query search
-    expect(mocks.searchCars).toHaveBeenNthCalledWith(1, expect.objectContaining({ q: '深蓝S7' }));
-    // Second call uses compact brand split (Chinese + alphanumeric)
-    expect(mocks.searchCars).toHaveBeenNthCalledWith(2, expect.objectContaining({ brand: '深蓝', q: 'S7' }));
+    expect(mocks.searchCars).toHaveBeenCalledWith(expect.objectContaining({ q: '深蓝 S7' }));
     expect(mocks.addCandidate).toHaveBeenCalledWith(
       expect.objectContaining({ carId: 'car-deepal-s7' })
     );
   });
 
-  it('space-separated search: "理想 L6" → compact match on normalized "理想L6" splits brand+q', async () => {
-    // fallbackQuery = '理想 L6', normalizedQuery = '理想L6'
-    // First searchCars (q='理想 L6') returns empty
-    mocks.searchCars.mockResolvedValueOnce([]);
-    // compactMatch on normalizedQuery '理想L6' → brand='理想', q='L6'
+  it('space-separated search: "理想 L6" finds car via fuzzy normalization', async () => {
+    // normalizeCarQuery("理想 L6") → ["理想 L6"]
+    // First query returns result directly
     mocks.searchCars.mockResolvedValueOnce([
       { id: 'car-li-l6', brand: '理想', model: 'L6' },
     ]);
@@ -162,8 +157,7 @@ describe('runAddCandidate', () => {
 
     await runAddCandidate('journey-1', { query: '理想 L6' });
 
-    // Second call should have brand split from compact match
-    expect(mocks.searchCars).toHaveBeenNthCalledWith(2, expect.objectContaining({ brand: '理想', q: 'L6' }));
+    expect(mocks.searchCars).toHaveBeenCalledWith(expect.objectContaining({ q: '理想 L6' }));
   });
 
   it('side effects return correct shape: { event: candidate_added, data: candidate }', async () => {
