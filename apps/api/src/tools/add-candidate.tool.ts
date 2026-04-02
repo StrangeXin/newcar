@@ -1,6 +1,7 @@
 import { AddedReason } from '@newcar/shared';
 import { carCandidateService } from '../services/car-candidate.service';
 import { carService } from '../services/car.service';
+import { normalizeCarQuery } from '../services/car-fuzzy';
 
 export const addCandidateTool = {
   name: 'add_candidate',
@@ -33,10 +34,19 @@ export async function runAddCandidate(journeyId: string, input: Record<string, u
 
   if (!car && fallbackQuery) {
     const normalizedQuery = fallbackQuery.replace(/\s+/g, '');
-    let candidates = await carService.searchCars({
-      q: fallbackQuery,
-      limit: 10,
-    });
+    const expandedQueries = normalizeCarQuery(fallbackQuery);
+
+    // 先尝试归一化后的所有查询
+    let candidates: Awaited<ReturnType<typeof carService.searchCars>> = [];
+    for (const q of expandedQueries) {
+      candidates = await carService.searchCars({ q, limit: 10 });
+      if (candidates.length > 0) break;
+    }
+
+    // 兜底：原始查询
+    if (candidates.length === 0) {
+      candidates = await carService.searchCars({ q: fallbackQuery, limit: 10 });
+    }
 
     if (candidates.length === 0) {
       const compactMatch = normalizedQuery.match(/^([\u4e00-\u9fa5]+)([A-Za-z0-9].*)$/);

@@ -6,7 +6,7 @@ import { post } from '@/lib/api';
 import { useSnapshot } from '@/hooks/useSnapshot';
 import { JOURNEY_SIDE_EFFECT_EVENT, JourneySideEffectEvent } from '@/lib/journey-workspace-events';
 import { SnapshotInsight } from '@/types/api';
-import { mockSnapshot } from './workspace-mock-data';
+
 
 interface AiSummaryProps {
   journeyId: string;
@@ -29,7 +29,7 @@ function toActions(value: unknown): string[] {
 export function AiSummary({ journeyId }: AiSummaryProps) {
   const { snapshot, isLoading, refresh } = useSnapshot(journeyId);
   const [isRefreshing, setIsRefreshing] = useState(false);
-  const displaySnapshot = snapshot || mockSnapshot;
+  const displaySnapshot = snapshot;
 
   const insights = toInsights(displaySnapshot?.keyInsights);
   const actions = toActions(displaySnapshot?.nextSuggestedActions);
@@ -80,6 +80,13 @@ export function AiSummary({ journeyId }: AiSummaryProps) {
       </div>
 
       {isLoading ? <p className="mt-4 text-[11px] text-[var(--text-muted)]">加载中...</p> : null}
+      {!isLoading && !displaySnapshot ? (
+        <div className="mt-[14px] flex flex-col items-center gap-2 rounded-[10px] border border-dashed border-[var(--border)] px-4 py-6 text-center">
+          <Sparkles className="h-6 w-6 text-[var(--text-muted)]" strokeWidth={1.5} aria-hidden="true" />
+          <p className="text-[11px] font-semibold text-[var(--text-soft)]">AI 分析尚未生成</p>
+          <p className="text-[10px] leading-[1.5] text-[var(--text-muted)]">继续和 AI 对话，系统会自动生成旅程分析</p>
+        </div>
+      ) : null}
       {displaySnapshot ? (
         <div className="mt-[14px] space-y-[14px]">
           <p className="text-[11px] leading-[1.7] text-[var(--text-soft)]">{displaySnapshot.narrativeSummary || '暂无摘要'}</p>

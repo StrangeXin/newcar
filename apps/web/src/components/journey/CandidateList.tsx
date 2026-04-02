@@ -5,7 +5,7 @@ import { AlertTriangle, ChevronDown, MessageSquare, Sparkles, Trophy } from 'luc
 import { Candidate, JourneyStage } from '@/types/api';
 import { CandidateCard } from './CandidateCard';
 import { ComparisonMatrix } from './ComparisonMatrix';
-import { mockCandidates } from './workspace-mock-data';
+
 
 interface CandidateListProps {
   candidates: Candidate[];
@@ -15,7 +15,7 @@ interface CandidateListProps {
 }
 
 export function CandidateList({ candidates, isLoading, refresh, stage = 'AWARENESS' }: CandidateListProps) {
-  const displayCandidates = candidates.length > 0 ? candidates : mockCandidates;
+  const displayCandidates = candidates;
   const [showEliminated, setShowEliminated] = useState(false);
   const activeOrWinner = useMemo(
     () => displayCandidates.filter((candidate) => candidate.status !== 'ELIMINATED'),

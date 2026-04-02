@@ -1,4 +1,5 @@
 import { carService, toYuanFromWan } from '../services/car.service';
+import type { UserPreferences } from '../services/car-ranking.service';
 
 export const carSearchTool = {
   name: 'car_search',
@@ -18,9 +19,23 @@ export const carSearchTool = {
   },
 };
 
-export async function runCarSearch(input: Record<string, unknown>) {
+export async function runCarSearch(
+  input: Record<string, unknown>,
+  context?: { requirements?: Record<string, unknown> },
+) {
   const query = typeof input.query === 'string' ? input.query : undefined;
   const limit = typeof input.limit === 'number' ? Math.min(Math.max(input.limit, 1), 10) : 5;
+
+  // 从 journey requirements 提取偏好
+  const preferences: UserPreferences = {};
+  if (context?.requirements) {
+    const req = context.requirements;
+    if (typeof req.budgetMin === 'number') preferences.budgetMin = req.budgetMin;
+    if (typeof req.budgetMax === 'number') preferences.budgetMax = req.budgetMax;
+    if (Array.isArray(req.useCases)) preferences.useCases = req.useCases as string[];
+    if (Array.isArray(req.fuelTypePreference)) preferences.fuelTypePreference = req.fuelTypePreference as string[];
+    if (typeof req.stylePreference === 'string') preferences.stylePreference = req.stylePreference;
+  }
 
   const cars = await carService.searchCars({
     q: query,
@@ -29,7 +44,7 @@ export async function runCarSearch(input: Record<string, unknown>) {
     fuelType: typeof input.fuelType === 'string' ? input.fuelType : undefined,
     carType: typeof input.carType === 'string' ? input.carType : undefined,
     limit,
-  });
+  }, preferences);
 
   return {
     cars: cars.map((car) => ({

@@ -1,4 +1,5 @@
 import { Prisma } from '@prisma/client';
+import { normalizeCarQuery } from './car-fuzzy';
 
 export interface CarSearchParams {
   brand?: string;
@@ -42,11 +43,18 @@ export function buildCarSearchWhere(params: CarSearchParams): Prisma.CarWhereInp
   }
 
   if (params.q) {
-    where.OR = [
-      { brand: { contains: params.q, mode: 'insensitive' } },
-      { model: { contains: params.q, mode: 'insensitive' } },
-      { variant: { contains: params.q, mode: 'insensitive' } },
-    ];
+    const queries = normalizeCarQuery(params.q);
+    const orClauses: Prisma.CarWhereInput[] = [];
+    for (const q of queries) {
+      orClauses.push(
+        { brand: { contains: q, mode: 'insensitive' } },
+        { model: { contains: q, mode: 'insensitive' } },
+        { variant: { contains: q, mode: 'insensitive' } },
+      );
+    }
+    if (orClauses.length > 0) {
+      where.OR = orClauses;
+    }
   }
 
   return where;
