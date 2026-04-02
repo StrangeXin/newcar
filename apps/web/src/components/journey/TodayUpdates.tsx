@@ -5,7 +5,7 @@ import { Bell, Clock3, Landmark, MessageSquare, ShieldAlert, Star, Tag } from 'l
 import { patch } from '@/lib/api';
 import { useNotifications } from '@/hooks/useNotifications';
 import { JOURNEY_SIDE_EFFECT_EVENT } from '@/lib/journey-workspace-events';
-import { mockNotifications } from './workspace-mock-data';
+
 
 const TYPE_META: Record<string, { label: string; tone: string }> = {
   PRICE_DROP: { label: '降价', tone: 'border-[var(--success-border)] bg-[var(--success-muted)] text-[var(--success-text)]' },
@@ -28,7 +28,7 @@ export function TodayUpdates() {
   const { notifications, isLoading, refresh } = useNotifications();
   const [processingId, setProcessingId] = useState<string | null>(null);
   const unread = notifications.filter((item) => !item.isRead);
-  const displayItems = unread.length > 0 ? unread : mockNotifications;
+  const displayItems = unread;
 
   useEffect(() => {
     const handleSideEffect = () => {
@@ -56,10 +56,18 @@ export function TodayUpdates() {
           今日新动态
         </h3>
         <span className="inline-flex items-center justify-center rounded-full border border-[var(--border)] bg-[var(--surface-subtle)] px-[10px] py-1 text-[10px] font-semibold leading-[1.2] text-[var(--text-muted)]">
-          {displayItems.length} 条未读
+          {displayItems.length > 0 ? `${displayItems.length} 条未读` : '无未读'}
         </span>
       </div>
       {isLoading ? <p className="mt-4 text-[11px] text-[var(--text-muted)]">加载中...</p> : null}
+      {!isLoading && displayItems.length === 0 ? (
+        <div className="mt-[10px] flex flex-col items-center gap-2 rounded-[10px] border border-dashed border-[var(--border)] px-4 py-6 text-center">
+          <Bell className="h-6 w-6 text-[var(--text-muted)]" strokeWidth={1.5} aria-hidden="true" />
+          <p className="text-[11px] font-semibold text-[var(--text-soft)]">暂无新动态</p>
+          <p className="text-[10px] leading-[1.5] text-[var(--text-muted)]">添加候选车后，会收到价格变动、新款发布等提醒</p>
+        </div>
+      ) : null}
+      {displayItems.length > 0 ? (
       <ul className="mt-[10px] space-y-[10px]">
         {displayItems.map((item) => (
           <li key={item.id} className="rounded-[10px] border border-[var(--border)] bg-[var(--surface-subtle)] px-[10px] py-[10px] transition hover:border-[var(--border-soft)]">
@@ -94,6 +102,7 @@ export function TodayUpdates() {
           </li>
         ))}
       </ul>
+      ) : null}
     </section>
   );
 }
