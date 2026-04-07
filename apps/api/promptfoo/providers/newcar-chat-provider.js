@@ -42,6 +42,8 @@ class NewcarChatProvider {
         request.set('x-scenario-id', this.config.scenarioId);
       }
 
+      request.set('x-test-auth', 'e2e-test-token');
+
       const res = await request;
 
       if (res.status !== 200) {

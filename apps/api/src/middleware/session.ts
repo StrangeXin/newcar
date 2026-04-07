@@ -8,6 +8,12 @@ export interface SessionRequest extends AuthenticatedRequest {
 }
 
 export async function sessionMiddleware(req: SessionRequest, res: Response, next: NextFunction) {
+  if (process.env.AI_E2E_MOCK === '1' && req.headers['x-test-auth'] === 'e2e-test-token') {
+    req.sessionId = 'test-session-id';
+    req.isGuest = false;
+    return next();
+  }
+
   let sessionId = req.headers['x-session-id'] as string | undefined;
 
   if (!sessionId && req.headers.authorization?.startsWith('Bearer ')) {

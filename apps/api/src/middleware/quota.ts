@@ -11,6 +11,10 @@ function createQuotaMiddleware(quotaType: QuotaType) {
       return res.status(401).json({ error: 'Unauthorized' });
     }
 
+    if (process.env.AI_E2E_MOCK === '1' && req.headers['x-test-auth'] === 'e2e-test-token') {
+      return next();
+    }
+
     const sub = await subscriptionService.getUserSubscription(userId);
     if (!sub) {
       return res.status(403).json({

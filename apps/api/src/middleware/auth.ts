@@ -8,6 +8,14 @@ export interface AuthenticatedRequest extends Request {
 }
 
 export function authMiddleware(req: AuthenticatedRequest, res: Response, next: NextFunction) {
+  // E2E test mode: accept X-Test-Auth header for promptfoo testing
+  if (process.env.AI_E2E_MOCK === '1' && req.headers['x-test-auth'] === 'e2e-test-token') {
+    req.userId = 'test-user-id';
+    req.sessionId = 'test-session-id';
+    req.userRole = 'user';
+    return next();
+  }
+
   const authHeader = req.headers.authorization;
 
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
