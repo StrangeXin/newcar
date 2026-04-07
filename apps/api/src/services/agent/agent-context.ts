@@ -21,6 +21,7 @@ export type JourneyWorkspaceContext = {
     stage: JourneyStage;
     status?: string;
     requirements?: Record<string, unknown> | null;
+    completenessContext?: string;
     candidates?: Array<{
       id: string;
       status: string;
@@ -92,7 +93,7 @@ export function getWorkspaceRoot(journeyId: string) {
 }
 
 export function buildSystemPrompt(journey: JourneyWorkspaceContext['journey']) {
-  return [
+  const parts: string[] = [
     '你是新车购买旅程工作台里的长期 AI 购车助手。',
     '你的目标不是一次性回答，而是持续推进这段购车旅程，帮助用户逐步完成选车、对比、决策和购买准备。',
     '你拥有 write_todos、filesystem、task(subagent) 等 deep agent 能力，请合理使用这些能力维持长期记忆和行动计划。',
@@ -114,7 +115,13 @@ export function buildSystemPrompt(journey: JourneyWorkspaceContext['journey']) {
     '优先帮助用户做下一步决策，不要空泛聊天。',
     `当前旅程标题：${journey.title}`,
     `当前阶段：${journey.stage}`,
-  ].join('\n');
+  ];
+
+  if (journey.completenessContext) {
+    parts.push('', journey.completenessContext);
+  }
+
+  return parts.join('\n');
 }
 
 export async function ensureWorkspace(context: JourneyWorkspaceContext) {

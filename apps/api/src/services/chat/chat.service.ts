@@ -6,6 +6,7 @@
  */
 
 import { AddedReason, JourneyStage, MessageRole } from '@newcar/shared';
+import { Prisma } from '@prisma/client';
 import { config } from '../../config';
 import { logger } from '../../lib/logger';
 import { carCandidateService } from '../car-candidate.service';
@@ -78,12 +79,7 @@ export class AiChatService {
     logger.info({ traceId, event, ...(details || {}) }, '[ai-chat]');
   }
 
-  async chat(data: {
-    journeyId: string;
-    userId?: string;
-    sessionId: string;
-    message: string;
-  }): Promise<{
+  async chat(data: ChatOptions): Promise<{
     message: string;
     conversationId: string;
     extractedSignals: Array<{ type: string; value: string; confidence: number; updatedAt: string }>;
@@ -162,7 +158,7 @@ export class AiChatService {
     const extractedSignals = buildSignals(data.message, existingRequirements);
 
     if (extractedSignals.length > 0) {
-      await conversationService.extractSignals(conversation.id, extractedSignals);
+      await conversationService.extractSignals(conversation.id, extractedSignals as unknown as Prisma.InputJsonValue[]);
     }
 
     // 计算旅程完整度
@@ -257,7 +253,7 @@ export class AiChatService {
       result: unknown;
     }> = [];
 
-    let fullContentResult: { fullContent: string; finalAssistantText: string };
+    let fullContentResult: { fullContent: string; workspaceRoot: string };
     try {
     fullContentResult = await journeyDeepAgentService.streamJourneyChat(
       {
@@ -392,7 +388,7 @@ export class AiChatService {
 
       fullContentResult = {
         fullContent: '抱歉，AI 服务暂时出现问题，请稍后再试。你可以继续告诉我你的需求，我会尽快恢复。',
-        finalAssistantText: '',
+        workspaceRoot: '',
       };
     }
 

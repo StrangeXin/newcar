@@ -225,13 +225,16 @@ describe('PublishService.generatePublishSummary', () => {
       recommendReason: '空间大',
       relevantDimensions: ['空间'],
       car: {
+        id: 'car-1',
         brand: 'BYD',
         model: 'Seal',
         variant: 'EV',
         fuelType: 'BEV',
         type: 'SEDAN',
         msrp: 230000,
-        baseSpecs: null,
+        year: 2024,
+        updatedAt: new Date(),
+        baseSpecs: {} as any,
       },
       ...overrides,
     };
